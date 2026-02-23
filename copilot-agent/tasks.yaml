@@ -3,6 +3,24 @@
 # Actualizado automáticamente por skills_manager.py
 
 tareas:
+  - id: "20260223-002"
+    fecha: "2026-02-23"
+    titulo: "Publicación v1.2 — README + installer + traza"
+    descripcion: >
+      Corrección rama default GitHub (master=main),
+      creación README.md completo,
+      creación setup-project.ps1 (instalador PowerShell),
+      commit 524f2f8, push a origin/main y origin/master.
+      Actualización trazabilidad: RESUME.md + tasks.yaml.
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["git-pushing", "readme"]
+    resultado: >
+      README.md visible en portada github.com/javiertarazon/agente-copilot,
+      setup-project.ps1 accesible vía one-liner iwr/iex,
+      main y master en commit 524f2f8,
+      VS Code local y github.com Copilot funcionales.
+
   - id: "20260223-001"
     fecha: "2026-02-23"
     titulo: "Inicialización sistema de skills"

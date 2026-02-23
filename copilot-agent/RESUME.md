@@ -1,9 +1,12 @@
 # copilot-agent — Estado del sistema
 
-*Actualizado: 2026-07-15 UTC*
+*Actualizado: 2026-02-23 UTC*
 
 ## Última acción
-- **add-skills**: +5 skills de agentes autónomos (963 total)
+- **github-publish-v1.2**: Commit `524f2f8` publicado en `main` y `master` — README.md + setup-project.ps1 añadidos; instrucciones disponibles en github.com/javiertarazon/agente-copilot
+
+## Sesión anterior
+- **github-publish-v1.1**: Push exitoso a https://github.com/javiertarazon/agente-copilot — commit `179b37b`, tag `v1.1`, 963 skills publicados
 
 ## Estado del catálogo
 - Total skills: **963**
