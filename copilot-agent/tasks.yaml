@@ -1,0 +1,22 @@
+# copilot-agent — Registro de Tareas
+# Formato: lista YAML de tareas ejecutadas por el agente
+# Actualizado automáticamente por skills_manager.py
+
+tareas:
+  - id: "20260223-001"
+    fecha: "2026-02-23"
+    titulo: "Inicialización sistema de skills"
+    descripcion: >
+      Clonado antigravity-awesome-skills (907 skills),
+      adaptados a formato OpenClaw (.github/skills/),
+      categorizados en 9 dominios, generados .instructions.md
+      para auto-detect en VS Code Copilot.
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: []
+    resultado: >
+      907 SKILL.md en .github/skills/,
+      907 en skills/<categoria>/,
+      9 archivos .github/instructions/<cat>.instructions.md,
+      .github/copilot-instructions.md maestro,
+      skills/.skills_index.json con 907 entries.

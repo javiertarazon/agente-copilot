@@ -1,0 +1,8 @@
+{
+  "_description": "Proyecto activo donde se aplican los cambios. Edita 'path' o usa: python skills_manager.py set-project <ruta>",
+  "path": "",
+  "name": "",
+  "set_at": "",
+  "notes": "",
+  "history": []
+}
