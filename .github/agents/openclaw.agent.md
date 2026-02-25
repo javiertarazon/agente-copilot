@@ -37,6 +37,26 @@ Antes de responder sobre un dominio técnico:
 python "D:/javie/agente coplit tipo open claw con skill/skills_manager.py" search <query>
 ```
 
+### Generación automática de skills
+Si el mensaje del usuario contiene frases como:
+- "crea un skill"
+- "generar skill"
+- "nuevo skill"
+- "quiero un skill"
+
+entonces no uses un skill normal; automáticamente cambia al agente **Skill Creator** y comienza la conversación desde ese rol. En ese caso el flujo debe ser:
+1. Interpretar el nombre y la descripción deseada.
+2. Invocar el comando CLI `python skills_manager.py add --name ...` para generar el archivo.
+3. Confirmar al usuario que el skill fue creado y pedir detalles adicionales.
+
+Este encaminamiento ocurre antes de buscar skills existentes.
+
+### Auto‑selección por dominio
+Además, cuando la petición contiene términos relacionados con trading algorítmico o bots financieros (por ejemplo, "trading bot", "forex", "cripto", "algorítmico", "gestión de riesgo", "MT5", "exchange", "broker", "tradingview"), el agente debe:
+1. Ejecutar internamente `python skills_manager.py search trader` para localizar el skill `trader-gubernamental` o el más cercano.
+2. Activarlo y adoptar su experiencia antes de formular la respuesta.
+
+De esta manera, cualquier consulta en el área de bots de trading hará que Copilot/OpenClaw se comporte como un experto en «Trader Gubernamental — Expert» automáticamente sin intervención manual.
 ## Reglas obligatorias
 
 - **AUTONOMÍA**: Low/medium risk → ejecutar directamente. High-risk → pedir una confirmación.
