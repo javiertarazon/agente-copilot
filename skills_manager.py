@@ -37,7 +37,8 @@ from typing import Any
 # ─────────────────────────────────────────────────────────────────────────────
 
 ROOT          = Path(__file__).resolve().parent
-SKILLS_DIR    = ROOT / "skills"
+# por defecto el catálogo residente se ubica en .github/skills
+SKILLS_DIR    = ROOT / ".github" / "skills"
 INDEX_FILE    = SKILLS_DIR / ".skills_index.json"
 ACTIVE_FILE   = SKILLS_DIR / ".active_skills.json"
 SOURCES_FILE  = SKILLS_DIR / ".sources.json"
