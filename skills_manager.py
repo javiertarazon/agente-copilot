@@ -715,8 +715,6 @@ Define aquí el comportamiento y las reglas del agente.
     agent_file.write_text(template, encoding="utf-8")
     print(f"[add-agent] Agente creado en {agent_file}")
     return 0
-        print(f"[add] Plantilla creada en: {local_file}")
-        print(f"      Edita el archivo para agregar el contenido experto.")
 
     # Agregar al indice
     skills = load_index()
