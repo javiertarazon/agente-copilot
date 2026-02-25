@@ -155,8 +155,10 @@ Las instrucciones están en la rama `master` (rama por defecto). Copilot en gith
 
 ## 📊 Versión actual
 
-- **v1.1** — 963 skills, Antigravity v5.7 + OpenClaw behaviors + awesome-copilot
-- Última actualización: 2026-07-15
+- **v1.2** — 963 skills, Antigravity v5.7 + OpenClaw behaviors + awesome-copilot
+- Última actualización: 25 de febrero de 2026  (publicada en el repositorio remoto con el script de instalación global)
+
+> 🚀 **Nota:** se ha subido una etiqueta/tags `v1.2` al repositorio remoto. Quien clone o actualice y ejecute `setup-project.ps1` obtendrá la configuración global en VS Code y Copilot automáticamente.
 
 ---
 
