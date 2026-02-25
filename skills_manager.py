@@ -678,6 +678,43 @@ metadata:
 -
 """
         local_file.write_text(template, encoding="utf-8")
+
+
+def cmd_add_agent(args: argparse.Namespace) -> int:
+    """Genera un esqueleto de agente en `.github/agents`."""
+    name = getattr(args, "name", None)
+    if not name:
+        print("ERROR: especifica --name para el agente")
+        return 1
+    desc = getattr(args, "description", "")
+    model = getattr(args, "model", "claude-sonnet-4-5")
+    tools = getattr(args, "tools", [])
+
+    agent_id = name.lower().replace(" ", "-")
+    agents_dir = ROOT / ".github" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+    agent_file = agents_dir / f"{agent_id}.agent.md"
+    if agent_file.exists():
+        print(f"ERROR: el agente ya existe: {agent_file}")
+        return 1
+
+    tools_yaml = "\n".join([f"  - {t}" for t in tools])
+    template = f"""---
+name: {name}
+description: {desc or 'Descripción del agente.'}
+model: {model}
+tools:
+{tools_yaml}
+---
+
+# {name} — Agente personalizado
+
+Eres **{agent_id}**.
+Define aquí el comportamiento y las reglas del agente.
+"""
+    agent_file.write_text(template, encoding="utf-8")
+    print(f"[add-agent] Agente creado en {agent_file}")
+    return 0
         print(f"[add] Plantilla creada en: {local_file}")
         print(f"      Edita el archivo para agregar el contenido experto.")
 
@@ -883,6 +920,7 @@ def _update_resume(action: str, detail: str = "") -> None:
     skills = load_index()
     active = [s for s in skills if s.get("active")]
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    active_lines = '\n'.join(f'- `{s["id"]}` ({s["category"]})' for s in active) or '- (ninguna)'
     content = f"""# copilot-agent — Estado del sistema
 
 *Actualizado: {ts}*
@@ -897,7 +935,7 @@ def _update_resume(action: str, detail: str = "") -> None:
 - Fuente: antigravity-awesome-skills v5.7
 
 ## Skills activas
-{'\n'.join(f'- `{s["id"]}` ({s["category"]})' for s in active) or '- (ninguna)'}
+{active_lines}
 
 ## Comandos útiles
 ```powershell
@@ -938,6 +976,10 @@ def cmd_sync_claude(args: argparse.Namespace) -> int:
     ]
 
     if active_skills:
+        active_block = "\n".join(
+            f"| {s['id']} | {s.get('path', '')} | {s.get('description', '')[:65]} |"
+            for s in active_skills
+        )
         lines += [
             f"### Skills Activas ({len(active_skills)} de {total})",
             "",
@@ -946,12 +988,7 @@ def cmd_sync_claude(args: argparse.Namespace) -> int:
             "",
             "| Skill | Archivo | Descripcion |",
             "|-------|---------|-------------|",
-        ]
-        for s in sorted(active_skills, key=lambda x: x["category"] + x["id"]):
-            path  = s.get("path","")
-            desc  = s.get("description","")[:65]
-            lines.append(f"| `{s['id']}` | `{path}` | {desc} |")
-        lines += [
+            active_block,
             "",
             "> **Instruccion para Claude**: Al inicio de cada sesion, lee los",
             "> archivos SKILL.md de la tabla anterior. Cuando el usuario haga",
@@ -960,7 +997,6 @@ def cmd_sync_claude(args: argparse.Namespace) -> int:
         ]
     else:
         lines += [
-            "### Skills Activas (0)",
             "",
             "No hay skills activas. Activa las que necesites:",
             "```",
@@ -994,7 +1030,9 @@ Este directorio contiene el agente de trading automatico para MetaTrader5
 - Agente: `powershell -File descarga_datos/scripts/run_expert_tm_v75_agent.ps1`
 - Supervisor: `powershell -File descarga_datos/scripts/run_expert_tm_v75_supervisor.ps1`
 
+<!-- SKILLS_LIBRARY_START -->
 {block}
+<!-- SKILLS_LIBRARY_END -->
 """
 
     CLAUDE_MD.write_text(new_content, encoding="utf-8")
@@ -1175,6 +1213,13 @@ def main() -> int:
     p_inst.add_argument("path", help="Ruta del proyecto destino")
     p_inst.add_argument("--force", "-f", action="store_true", help="Sobreescribir archivos existentes")
 
+    # add-agent
+    p_agent = sub.add_parser("add-agent", help="Crear un agente personalizado")
+    p_agent.add_argument("--name", "-n", help="Nombre/ID del agente")
+    p_agent.add_argument("--description", "-d", default="", help="Descripción breve")
+    p_agent.add_argument("--model", "-m", default="claude-sonnet-4-5", help="Modelo base")
+    p_agent.add_argument("--tools", "-t", nargs="*", default=["codebase","terminal","search","vscode"], help="Lista de herramientas disponibles")
+
     args = parser.parse_args()
 
     if not args.cmd:
@@ -1194,6 +1239,7 @@ def main() -> int:
         "rebuild":       lambda a: (_rebuild_index([], DEFAULT_REPO), 0)[1],
         "set-project":   cmd_set_project,
         "install":       cmd_install,
+        "add-agent":    cmd_add_agent,
     }
 
     fn = dispatch.get(args.cmd)

@@ -101,7 +101,7 @@ En VS Code Copilot Chat, selecciona el agente `openclaw` (aparece en el menú de
 
 ---
 
-## 🔧 Gestión de skills
+## 🔧 Gestión de skills y agentes
 
 ```powershell
 cd "D:\agente-copilot"
@@ -119,9 +119,17 @@ python skills_manager.py list --active
 # Activar skills adicionales
 python skills_manager.py activate python-pro fastapi-pro
 
+# Generar una skill nueva desde plantilla
+python skills_manager.py add --name "mi-skill" --description "Descripción breve"
+
+# Crear un agente personalizado
+python skills_manager.py add-agent --name "Mi Agente" --description "Ayuda con CI/CD" --model claude-2 --tools codebase terminal
+
 # Instalar EN otro proyecto
 python skills_manager.py install "D:\mis-proyectos\mi-app"
 ```
+
+> 🛠 **Nota:** los comandos `add` y `add-agent` generan los archivos necesarios automáticamente; edítalos después para completar la documentación y las reglas del skill/agent.
 
 ---
 
