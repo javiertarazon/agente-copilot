@@ -6,12 +6,14 @@ applyTo: "**/*.{ts,js,py,go,rs,java,cs,rb,php}"
 
 Cuando el usuario haga una solicitud relacionada con **security**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (36)
+## Skills disponibles en esta categoría (38)
 
 | ID | Descripción |
 |-----|-------------|
 | `active-directory-attacks` | This skill should be used when the user asks to \"attack Active Directory\", \"e |
+| `agent-safety-governance` | Safety and governance framework for autonomous AI agents with audit trail and ro |
 | `api-security-best-practices` | Implement secure API design patterns including authentication, authorization, in |
+| `azure-role-selector` | Azure role assignment with least-privilege principle guidance |
 | `backend-security-coder` | Expert in secure backend coding practices specializing in input |
 | `broken-authentication` | This skill should be used when the user asks to \"test for broken authentication |
 | `burp-suite-testing` | This skill should be used when the user asks to \"intercept HTTP traffic\", \"mo |

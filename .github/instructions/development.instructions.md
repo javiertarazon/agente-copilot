@@ -6,7 +6,7 @@ applyTo: "**/*.{ts,tsx,js,jsx,py,go,rs,java,cs,rb,php,swift,kt}"
 
 Cuando el usuario haga una solicitud relacionada con **development**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (171)
+## Skills disponibles en esta categoría (186)
 
 | ID | Descripción |
 |-----|-------------|
@@ -14,6 +14,7 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `android-jetpack-compose-expert` | Expert guidance for building modern Android UIs with Jetpack Compose, covering s |
 | `angular-best-practices` | Angular performance optimization and best practices guide. Use when writing, rev |
 | `app-store-optimization` | Complete App Store Optimization (ASO) toolkit for researching, optimizing, and t |
+| `aspire` | .NET Aspire CLI, AppHost, service discovery and deployment patterns |
 | `async-python-patterns` | Master Python asyncio, concurrent programming, and async/await patterns for high |
 | `auth-implementation-patterns` | Master authentication and authorization patterns including JWT, OAuth2, session  |
 | `avalonia-viewmodels-zafiro` | Optimal ViewModel and Wizard creation patterns for Avalonia using Zafiro and Rea |
@@ -87,7 +88,10 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `canva-automation` | Automate Canva tasks via Rube MCP (Composio): designs, exports, folders, brand t |
 | `cc-skill-coding-standards` | Universal coding standards, best practices, and patterns for TypeScript, JavaScr |
 | `cc-skill-frontend-patterns` | Frontend development patterns for React, Next.js, state management, performance  |
+| `chrome-devtools` | Browser automation, debugging and performance via Chrome DevTools MCP |
+| `context-multi-file` | Context Architect pattern for autonomous multi-file changes using dependency gra |
 | `copilot-sdk` | Build applications powered by GitHub Copilot using the Copilot SDK. Use when cre |
+| `create-web-form` | Robust accessible web forms in HTML/CSS/JS/PHP/Python/MySQL |
 | `csharp-pro` | Write modern C# code with advanced features like records, pattern |
 | `dbos-golang` | DBOS Go SDK for building reliable, fault-tolerant applications with durable work |
 | `dbos-python` | DBOS Python SDK for building reliable, fault-tolerant applications with durable  |
@@ -102,6 +106,7 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `fastapi-router-py` | Create FastAPI routers with CRUD operations, authentication dependencies, and pr |
 | `fastapi-templates` | Create production-ready FastAPI projects with async patterns, dependency injecti |
 | `figma-automation` | Automate Figma tasks via Rube MCP (Composio): files, components, design tokens,  |
+| `fluentui-blazor` | Fluent UI Blazor component library guide for Microsoft web apps |
 | `flutter-expert` | Master Flutter development with Dart 3, advanced widgets, and |
 | `fp-ts-errors` | Handle errors as values using fp-ts Either and TaskEither for cleaner, more pred |
 | `fp-ts-react` | Practical patterns for using fp-ts with React - hooks, state, forms, data fetchi |
@@ -118,12 +123,16 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `javascript-testing-patterns` | Implement comprehensive testing strategies using Jest, Vitest, and Testing Libra |
 | `kotlin-coroutines-expert` | Expert patterns for Kotlin Coroutines and Flow, covering structured concurrency, |
 | `laravel-security-audit` | Security auditor for Laravel applications. Analyzes code for vulnerabilities, mi |
+| `legacy-circuit-mockups` | Generate breadboard and circuit mockups via HTML5 Canvas rendering |
 | `linkerd-patterns` | Implement Linkerd service mesh patterns for lightweight, security-focused servic |
 | `linux-privilege-escalation` | This skill should be used when the user asks to \"escalate privileges on Linux\" |
 | `m365-agents-dotnet` | \| |
 | `makepad-skills` | Makepad UI development skills for Rust apps: setup, patterns, shaders, packaging |
+| `markdown-to-html` | Convert Markdown to HTML with Jekyll and Hugo templating support |
+| `mcp-cli` | Command-line interface for interacting with MCP servers and tools |
 | `memory-safety-patterns` | Implement memory-safe programming with RAII, ownership, smart pointers, and reso |
 | `microsoft-azure-webjobs-extensions-authentication-events-dotnet` | \| |
+| `microsoft-code-reference` | Look up Microsoft API references and verify SDK code patterns |
 | `mobile-design` | Mobile-first design and engineering doctrine for iOS and Android apps. Covers to |
 | `mobile-developer` | Develop React Native, Flutter, or native mobile apps with modern |
 | `mobile-security-coder` | Expert in secure mobile coding practices specializing in input |
@@ -135,6 +144,7 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `nextjs-best-practices` | Next.js App Router principles. Server Components, data fetching, routing pattern |
 | `nextjs-supabase-auth` | Expert integration of Supabase Auth with Next.js App Router Use when: supabase a |
 | `nodejs-backend-patterns` | Build production-ready Node.js backend services with Express/Fastify, implementi |
+| `nuget-manager` | Manage NuGet packages in .NET projects via dotnet CLI |
 | `on-call-handoff-patterns` | Master on-call shift handoffs with context transfer, escalation procedures, and  |
 | `pagerduty-automation` | Automate PagerDuty tasks via Rube MCP (Composio): manage incidents, services, sc |
 | `paypal-integration` | Integrate PayPal payment processing with support for express checkout, subscript |
@@ -147,6 +157,7 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `python-performance-optimization` | Profile and optimize Python code using cProfile, memory profilers, and performan |
 | `python-pro` | Master Python 3.12+ with modern features, async programming, |
 | `python-testing-patterns` | Implement comprehensive testing strategies with pytest, fixtures, mocking, and t |
+| `quasi-coder` | Interpret pseudo-code and shorthand into production-ready code |
 | `react-best-practices` | React and Next.js performance optimization guidelines from Vercel Engineering. T |
 | `react-flow-node-ts` | Create React Flow node components with TypeScript types, handles, and Zustand in |
 | `react-modernization` | Upgrade React applications to latest versions, migrate from class components to  |
@@ -154,6 +165,7 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `react-patterns` | Modern React patterns and principles. Hooks, composition, performance, TypeScrip |
 | `react-state-management` | Master modern React state management with Redux Toolkit, Zustand, Jotai, and Rea |
 | `react-ui-patterns` | Modern React UI patterns for loading states, error handling, and data fetching.  |
+| `refactor` | Surgical code refactoring: extract functions, eliminate code smells |
 | `remotion-best-practices` | Best practices for Remotion - Video creation in React |
 | `ruby-pro` | Write idiomatic Ruby code with metaprogramming, Rails patterns, and |
 | `rust-async-patterns` | Master Rust async programming with Tokio, async traits, error handling, and conc |
@@ -177,8 +189,11 @@ Cuando el usuario haga una solicitud relacionada con **development**, consulta a
 | `upgrading-expo` | Upgrade Expo SDK versions |
 | `uv-package-manager` | Master the uv package manager for fast Python dependency management, virtual env |
 | `varlock-claude-skill` | Secure environment variable management ensuring secrets are never exposed in Cla |
+| `vscode-ext-commands` | VS Code extension command contribution guidelines and best practices |
+| `vscode-ext-localization` | VS Code extension localization best practices and l10n patterns |
 | `web-artifacts-builder` | Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts  |
 | `web-performance-optimization` | Optimize website and web application performance including loading speed, Core W |
+| `winapp-cli` | Windows App Development CLI: MSIX packaging, AppxManifest, signing |
 | `windows-privilege-escalation` | This skill should be used when the user asks to \"escalate privileges on Windows |
 | `zustand-store-ts` | Create Zustand stores with TypeScript, subscribeWithSelector middleware, and pro |
 

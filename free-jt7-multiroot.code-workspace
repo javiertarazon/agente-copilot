@@ -1,0 +1,18 @@
+﻿{
+  "folders": [
+    {
+      "path": ".",
+      "name": "ðŸ¤– Free JT7 Agent (Skills + Config)"
+    }
+  ],
+  "settings": {
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "chat.agentFilesLocations": [
+      ".github/agents",
+      "D:/javie/agente coplit tipo free jt7 con skill/.github/agents"
+    ]
+  },
+  "launch": {},
+  "tasks": {}
+}
+

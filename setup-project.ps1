@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Instala Agente Free JT7 en un proyecto y adapta la configuracion por IDE.
 
@@ -53,7 +53,7 @@ function Resolve-AgentPath {
     $candidates = @(
         $scriptDir,
         "D:\agente-copilot",
-        "D:\javie\agente coplit tipo open claw con skill",
+        "D:\javie\agente coplit tipo free jt7 con skill",
         "$env:USERPROFILE\agente-copilot",
         "$env:USERPROFILE\Documents\agente-copilot"
     )
@@ -114,3 +114,4 @@ catch {
     Write-Err $_
     exit 1
 }
+

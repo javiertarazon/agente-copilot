@@ -1,32 +1,32 @@
-# copilot-agent — Registro de Tareas
+﻿# copilot-agent â€” Registro de Tareas
 # Formato: lista YAML de tareas ejecutadas por el agente
-# Actualizado automáticamente por skills_manager.py
+# Actualizado automÃ¡ticamente por skills_manager.py
 
 tareas:
   - id: "20260223-002"
     fecha: "2026-02-23"
-    titulo: "Publicación v1.2 — README + installer + traza"
+    titulo: "PublicaciÃ³n v1.2 â€” README + installer + traza"
     descripcion: >
-      Corrección rama default GitHub (master=main),
-      creación README.md completo,
-      creación setup-project.ps1 (instalador PowerShell),
+      CorrecciÃ³n rama default GitHub (master=main),
+      creaciÃ³n README.md completo,
+      creaciÃ³n setup-project.ps1 (instalador PowerShell),
       commit 524f2f8, push a origin/main y origin/master.
-      Actualización trazabilidad: RESUME.md + tasks.yaml.
+      ActualizaciÃ³n trazabilidad: RESUME.md + tasks.yaml.
     estado: "completado"
     riesgo: "low"
     skills_usados: ["git-pushing", "readme"]
     resultado: >
       README.md visible en portada github.com/javiertarazon/agente-copilot,
-      setup-project.ps1 accesible vía one-liner iwr/iex,
+      setup-project.ps1 accesible vÃ­a one-liner iwr/iex,
       main y master en commit 524f2f8,
       VS Code local y github.com Copilot funcionales.
 
   - id: "20260223-001"
     fecha: "2026-02-23"
-    titulo: "Inicialización sistema de skills"
+    titulo: "InicializaciÃ³n sistema de skills"
     descripcion: >
       Clonado antigravity-awesome-skills (907 skills),
-      adaptados a formato OpenClaw (.github/skills/),
+      adaptados a formato Free JT7 (.github/skills/),
       categorizados en 9 dominios, generados .instructions.md
       para auto-detect en VS Code Copilot.
     estado: "completado"
@@ -38,3 +38,4 @@ tareas:
       9 archivos .github/instructions/<cat>.instructions.md,
       .github/copilot-instructions.md maestro,
       skills/.skills_index.json con 907 entries.
+

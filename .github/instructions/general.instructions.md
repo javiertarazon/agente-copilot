@@ -6,12 +6,13 @@ applyTo: "**/*"
 
 Cuando el usuario haga una solicitud relacionada con **general**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (235)
+## Skills disponibles en esta categoría (249)
 
 | ID | Descripción |
 |-----|-------------|
 | `accessibility-compliance-accessibility-audit` | You are an accessibility expert specializing in WCAG compliance, inclusive desig |
 | `address-github-comments` | Use when you need to address review or issue comments on an open GitHub Pull Req |
+| `agent-governance` | Safety, trust controls and guardrails for AI agent systems |
 | `algorithmic-art` | Creating algorithmic art using p5.js with seeded randomness and interactive para |
 | `angular` | >- |
 | `angular-migration` | Migrate from AngularJS to Angular using hybrid mode, incremental component rewri |
@@ -69,6 +70,7 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `context-management-context-save` | Use when working with context management context save |
 | `context-manager` | Elite AI context engineering specialist mastering dynamic context |
 | `context-optimization` | Apply compaction, masking, and caching strategies |
+| `copilot-cli-quickstart` | Interactive GitHub Copilot CLI tutorials for dev and non-dev tracks |
 | `core-components` | Core component library and design system patterns. Use when building UI, using d |
 | `cpp-pro` | Write idiomatic C++ code with modern features, RAII, smart |
 | `create-pr` | Create pull requests following Sentry conventions. Use when opening PRs, writing |
@@ -104,10 +106,12 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `error-handling-patterns` | Master error handling patterns across languages including exceptions, Result typ |
 | `evaluation` | Build evaluation frameworks for agent systems |
 | `event-store-design` | Design and implement event stores for event-sourced systems. Use when building e |
+| `excalidraw-diagram-generator` | Generate Excalidraw diagrams from natural language descriptions |
 | `executing-plans` | Use when you have a written implementation plan to execute in a separate session |
 | `ffuf-claude-skill` | Web fuzzing with ffuf |
 | `file-organizer` | Intelligently organizes files and folders by understanding context, finding dupl |
 | `finishing-a-development-branch` | Use when implementation is complete, all tests pass, and you need to decide how  |
+| `finnish-humanizer` | Remove AI text markers from Finnish text using 26 detection patterns |
 | `firecrawl-scraper` | Deep web scraping, screenshots, PDF parsing, and website crawling using Firecraw |
 | `fix-review` | Verify fix commits address audit findings without new bugs |
 | `form-cro` | > |
@@ -115,7 +119,9 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `frontend-design` | Create distinctive, production-grade frontend interfaces with intentional aesthe |
 | `frontend-slides` | Create stunning, animation-rich HTML presentations from scratch or by converting |
 | `geo-fundamentals` | Generative Engine Optimization for AI search engines (ChatGPT, Claude, Perplexit |
+| `gh-cli` | Comprehensive GitHub CLI reference for repos, issues, PRs and Actions |
 | `git-advanced-workflows` | Master advanced Git workflows including rebasing, cherry-picking, bisect, worktr |
+| `git-commit` | Conventional commits with intelligent staging and message generation |
 | `git-pr-workflows-pr-enhance` | You are a PR optimization expert specializing in creating high-quality pull requ |
 | `git-pushing` | Stage, commit, and push git changes with conventional commit messages. Use when  |
 | `github-issue-creator` | Convert raw notes, error logs, voice dictation, or screenshots into crisp GitHub |
@@ -137,6 +143,7 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `hig-project-context` | >- |
 | `hig-technologies` | > |
 | `i18n-localization` | Internationalization and localization patterns. Detecting hardcoded strings, man |
+| `image-manipulation-image-magick` | ImageMagick image processing: resize, convert, batch operations |
 | `imagen` | \| |
 | `interactive-portfolio` | Expert in building portfolios that actually land jobs and clients - not just sho |
 | `internal-comms-community` | A set of resources to help me write all kinds of internal communications, using  |
@@ -152,9 +159,13 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `m365-agents-py` | \| |
 | `m365-agents-ts` | \| |
 | `machine-learning-ops-ml-pipeline` | Design and implement a complete ML pipeline for: $ARGUMENTS |
+| `make-repo-contribution` | Follow repository contribution guidelines: issues, commits and PRs |
+| `make-skill-template` | Scaffold new Agent Skills / create SKILL.md files from template |
 | `manifest` | Install and configure the Manifest observability plugin for your agents. Use whe |
 | `memory-forensics` | Master memory forensics techniques including memory acquisition, process analysi |
 | `mermaid-expert` | Create Mermaid diagrams for flowcharts, sequences, ERDs, and |
+| `microsoft-docs` | Query official Microsoft documentation (Learn, Azure, .NET) |
+| `microsoft-skill-creator` | Create skills for Microsoft tech using Learn MCP server |
 | `minecraft-bukkit-pro` | Master Minecraft server plugin development with Bukkit, Spigot, and |
 | `ml-engineer` | Build production ML systems with PyTorch 2.x, TensorFlow, and |
 | `moodle-external-api-development` | Create custom external web service APIs for Moodle LMS. Use when implementing we |
@@ -172,12 +183,14 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `payment-integration` | Integrate Stripe, PayPal, and payment processors. Handles checkout |
 | `paywall-upgrade-cro` | When the user wants to create or optimize in-app paywalls, upgrade screens, upse |
 | `pdf-official` | Comprehensive PDF manipulation toolkit for extracting text and tables, creating  |
+| `pdftk-server` | PDF manipulation via PDFtk CLI: merge, split, encrypt and fill forms |
 | `performance-engineer` | Expert performance engineer specializing in modern observability, |
 | `performance-profiling` | Performance profiling principles. Measurement, analysis, and optimization techni |
 | `personal-tool-builder` | Expert in building custom tools that solve your own problems first. The best pro |
 | `plaid-fintech` | Expert patterns for Plaid API integration including Link token flows, transactio |
 | `plan-writing` | Structured task planning with clear breakdowns, dependencies, and verification c |
 | `planning-with-files` | Implements Manus-style file-based planning for complex tasks. Creates task_plan. |
+| `plantuml-ascii` | Generate ASCII art diagrams with PlantUML text-only mode |
 | `posix-shell-pro` | Expert in strict POSIX sh scripting for maximum portability across |
 | `postgres-best-practices` | Postgres performance optimization and best practices from Supabase. Use this ski |
 | `postgresql` | Design a PostgreSQL-specific schema. Covers best-practices, data types, indexing |
@@ -232,6 +245,7 @@ Cuando el usuario haga una solicitud relacionada con **general**, consulta autom
 | `verification-before-completion` | Use when about to claim work is complete, fixed, or passing, before committing o |
 | `voice-agents` | Voice agents represent the frontier of AI interaction - humans speaking naturall |
 | `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to \\\"re |
+| `web-design-reviewer` | Visual inspection of websites to identify and fix design issues |
 | `webapp-testing` | Toolkit for interacting with and testing local web applications using Playwright |
 | `wiki-changelog` | Analyzes git commit history and generates structured changelogs categorized by c |
 | `wiki-page-writer` | Generates rich technical documentation pages with dark-mode Mermaid diagrams, so |

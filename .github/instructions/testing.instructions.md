@@ -6,7 +6,7 @@ applyTo: "**/*.{test.ts,test.js,test.py,spec.ts,spec.js,_test.go}"
 
 Cuando el usuario haga una solicitud relacionada con **testing**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (30)
+## Skills disponibles en esta categoría (34)
 
 | ID | Descripción |
 |-----|-------------|
@@ -26,9 +26,13 @@ Cuando el usuario haga una solicitud relacionada con **testing**, consulta autom
 | `infinite-gratitude` | Multi-agent research skill for parallel research execution (10 agents, battle-te |
 | `network-101` | This skill should be used when the user asks to \"set up a web server\", \"confi |
 | `playwright-skill` | Complete browser automation with Playwright. Auto-detects dev servers, writes cl |
+| `polyglot-test-agent` | Multi-language unit test generation (C#, TypeScript, JS, Python, Go) |
+| `polyglot-testing-pipeline` | Autonomous 6-agent pipeline for comprehensive test generation across any program |
 | `pypict-skill` | Pairwise test generation |
 | `quant-analyst` | Build financial models, backtest trading strategies, and analyze |
+| `scoutqa-test` | Web QA testing with ScoutQA CLI: smoke, accessibility and e2e tests |
 | `smtp-penetration-testing` | This skill should be used when the user asks to \"perform SMTP penetration testi |
+| `tdd-full-cycle` | Complete TDD Red-Green-Refactor cycle with autonomous agents dedicated to each p |
 | `tdd-orchestrator` | Master TDD orchestrator specializing in red-green-refactor |
 | `tdd-workflow` | Test-Driven Development workflow principles. RED-GREEN-REFACTOR cycle. |
 | `tdd-workflows-tdd-cycle` | Use when working with tdd workflows tdd cycle |

@@ -10,8 +10,8 @@ Este directorio contiene el agente de trading automatico para MetaTrader5
 <!-- SKILLS_LIBRARY_START -->
 ## Skills Library — Contexto Experto
 
-Directorio: `skills/` — **963 skills** en el indice.
-Actualizacion: 2026-07-15 UTC
+Directorio: `.github/skills/` — **962 skills** en el indice.
+Actualizacion: 2026-02-26 00:50 UTC
 
 ### Comandos de gestion
 ```
@@ -24,7 +24,6 @@ python skills_manager.py fetch             # importar skills
 python skills_manager.py github-search Q   # buscar repos
 ```
 
-### Skills Activas (0)
 
 No hay skills activas. Activa las que necesites:
 ```

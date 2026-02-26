@@ -6,15 +6,17 @@ applyTo: "**/*.{yaml,yml,json,md}"
 
 Cuando el usuario haga una solicitud relacionada con **workflow**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (70)
+## Skills disponibles en esta categoría (78)
 
 | ID | Descripción |
 |-----|-------------|
+| `agent-orchestration` | Multi-agent orchestration patterns: decompose goals, delegate to sub-agents, val |
 | `airtable-automation` | Automate Airtable tasks via Rube MCP (Composio): records, bases, tables, fields, |
 | `amplitude-automation` | Automate Amplitude tasks via Rube MCP (Composio): events, user activity, cohorts |
 | `app-builder` | Main application building orchestrator. Creates full-stack applications from nat |
 | `asana-automation` | Automate Asana tasks via Rube MCP (Composio): tasks, projects, sections, teams,  |
 | `automate-whatsapp` | Build WhatsApp automations with Kapso workflows: configure WhatsApp triggers, ed |
+| `azure-devops-cli` | Manage Azure DevOps resources (pipelines, repos, boards) via CLI |
 | `backend-development-feature-development` | Orchestrate end-to-end backend feature development from requirements to deployme |
 | `basecamp-automation` | Automate Basecamp project management, to-dos, messages, people, and to-do list o |
 | `bash-pro` | Master of defensive Bash scripting for production automation, CI/CD |
@@ -26,6 +28,7 @@ Cuando el usuario haga una solicitud relacionada con **workflow**, consulta auto
 | `clickup-automation` | Automate ClickUp project management including tasks, spaces, folders, lists, com |
 | `coda-automation` | Automate Coda tasks via Rube MCP (Composio): manage docs, pages, tables, rows, f |
 | `convertkit-automation` | Automate ConvertKit (Kit) tasks via Rube MCP (Composio): manage subscribers, tag |
+| `copilot-usage-metrics` | Retrieve Copilot usage metrics via GitHub CLI and REST API |
 | `datadog-automation` | Automate Datadog tasks via Rube MCP (Composio): query metrics, search logs, mana |
 | `design-orchestration` |  |
 | `docusign-automation` | Automate DocuSign tasks via Rube MCP (Composio): templates, envelopes, signature |
@@ -35,6 +38,7 @@ Cuando el usuario haga una solicitud relacionada con **workflow**, consulta auto
 | `full-stack-orchestration-full-stack-feature` | Use when working with full stack orchestration full stack feature |
 | `game-development` | Game development orchestrator. Routes to platform-specific skills based on proje |
 | `github-automation` | Automate GitHub repositories, issues, pull requests, branches, CI/CD, and permis |
+| `github-issues` | Create, update and manage GitHub issues via MCP tools |
 | `github-workflow-automation` | Automate GitHub workflows with AI assistance. Includes PR reviews, issue triage, |
 | `gitlab-automation` | Automate GitLab project management, issues, merge requests, pipelines, branches, |
 | `gmail-automation` | Automate Gmail tasks via Rube MCP (Composio): send/reply, search, labels, drafts |
@@ -61,22 +65,26 @@ Cuando el usuario haga una solicitud relacionada con **workflow**, consulta auto
 | `outlook-automation` | Automate Outlook tasks via Rube MCP (Composio): emails, calendar, contacts, fold |
 | `outlook-calendar-automation` | Automate Outlook Calendar tasks via Rube MCP (Composio): create events, manage a |
 | `parallel-agents` | Multi-agent orchestration patterns. Use when multiple independent tasks can run  |
+| `penpot-uiux-design` | Professional UI/UX design in Penpot open-source design tool via MCP |
 | `posthog-automation` | Automate PostHog tasks via Rube MCP (Composio): events, feature flags, projects, |
 | `postmark-automation` | Automate Postmark email delivery tasks via Rube MCP (Composio): send templated e |
 | `saga-orchestration` | Implement saga patterns for distributed transactions and cross-aggregate workflo |
 | `segment-automation` | Automate Segment tasks via Rube MCP (Composio): track events, identify users, ma |
 | `sentry-automation` | Automate Sentry tasks via Rube MCP (Composio): manage issues/events, configure a |
 | `slack-gif-creator` | Knowledge and utilities for creating animated GIFs optimized for Slack. Provides |
+| `sponsor-finder` | Find sponsorable dependencies via GitHub Sponsors and deps.dev |
 | `square-automation` | Automate Square tasks via Rube MCP (Composio): payments, orders, invoices, locat |
 | `stripe-automation` | Automate Stripe tasks via Rube MCP (Composio): customers, charges, subscriptions |
 | `telegram-automation` | Automate Telegram tasks via Rube MCP (Composio): send messages, manage chats, sh |
 | `todoist-automation` | Automate Todoist task management, projects, sections, filtering, and bulk operat |
+| `transloadit-media-processing` | Process video, audio, images and docs via Transloadit (86+ robots) |
 | `trello-automation` | Automate Trello boards, cards, and workflows via Rube MCP (Composio). Create car |
 | `twitter-automation` | Automate Twitter/X tasks via Rube MCP (Composio): posts, search, users, bookmark |
 | `webflow-automation` | Automate Webflow CMS collections, site publishing, page management, asset upload |
 | `whatsapp-automation` | Automate WhatsApp Business tasks via Rube MCP (Composio): send messages, manage  |
 | `workflow-automation` | Workflow automation is the infrastructure that makes AI agents reliable. Without |
 | `workflow-orchestration-patterns` | Design durable workflows with Temporal for distributed systems. Covers workflow  |
+| `workiq-copilot` | Query M365 Copilot data (emails, meetings, Teams) via WorkIQ CLI |
 | `wrike-automation` | Automate Wrike project management via Rube MCP (Composio): create tasks/folders, |
 | `zendesk-automation` | Automate Zendesk tasks via Rube MCP (Composio): tickets, users, organizations, r |
 | `zoom-automation` | Automate Zoom meeting creation, management, recordings, webinars, and participan |

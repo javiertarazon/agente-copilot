@@ -6,7 +6,7 @@ applyTo: "**/*.{py,ipynb,json,yaml,yml}"
 
 Cuando el usuario haga una solicitud relacionada con **data-ai**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (88)
+## Skills disponibles en esta categoría (93)
 
 | ID | Descripción |
 |-----|-------------|
@@ -15,6 +15,7 @@ Cuando el usuario haga una solicitud relacionada con **data-ai**, consulta autom
 | `agent-framework-azure-ai-py` | Build Azure AI Foundry agents using the Microsoft Agent Framework Python SDK (ag |
 | `agent-manager-skill` | Manage multiple local CLI agents via tmux sessions (start/stop/monitor/assign) w |
 | `agent-tool-builder` | Tools are how AI agents interact with the world. A well-designed tool is the dif |
+| `agentic-eval` | Evaluate and improve AI agent outputs with self-critique loops |
 | `ai-agent-development` | AI agent development workflow for building autonomous agents, multi-agent system |
 | `ai-engineer` | Build production-ready LLM applications, advanced RAG systems, and |
 | `analytics-tracking` | > |
@@ -54,6 +55,7 @@ Cuando el usuario haga una solicitud relacionada con **data-ai**, consulta autom
 | `dbt-transformation-patterns` | Master dbt (data build tool) for analytics engineering with model organization,  |
 | `embedding-strategies` | Select and optimize embedding models for semantic search and RAG applications. U |
 | `error-debugging-multi-agent-review` | Use when working with error debugging multi agent review |
+| `fabric-lakehouse` | Microsoft Fabric Lakehouse features, shortcuts and AI functions |
 | `fal-audio` | Text-to-speech and speech-to-text using fal.ai audio models |
 | `fal-generate` | Generate images and videos using fal.ai AI models |
 | `fal-image-edit` | AI-powered image editing with style transfer and object removal |
@@ -74,11 +76,13 @@ Cuando el usuario haga una solicitud relacionada con **data-ai**, consulta autom
 | `llm-application-dev-langchain-agent` | You are an expert LangChain agent developer specializing in production-grade AI  |
 | `llm-evaluation` | Implement comprehensive evaluation strategies for LLM applications using automat |
 | `mlops-engineer` | Build comprehensive ML pipelines, experiment tracking, and model |
+| `nano-banana-pro-openrouter` | Generate and edit images via OpenRouter with Gemini 3 Pro model |
 | `nerdzao-elite-gemini-high` | Modo Elite Coder + UX Pixel-Perfect otimizado especificamente para Gemini 3.1 Pr |
 | `notebooklm` | Use this skill to query your Google NotebookLM notebooks directly from Claude Co |
 | `performance-testing-review-ai-review` | You are an expert AI-powered code review specialist combining automated static a |
 | `performance-testing-review-multi-agent-review` | Use when working with performance testing review multi agent review |
 | `podcast-generation` | Generate AI-powered podcast-style audio narratives using Azure OpenAI's GPT Real |
+| `powerbi-modeling` | Power BI semantic modeling, DAX calculations, star schemas and RLS |
 | `prometheus-configuration` | Set up Prometheus for comprehensive metric collection, storage, and monitoring o |
 | `prompt-engineer` | Transforms user prompts into optimized prompts using frameworks (RTF, RISEN, Cha |
 | `prompt-engineering` | Expert guide on prompt engineering patterns, best practices, and optimization te |
@@ -90,6 +94,7 @@ Cuando el usuario haga una solicitud relacionada con **data-ai**, consulta autom
 | `senior-fullstack` | Comprehensive fullstack development skill for building complete web applications |
 | `shader-programming-glsl` | Expert guide for writing efficient GLSL shaders (Vertex/Fragment) for web and ga |
 | `shopify-apps` | Expert patterns for Shopify app development including Remix/React Router apps, e |
+| `snowflake-semanticview` | Create Snowflake semantic views via snow CLI for AI-ready analytics |
 | `subagent-driven-development` | Use when executing implementation plans with independent tasks in the current se |
 | `supabase-automation` | Automate Supabase database queries, table management, project administration, st |
 | `unit-testing-test-generate` | Generate comprehensive, maintainable unit tests across languages with strong cov |

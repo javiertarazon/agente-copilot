@@ -1,4 +1,4 @@
-import tempfile
+﻿import tempfile
 import unittest
 from argparse import Namespace
 from contextlib import contextmanager
@@ -32,8 +32,8 @@ def isolated_workspace():
             "VERSION_FILE": root / "VERSION",
             "README_MD": root / "README.md",
             "CHANGELOG_MD": root / "CHANGELOG.md",
-            "AGENT_FILE": root / ".github" / "agents" / "openclaw.agent.md",
-            "POLICY_FILE": root / ".github" / "openclaw-policy.yaml",
+            "AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
+            "POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
             "ROLLOUT_FILE": root / "copilot-agent" / "rollout-mode.json",
         }
         for key, value in mappings.items():
@@ -92,7 +92,7 @@ class SkillsManagerUnitTests(unittest.TestCase):
     def test_add_persists_index(self):
         with isolated_workspace() as root:
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "openclaw.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
             args = Namespace(
                 name="new-skill",
                 description="desc",
@@ -120,23 +120,23 @@ class SkillsManagerUnitTests(unittest.TestCase):
             (appdata / "Cursor" / "User").mkdir(parents=True, exist_ok=True)
             (appdata / "Cursor" / "User" / "settings.json").write_text("{}", encoding="utf-8")
 
-            original = os.environ.get("OPENCLAW_APPDATA_ROOT")
-            os.environ["OPENCLAW_APPDATA_ROOT"] = str(appdata)
+            original = os.environ.get("FREE_JT7_APPDATA_ROOT")
+            os.environ["FREE_JT7_APPDATA_ROOT"] = str(appdata)
             try:
                 targets = sm._resolve_ide_targets("auto", appdata)
             finally:
                 if original is None:
-                    os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+                    os.environ.pop("FREE_JT7_APPDATA_ROOT", None)
                 else:
-                    os.environ["OPENCLAW_APPDATA_ROOT"] = original
+                    os.environ["FREE_JT7_APPDATA_ROOT"] = original
 
             self.assertIn("cursor", targets)
 
     def test_appdata_root_supports_macos_and_linux_defaults(self):
         original_pf = sm._platform_family
-        original_override = os.environ.get("OPENCLAW_APPDATA_ROOT")
+        original_override = os.environ.get("FREE_JT7_APPDATA_ROOT")
         try:
-            os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+            os.environ.pop("FREE_JT7_APPDATA_ROOT", None)
             sm._platform_family = lambda: "darwin"
             mac_root = sm._appdata_root()
             self.assertIn("Library", str(mac_root))
@@ -148,9 +148,9 @@ class SkillsManagerUnitTests(unittest.TestCase):
         finally:
             sm._platform_family = original_pf
             if original_override is None:
-                os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+                os.environ.pop("FREE_JT7_APPDATA_ROOT", None)
             else:
-                os.environ["OPENCLAW_APPDATA_ROOT"] = original_override
+                os.environ["FREE_JT7_APPDATA_ROOT"] = original_override
 
     def test_ide_settings_path_for_claude_and_gemini_with_override_root(self):
         with isolated_workspace() as root:
@@ -164,3 +164,4 @@ class SkillsManagerUnitTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

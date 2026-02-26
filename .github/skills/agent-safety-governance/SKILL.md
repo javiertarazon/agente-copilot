@@ -1,4 +1,4 @@
----
+﻿---
 name: agent-safety-governance
 description: "Safety and governance framework for autonomous AI agents. Validates agent actions before execution, enforces permission boundaries, detects dangerous patterns (file deletion, env modification, network calls), and maintains audit trails. Use before deploying autonomous agents or when reviewing agent-generated code."
 risk: low
@@ -11,7 +11,7 @@ Validate, constrain, and audit autonomous agent actions before they affect produ
 
 ## Core Principle
 
-> "An autonomous agent that can't be stopped is not an asset — it's a liability."
+> "An autonomous agent that can't be stopped is not an asset â€” it's a liability."
 
 Safety governance answers: **What can this agent do? What should it NOT do? Who reviews what it did?**
 
@@ -23,10 +23,10 @@ Safety governance answers: **What can this agent do? What should it NOT do? Who 
 
 | Risk Level | Examples | Approval Required |
 |-----------|---------|------------------|
-| 🟢 **LOW** | Read files, search codebase, generate code suggestions | None — auto-execute |
-| 🟡 **MEDIUM** | Write/edit files, install packages, run tests | Log + continue |
-| 🟠 **HIGH** | Delete files, modify config, commit/push | Human review checkpoint |
-| 🔴 **CRITICAL** | Drop database, modify secrets, external API calls with side effects | Explicit confirmation + audit |
+| ðŸŸ¢ **LOW** | Read files, search codebase, generate code suggestions | None â€” auto-execute |
+| ðŸŸ¡ **MEDIUM** | Write/edit files, install packages, run tests | Log + continue |
+| ðŸŸ  **HIGH** | Delete files, modify config, commit/push | Human review checkpoint |
+| ðŸ”´ **CRITICAL** | Drop database, modify secrets, external API calls with side effects | Explicit confirmation + audit |
 
 ---
 
@@ -36,10 +36,10 @@ Before any autonomous task, validate:
 
 ### 1. Scope Validation
 ```
-✅ Does the task stay within the defined scope?
-✅ Are the files to be modified listed in the task manifest?
-✅ Is the agent working in the correct project directory?
-✅ Is there a git checkpoint to rollback to?
+âœ… Does the task stay within the defined scope?
+âœ… Are the files to be modified listed in the task manifest?
+âœ… Is the agent working in the correct project directory?
+âœ… Is there a git checkpoint to rollback to?
 ```
 
 ### 2. Dangerous Pattern Detection
@@ -68,7 +68,7 @@ DANGEROUS_PATTERNS = [
 ]
 ```
 
-If any pattern detected → **PAUSE and require human review**.
+If any pattern detected â†’ **PAUSE and require human review**.
 
 ### 3. Resource Limits
 
@@ -195,9 +195,10 @@ COMPLETENESS
 
 ---
 
-## Integration with OpenClaw
+## Integration with Free JT7
 
 - Use with `agent-orchestration` to add safety gates between sub-agent calls
 - Apply **Devil's Advocate** review before `context-multi-file` commits
 - Combine with `verification-before-completion` for final checks
-- Log to `copilot-agent/audit-log.jsonl` (already used by OpenClaw agent system)
+- Log to `copilot-agent/audit-log.jsonl` (already used by Free JT7 agent system)
+

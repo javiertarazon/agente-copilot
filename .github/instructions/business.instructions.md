@@ -6,7 +6,7 @@ applyTo: "**/*.{md,txt,json}"
 
 Cuando el usuario haga una solicitud relacionada con **business**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (128)
+## Skills disponibles en esta categoría (130)
 
 | ID | Descripción |
 |-----|-------------|
@@ -82,6 +82,7 @@ Cuando el usuario haga una solicitud relacionada con **business**, consulta auto
 | `marketing-psychology` | Apply behavioral science and mental models to marketing decisions, prioritized u |
 | `mcp-builder` | Guide for creating high-quality MCP (Model Context Protocol) servers that enable |
 | `mcp-builder-ms` | Guide for creating high-quality MCP (Model Context Protocol) servers that enable |
+| `meeting-minutes` | Generate concise actionable meeting minutes from notes or transcripts |
 | `micro-saas-launcher` | Expert in launching small, focused SaaS products fast - the indie hacker approac |
 | `ml-pipeline-workflow` | Build end-to-end MLOps pipelines from data preparation through model training, v |
 | `nft-standards` | Implement NFT standards (ERC-721, ERC-1155) with proper metadata handling, minti |
@@ -92,6 +93,7 @@ Cuando el usuario haga una solicitud relacionada con **business**, consulta auto
 | `pentest-checklist` | This skill should be used when the user asks to \"plan a penetration test\", \"c |
 | `pipedrive-automation` | Automate Pipedrive CRM operations including deals, contacts, organizations, acti |
 | `pptx-official` | Presentation creation, editing, and analysis. When Claude needs to work with pre |
+| `prd` | Generate Product Requirements Documents (PRDs) from feature ideas |
 | `pricing-strategy` | Design pricing, packaging, and monetization strategies based on value, customer  |
 | `product-manager-toolkit` | Comprehensive toolkit for product managers including RICE prioritization, custom |
 | `programmatic-seo` | > |

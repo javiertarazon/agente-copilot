@@ -1,6 +1,6 @@
 ﻿# ðŸ¤– Agente Copilot Free JT7 â€” 962 Skills
 
-Sistema de skills expertos para GitHub Copilot, basado en [OpenClaw](https://github.com/openclaw) y el catÃ¡logo [Antigravity Awesome Skills](https://github.com/sickn33/antigravity-awesome-skills).
+Sistema de skills expertos para GitHub Copilot, basado en [Free JT7](https://github.com/free-jt7) y el catÃ¡logo [Antigravity Awesome Skills](https://github.com/sickn33/antigravity-awesome-skills).
 
 **962 skills** organizados en 9 categorÃ­as â€” disponibles **siempre** en cualquier proyecto VS Code y en github.com.
 
@@ -32,11 +32,11 @@ iwr https://raw.githubusercontent.com/javiertarazon/agente-copilot/master/setup-
 ```
 
 > **alternativa offline:** si ya tienes este repositorio descargado puedes usar
-> el helper local `add-openclaw-agent.ps1` que hace exactamente lo mismo:
+> el helper local `add-free-jt7-agent.ps1` que hace exactamente lo mismo:
 >
 ```powershell
 # en cualquier carpeta, path por defecto es el cwd
-.\add-openclaw-agent.ps1 -Path "C:\ruta\a\tu-proyecto" -Ide cursor -UpdateUserSettings [-Force]
+.\add-free-jt7-agent.ps1 -Path "C:\ruta\a\tu-proyecto" -Ide cursor -UpdateUserSettings [-Force]
 ```
 
 
@@ -69,7 +69,7 @@ python skills_manager.py install "C:\ruta\a\tu-proyecto" --ide gemini-cli
 
 ### OpciÃ³n 3: Workspace multiroot (recomendado para desarrollo)
 
-Abre `open-claw-multiroot.code-workspace` en VS Code. Edita la segunda carpeta para apuntar a tu proyecto activo.
+Abre `free-jt7-multiroot.code-workspace` en VS Code. Edita la segunda carpeta para apuntar a tu proyecto activo.
 
 ---
 
@@ -185,7 +185,7 @@ python skills_manager.py task-close --run-id <id> --summary "verificaciÃ³n com
 Artefactos generados:
 - `copilot-agent/runs/<run_id>.json`
 - `copilot-agent/runs/<run_id>.events.jsonl`
-- Policy: `.github/openclaw-policy.yaml`
+- Policy: `.github/free-jt7-policy.yaml`
 
 ---
 
@@ -196,14 +196,14 @@ agente-copilot/
 â”œâ”€â”€ .github/
 â”‚   â”œâ”€â”€ copilot-instructions.md     # â† Instrucciones globales de Copilot
 â”‚   â”œâ”€â”€ agents/
-â”‚   â”‚   â””â”€â”€ openclaw.agent.md       # â† DefiniciÃ³n del agente VS Code
+â”‚   â”‚   â””â”€â”€ free-jt7.agent.md       # â† DefiniciÃ³n del agente VS Code
 â”‚   â”œâ”€â”€ skills/                     # â† 963 skills individuales
 â”‚   â”‚   â””â”€â”€ <nombre>/SKILL.md
 â”‚   â””â”€â”€ instructions/               # â† Instrucciones por categorÃ­a
 â”œâ”€â”€ skills/                         # â† Skills organizados por categorÃ­a
 â”œâ”€â”€ skills_manager.py               # â† CLI de gestiÃ³n
 â”œâ”€â”€ setup-project.ps1               # â† Instalador rÃ¡pido por proyecto
-â”œâ”€â”€ open-claw-multiroot.code-workspace
+â”œâ”€â”€ free-jt7-multiroot.code-workspace
 â””â”€â”€ copilot-agent/
     â”œâ”€â”€ active-project.json         # â† Proyecto activo actual
     â””â”€â”€ RESUME.md                   # â† Estado del agente
@@ -227,5 +227,6 @@ Las instrucciones estÃ¡n en la rama `master` (rama por defecto). Copilot en gi
 ---
 
 *962 skills â€” MIT License*
+
 
 

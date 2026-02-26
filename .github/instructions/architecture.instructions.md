@@ -6,7 +6,7 @@ applyTo: "**/*.{ts,js,py,go,rs,java,cs,md}"
 
 Cuando el usuario haga una solicitud relacionada con **architecture**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (82)
+## Skills disponibles en esta categoría (83)
 
 | ID | Descripción |
 |-----|-------------|
@@ -21,6 +21,7 @@ Cuando el usuario haga una solicitud relacionada con **architecture**, consulta 
 | `architecture-patterns` | Implement proven backend architecture patterns including Clean Architecture, Hex |
 | `aws-skills` | AWS development with infrastructure automation and cloud architecture patterns |
 | `azure-eventhub-java` | Build real-time streaming applications with Azure Event Hubs SDK for Java. Use w |
+| `azure-resource-visualizer` | Generate Mermaid diagrams of Azure resource groups and dependencies |
 | `backend-architect` | Expert backend architect specializing in scalable API design, |
 | `backend-dev-guidelines` | Opinionated backend development standards for Node.js + Express + TypeScript mic |
 | `bazel-build-optimization` | Optimize Bazel builds for large-scale monorepos. Use when configuring Bazel, imp |

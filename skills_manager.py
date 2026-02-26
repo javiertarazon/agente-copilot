@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Skills Library Manager for Claude Code.
 Gestiona una libreria local de skills (habilidades de experto) que se
@@ -16,9 +16,9 @@ Comandos:
     add        Agregar una skill nueva o desde archivo
     github-search  Buscar repos de skills en GitHub
     sync-claude    Actualizar CLAUDE.md con skills activas
-    policy-validate  Validar policy de ejecución
+    policy-validate  Validar policy de ejecuciÃ³n
     rollout-mode     Ver/cambiar modo canary
-    skill-resolve    Resolver skills efímeras
+    skill-resolve    Resolver skills efÃ­meras
     task-run/task-*  Orquestar runs de tarea con evidencia
     ide-detect       Detectar perfiles IDE instalados
 """
@@ -51,12 +51,12 @@ for stream_name in ("stdout", "stderr"):
         except Exception:
             pass
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Constantes
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 ROOT          = Path(__file__).resolve().parent
-# por defecto el catálogo residente se ubica en .github/skills
+# por defecto el catÃ¡logo residente se ubica en .github/skills
 SKILLS_DIR    = ROOT / ".github" / "skills"
 INDEX_FILE    = SKILLS_DIR / ".skills_index.json"
 ACTIVE_FILE   = SKILLS_DIR / ".active_skills.json"
@@ -71,8 +71,8 @@ COPILOT_INSTR = ROOT / ".github" / "copilot-instructions.md"
 VERSION_FILE  = ROOT / "VERSION"
 README_MD     = ROOT / "README.md"
 CHANGELOG_MD  = ROOT / "CHANGELOG.md"
-AGENT_FILE    = ROOT / ".github" / "agents" / "openclaw.agent.md"
-POLICY_FILE   = ROOT / ".github" / "openclaw-policy.yaml"
+AGENT_FILE    = ROOT / ".github" / "agents" / "freejt7.agent.md"
+POLICY_FILE   = ROOT / ".github" / "freejt7-policy.yaml"
 ROLLOUT_FILE  = COPILOT_AGENT / "rollout-mode.json"
 
 SUPPORTED_IDES: tuple[str, ...] = (
@@ -187,9 +187,9 @@ CATEGORY_KEYWORDS: dict[str, list[str]] = {
 }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Utilidades I/O
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def load_json(path: Path, default: Any) -> Any:
     if path.exists():
@@ -250,7 +250,7 @@ def _platform_family() -> str:
 
 
 def _codex_home() -> Path:
-    override = os.environ.get("OPENCLAW_CODEX_HOME", "").strip()
+    override = os.environ.get("FREE_JT7_CODEX_HOME", "").strip()
     if override:
         return Path(override).expanduser().resolve()
     codex_home = os.environ.get("CODEX_HOME", "").strip()
@@ -260,14 +260,14 @@ def _codex_home() -> Path:
 
 
 def _claude_home() -> Path:
-    override = os.environ.get("OPENCLAW_CLAUDE_HOME", "").strip()
+    override = os.environ.get("FREE_JT7_CLAUDE_HOME", "").strip()
     if override:
         return Path(override).expanduser().resolve()
     return (Path.home() / ".claude").resolve()
 
 
 def _gemini_home() -> Path:
-    override = os.environ.get("OPENCLAW_GEMINI_HOME", "").strip()
+    override = os.environ.get("FREE_JT7_GEMINI_HOME", "").strip()
     if override:
         return Path(override).expanduser().resolve()
     return (Path.home() / ".gemini").resolve()
@@ -281,7 +281,7 @@ def _command_exists(candidates: list[str]) -> bool:
 
 
 def _appdata_root() -> Path:
-    override = os.environ.get("OPENCLAW_APPDATA_ROOT", "").strip()
+    override = os.environ.get("FREE_JT7_APPDATA_ROOT", "").strip()
     if override:
         return Path(override).expanduser().resolve()
     family = _platform_family()
@@ -409,7 +409,7 @@ def _append_agent_location(settings: dict[str, Any], agent_location: str) -> Non
     settings[key] = value
 
 
-def _apply_openclaw_settings(
+def _apply_freejt7_settings(
     settings: dict[str, Any],
     instruction_file: str,
     agent_location: str,
@@ -423,11 +423,11 @@ def _apply_openclaw_settings(
     settings["freejt7.enabled"] = True
     settings[f"freejt7.integrations.{ide}.enabled"] = True
     settings["freejt7.skills.index"] = ".github/skills/.skills_index.json"
-    settings["freejt7.policy.file"] = ".github/openclaw-policy.yaml"
-    settings["openclaw.enabled"] = True
-    settings[f"openclaw.integrations.{ide}.enabled"] = True
-    settings["openclaw.skills.index"] = ".github/skills/.skills_index.json"
-    settings["openclaw.policy.file"] = ".github/openclaw-policy.yaml"
+    settings["freejt7.policy.file"] = ".github/freejt7-policy.yaml"
+    settings["freejt7.enabled"] = True
+    settings[f"freejt7.integrations.{ide}.enabled"] = True
+    settings["freejt7.skills.index"] = ".github/skills/.skills_index.json"
+    settings["freejt7.policy.file"] = ".github/freejt7-policy.yaml"
 
 
 def _save_json_object(path: Path, data: dict[str, Any]) -> None:
@@ -475,7 +475,7 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
     if ide == "vscode":
         settings_path = target / ".vscode" / "settings.json"
         settings = _load_json_object(settings_path)
-        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        _apply_freejt7_settings(settings, instruction_file, agent_location, ide)
         _save_json_object(settings_path, settings)
         notes.append(f"workspace settings: {settings_path}")
         return notes
@@ -483,17 +483,17 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
     if ide == "cursor":
         settings_path = target / ".cursor" / "settings.json"
         settings = _load_json_object(settings_path)
-        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        _apply_freejt7_settings(settings, instruction_file, agent_location, ide)
         _save_json_object(settings_path, settings)
         notes.append(f"workspace settings: {settings_path}")
-        rules_path = target / ".cursor" / "rules" / "openclaw.mdc"
+        rules_path = target / ".cursor" / "rules" / "freejt7.mdc"
         rules_content = (
             "---\n"
             "description: Free JT7 runtime policy\n"
             "alwaysApply: true\n"
             "---\n\n"
             "Use .github/copilot-instructions.md and .github/skills as canonical source.\n"
-            "Respect .github/openclaw-policy.yaml and task quality gate before closing work.\n"
+            "Respect .github/freejt7-policy.yaml and task quality gate before closing work.\n"
         )
         if _write_text_if_needed(rules_path, rules_content, force):
             notes.append(f"rules: {rules_path}")
@@ -502,22 +502,22 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
     if ide == "kiro":
         settings_path = target / ".kiro" / "settings.json"
         settings = _load_json_object(settings_path)
-        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
-        settings["kiro.openclaw.enabled"] = True
+        _apply_freejt7_settings(settings, instruction_file, agent_location, ide)
+        settings["kiro.freejt7.enabled"] = True
         _save_json_object(settings_path, settings)
         notes.append(f"workspace settings: {settings_path}")
-        steering_path = target / ".kiro" / "steering" / "openclaw.md"
+        steering_path = target / ".kiro" / "steering" / "freejt7.md"
         steering_content = (
             "# Free JT7 Steering\n\n"
             "- Instructions: `.github/copilot-instructions.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Policy: `.github/freejt7-policy.yaml`\n"
             "- Runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(steering_path, steering_content, force):
             notes.append(f"steering: {steering_path}")
         if AGENT_FILE.exists():
-            kiro_agent = target / ".kiro" / "agents" / "openclaw.agent.md"
+            kiro_agent = target / ".kiro" / "agents" / "freejt7.agent.md"
             if not kiro_agent.exists() or force:
                 kiro_agent.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(AGENT_FILE, kiro_agent)
@@ -525,16 +525,16 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         return notes
 
     if ide == "antigravity":
-        manifest = target / ".antigravity" / "openclaw.runtime.json"
+        manifest = target / ".antigravity" / "freejt7.runtime.json"
         payload = {
-            "name": "openclaw-runtime",
+            "name": "freejt7-runtime",
             "version": VERSION_FILE.read_text(encoding="utf-8").strip() if VERSION_FILE.exists() else "0.0",
             "root": ".",
             "sources": {
                 "instructions": str((gh_dir / "copilot-instructions.md").relative_to(target)).replace("\\", "/"),
                 "skills_dir": str((gh_dir / "skills").relative_to(target)).replace("\\", "/"),
                 "skills_index": str((gh_dir / "skills" / ".skills_index.json").relative_to(target)).replace("\\", "/"),
-                "policy": str((gh_dir / "openclaw-policy.yaml").relative_to(target)).replace("\\", "/"),
+                "policy": str((gh_dir / "freejt7-policy.yaml").relative_to(target)).replace("\\", "/"),
             },
             "permissions": ["read", "write", "terminal", "search"],
             "activation": "ephemeral",
@@ -546,13 +546,13 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
 
     if ide == "codex":
         codex_dir = target / ".codex"
-        codex_runtime = codex_dir / "openclaw-agent.md"
+        codex_runtime = codex_dir / "freejt7-agent.md"
         codex_content = (
             "# Free JT7 Agent Bridge for Codex\n\n"
             "- Instructions: `.github/copilot-instructions.md`\n"
-            "- Agent file: `.github/agents/openclaw.agent.md`\n"
+            "- Agent file: `.github/agents/freejt7.agent.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Policy: `.github/freejt7-policy.yaml`\n"
             "- Runtime runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(codex_runtime, codex_content, force):
@@ -561,15 +561,15 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         agents_path = target / "AGENTS.md"
         status = _upsert_marked_block(
             path=agents_path,
-            start_marker="<!-- OPENCLAW_CODEX_START -->",
-            end_marker="<!-- OPENCLAW_CODEX_END -->",
+            start_marker="<!-- FREE_JT7_CODEX_START -->",
+            end_marker="<!-- FREE_JT7_CODEX_END -->",
             block_body=(
                 "## Free JT7 Codex Bridge\n"
                 "When operating in this workspace, prioritize Free JT7 runtime assets:\n"
                 "- `.github/copilot-instructions.md`\n"
-                "- `.github/agents/openclaw.agent.md`\n"
+                "- `.github/agents/freejt7.agent.md`\n"
                 "- `.github/skills/.skills_index.json`\n"
-                "- `.github/openclaw-policy.yaml`\n"
+                "- `.github/freejt7-policy.yaml`\n"
                 "Use `python skills_manager.py task-run` for end-to-end execution with evidence.\n"
             ),
             header="# Workspace Agents",
@@ -578,12 +578,12 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         return notes
 
     if ide == "claude-code":
-        claude_runtime = target / ".claude" / "openclaw-agent.md"
+        claude_runtime = target / ".claude" / "freejt7-agent.md"
         claude_content = (
             "# Free JT7 Bridge for Claude Code\n\n"
             "- Canonical instructions: `.github/copilot-instructions.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Policy: `.github/freejt7-policy.yaml`\n"
             "- Runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(claude_runtime, claude_content, force):
@@ -591,15 +591,15 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         claude_md = target / "CLAUDE.md"
         status = _upsert_marked_block(
             path=claude_md,
-            start_marker="<!-- OPENCLAW_CLAUDE_CODE_START -->",
-            end_marker="<!-- OPENCLAW_CLAUDE_CODE_END -->",
+            start_marker="<!-- FREE_JT7_CLAUDE_CODE_START -->",
+            end_marker="<!-- FREE_JT7_CLAUDE_CODE_END -->",
             block_body=(
                 "## Free JT7 Claude Code Bridge\n"
                 "Use these files as source of truth:\n"
                 "- `.github/copilot-instructions.md`\n"
-                "- `.github/agents/openclaw.agent.md`\n"
+                "- `.github/agents/freejt7.agent.md`\n"
                 "- `.github/skills/.skills_index.json`\n"
-                "- `.github/openclaw-policy.yaml`\n"
+                "- `.github/freejt7-policy.yaml`\n"
                 "Prefer `python skills_manager.py task-run` for full execution flow.\n"
             ),
             header="# CLAUDE Instructions",
@@ -608,12 +608,12 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         return notes
 
     if ide == "gemini-cli":
-        gemini_runtime = target / ".gemini" / "openclaw-agent.md"
+        gemini_runtime = target / ".gemini" / "freejt7-agent.md"
         gemini_content = (
             "# Free JT7 Bridge for Gemini CLI\n\n"
             "- Canonical instructions: `.github/copilot-instructions.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Policy: `.github/freejt7-policy.yaml`\n"
             "- Runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(gemini_runtime, gemini_content, force):
@@ -621,15 +621,15 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         gemini_md = target / "GEMINI.md"
         status = _upsert_marked_block(
             path=gemini_md,
-            start_marker="<!-- OPENCLAW_GEMINI_CLI_START -->",
-            end_marker="<!-- OPENCLAW_GEMINI_CLI_END -->",
+            start_marker="<!-- FREE_JT7_GEMINI_CLI_START -->",
+            end_marker="<!-- FREE_JT7_GEMINI_CLI_END -->",
             block_body=(
                 "## Free JT7 Gemini CLI Bridge\n"
                 "Use these files as source of truth:\n"
                 "- `.github/copilot-instructions.md`\n"
-                "- `.github/agents/openclaw.agent.md`\n"
+                "- `.github/agents/freejt7.agent.md`\n"
                 "- `.github/skills/.skills_index.json`\n"
-                "- `.github/openclaw-policy.yaml`\n"
+                "- `.github/freejt7-policy.yaml`\n"
                 "Prefer `python skills_manager.py task-run` for full execution flow.\n"
             ),
             header="# GEMINI Instructions",
@@ -655,20 +655,20 @@ def _update_user_settings_for_ide(
             "instructions_file": _to_posix((ROOT / ".github" / "copilot-instructions.md").resolve()),
             "agents_path": _to_posix((ROOT / ".github" / "agents").resolve()),
             "skills_index": _to_posix((ROOT / ".github" / "skills" / ".skills_index.json").resolve()),
-            "policy_file": _to_posix((ROOT / ".github" / "openclaw-policy.yaml").resolve()),
+            "policy_file": _to_posix((ROOT / ".github" / "freejt7-policy.yaml").resolve()),
         }
         settings["freejt7"] = freejt7_payload
-        settings["openclaw"] = {
+        settings["freejt7"] = {
             **freejt7_payload
         }
     else:
         instruction_file = _to_posix((ROOT / ".github" / "copilot-instructions.md").resolve())
         agent_location = _to_posix((ROOT / ".github" / "agents").resolve())
-        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        _apply_freejt7_settings(settings, instruction_file, agent_location, ide)
         if ide == "kiro":
-            settings["kiro.openclaw.enabled"] = True
+            settings["kiro.freejt7.enabled"] = True
         if ide == "antigravity":
-            settings["antigravity.openclaw.enabled"] = True
+            settings["antigravity.freejt7.enabled"] = True
     _save_json_object(settings_path, settings)
     return settings_path
 
@@ -774,7 +774,7 @@ def _validate_policy(policy: dict[str, Any]) -> list[str]:
         errors.append("execution.retry.max_attempts debe ser entero entre 1 y 5")
     level = str(policy.get("telemetry", {}).get("level", ""))
     if level not in {"full_sanitized", "moderate", "minimal"}:
-        errors.append("telemetry.level inválido")
+        errors.append("telemetry.level invÃ¡lido")
     return errors
 
 
@@ -955,7 +955,7 @@ def _load_skills_from_disk(skills_dir: Path) -> list[dict]:
 
 def _rebuild_index_from_disk() -> list[dict]:
     if not SKILLS_DIR.exists():
-        raise RuntimeError(f"No existe el catálogo de skills: {SKILLS_DIR}")
+        raise RuntimeError(f"No existe el catÃ¡logo de skills: {SKILLS_DIR}")
     skills = _load_skills_from_disk(SKILLS_DIR)
     if not skills:
         raise RuntimeError("No se encontraron SKILL.md en .github/skills")
@@ -976,7 +976,7 @@ def _migrate_legacy_state() -> list[str]:
         if skills:
             save_index(skills)
             _mirror_legacy_index(skills)
-            notes.append("índice reconstruido desde .github/skills")
+            notes.append("Ã­ndice reconstruido desde .github/skills")
     elif INDEX_FILE.exists():
         _mirror_legacy_index(load_index())
         notes.append("espejo legado actualizado")
@@ -985,7 +985,7 @@ def _migrate_legacy_state() -> list[str]:
 
 def _preflight(require_index: bool = False, strict_active_project: bool = False) -> None:
     if not SKILLS_DIR.exists():
-        raise RuntimeError(f"Catálogo no encontrado: {SKILLS_DIR}")
+        raise RuntimeError(f"CatÃ¡logo no encontrado: {SKILLS_DIR}")
     migrate_notes = _migrate_legacy_state()
     if migrate_notes:
         _log_audit("migrate", "; ".join(migrate_notes))
@@ -999,9 +999,9 @@ def _preflight(require_index: bool = False, strict_active_project: bool = False)
             )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Frontmatter
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def parse_frontmatter(text: str) -> tuple[dict, str]:
     """Parsea frontmatter YAML simple (solo primer nivel + metadata: bloque)."""
@@ -1066,9 +1066,9 @@ def build_frontmatter(meta: dict, body: str) -> str:
     return "\n".join(lines) + body
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Categorization automatica
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def auto_categorize(skill_id: str, description: str = "") -> str:
     text = (skill_id + " " + description).lower()
@@ -1082,9 +1082,9 @@ def auto_categorize(skill_id: str, description: str = "") -> str:
     return best_cat
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # HTTP helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _headers() -> dict[str, str]:
     h = {"User-Agent": "skills-manager/1.0"}
@@ -1124,9 +1124,9 @@ def print_progress(done: int, total: int, label: str = "", width: int = 36) -> N
         sys.stdout.write("\n")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_fetch
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def cmd_fetch(args: argparse.Namespace) -> int:
     """Importa skills desde un repositorio GitHub."""
@@ -1255,9 +1255,9 @@ def _rebuild_index(remote_index: list[dict], repo: str) -> None:
     print(f"[index] {len(skills)} skills indexados.")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_list
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def cmd_list(args: argparse.Namespace) -> int:
     try:
@@ -1307,9 +1307,9 @@ def cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_search
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _relevance(skill: dict, query: str) -> float:
     q = query.lower()
@@ -1375,9 +1375,9 @@ def cmd_search(args: argparse.Namespace) -> int:
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_activate / cmd_deactivate
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def cmd_activate(args: argparse.Namespace) -> int:
     try:
@@ -1445,9 +1445,9 @@ def cmd_deactivate(args: argparse.Namespace) -> int:
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_add
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def cmd_add(args: argparse.Namespace) -> int:
     """Agrega una skill nueva al indice."""
@@ -1545,18 +1545,18 @@ metadata:
         return 1
 
     if not local_file.exists():
-        print(f"[add] ERROR: no se creó el archivo esperado: {local_file}")
+        print(f"[add] ERROR: no se creÃ³ el archivo esperado: {local_file}")
         return 1
 
     try:
         skills = _rebuild_index_from_disk()
     except RuntimeError as exc:
-        print(f"[add] ERROR al reconstruir índice: {exc}")
+        print(f"[add] ERROR al reconstruir Ã­ndice: {exc}")
         return 1
 
     _log_audit("add", f"{name} ({category})")
     _update_resume("add", f"skill creada/importada: {name}")
-    print(f"[add] '{name}' agregada. Índice total: {len(skills)}")
+    print(f"[add] '{name}' agregada. Ãndice total: {len(skills)}")
     return 0
 
 
@@ -1581,16 +1581,16 @@ def cmd_add_agent(args: argparse.Namespace) -> int:
     tools_yaml = "\n".join([f"  - {t}" for t in tools])
     template = f"""---
 name: {name}
-description: {desc or 'Descripción del agente.'}
+description: {desc or 'DescripciÃ³n del agente.'}
 model: {model}
 tools:
 {tools_yaml}
 ---
 
-# {name} — Agente personalizado
+# {name} â€” Agente personalizado
 
 Eres **{agent_id}**.
-Define aquí el comportamiento y las reglas del agente.
+Define aquÃ­ el comportamiento y las reglas del agente.
 """
     agent_file.write_text(template, encoding="utf-8")
     print(f"[add-agent] Agente creado en {agent_file}")
@@ -1599,9 +1599,9 @@ Define aquí el comportamiento y las reglas del agente.
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_github_search
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def cmd_github_search(args: argparse.Namespace) -> int:
     query = " ".join(args.query) if args.query else "claude skills"
@@ -1659,13 +1659,13 @@ def cmd_github_search(args: argparse.Namespace) -> int:
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_sync_claude
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # cmd_adapt_copilot
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 CATEGORY_APPLY_TO: dict[str, str] = {
     "architecture":   "**/*.{ts,js,py,go,rs,java,cs,md}",
@@ -1708,15 +1708,15 @@ def cmd_adapt_copilot(args: argparse.Namespace) -> int:
             f'applyTo: "{apply_to}"',
             "---",
             "",
-            f"# Skills de experto — categoría: {cat}",
+            f"# Skills de experto â€” categorÃ­a: {cat}",
             "",
             f"Cuando el usuario haga una solicitud relacionada con **{cat}**, "
-            f"consulta automáticamente el SKILL.md correspondiente en "
+            f"consulta automÃ¡ticamente el SKILL.md correspondiente en "
             f"`.github/skills/<nombre>/SKILL.md` antes de responder.",
             "",
-            f"## Skills disponibles en esta categoría ({len(entries)})",
+            f"## Skills disponibles en esta categorÃ­a ({len(entries)})",
             "",
-            "| ID | Descripción |",
+            "| ID | DescripciÃ³n |",
             "|-----|-------------|" ,
         ]
         for e in sorted(entries, key=lambda x: x["id"]):
@@ -1724,13 +1724,13 @@ def cmd_adapt_copilot(args: argparse.Namespace) -> int:
             lines.append(f"| `{e['id']}` | {desc} |")
         lines += [
             "",
-            "## Instrucción de uso",
+            "## InstrucciÃ³n de uso",
             "",
-            "1. **Identifica** qué skill es más relevante para la solicitud.",
+            "1. **Identifica** quÃ© skill es mÃ¡s relevante para la solicitud.",
             "2. **Lee** el archivo `.github/skills/<id>/SKILL.md` para obtener "
-            "   contexto experto, metodología y mejores prácticas.",
+            "   contexto experto, metodologÃ­a y mejores prÃ¡cticas.",
             "3. **Aplica** ese conocimiento en tu respuesta.",
-            "4. Si múltiples skills son relevantes, combínalas.",
+            "4. Si mÃºltiples skills son relevantes, combÃ­nalas.",
         ]
         out = GH_INSTR_DIR / f"{cat}.instructions.md"
         out.write_text("\n".join(lines), encoding="utf-8")
@@ -1747,8 +1747,8 @@ def cmd_adapt_copilot(args: argparse.Namespace) -> int:
                 content
             )
         content = re.sub(
-            r'\*(\d+) skills — antigravity.*\*',
-            f'*{len(skills)} skills — antigravity-awesome-skills v5.7 + Free JT7 behaviors*',
+            r'\*(\d+) skills â€” antigravity.*\*',
+            f'*{len(skills)} skills â€” antigravity-awesome-skills v5.7 + Free JT7 behaviors*',
             content
         )
         COPILOT_INSTR.write_text(content, encoding="utf-8")
@@ -1761,9 +1761,9 @@ def cmd_adapt_copilot(args: argparse.Namespace) -> int:
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # copilot-agent helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _log_audit(action: str, detail: str = "") -> None:
     """Registra una entrada en copilot-agent/audit-log.jsonl."""
@@ -1779,30 +1779,30 @@ def _log_audit(action: str, detail: str = "") -> None:
 
 
 def _update_resume(action: str, detail: str = "") -> None:
-    """Actualiza copilot-agent/RESUME.md con la última acción."""
+    """Actualiza copilot-agent/RESUME.md con la Ãºltima acciÃ³n."""
     COPILOT_AGENT.mkdir(parents=True, exist_ok=True)
     resume = COPILOT_AGENT / "RESUME.md"
     skills = load_index()
     active = [s for s in skills if s.get("active")]
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     active_lines = '\n'.join(f'- `{s["id"]}` ({s["category"]})' for s in active) or '- (ninguna)'
-    content = f"""# copilot-agent — Estado del sistema
+    content = f"""# copilot-agent â€” Estado del sistema
 
 *Actualizado: {ts}*
 
-## Última acción
+## Ãšltima acciÃ³n
 - **{action}**: {detail}
 
-## Estado del catálogo
+## Estado del catÃ¡logo
 - Total skills: **{len(skills)}**
 - Skills activas: **{len(active)}**
-- Categorías: 9
+- CategorÃ­as: 9
 - Fuente: antigravity-awesome-skills v5.7
 
 ## Skills activas
 {active_lines}
 
-## Comandos útiles
+## Comandos Ãºtiles
 ```powershell
 python skills_manager.py search <query>
 python skills_manager.py activate <id>
@@ -1828,9 +1828,9 @@ def cmd_sync_claude(args: argparse.Namespace) -> int:
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [
         SKILLS_START,
-        "## Skills Library — Contexto Experto",
+        "## Skills Library â€” Contexto Experto",
         "",
-        f"Directorio: `.github/skills/` — **{total} skills** en el indice.",
+        f"Directorio: `.github/skills/` â€” **{total} skills** en el indice.",
         f"Actualizacion: {ts}",
         "",
         "### Comandos de gestion",
@@ -1919,7 +1919,7 @@ def cmd_set_project(args: argparse.Namespace) -> int:
     ruta = Path(args.path).resolve()
     if not ruta.exists():
         print(f"[set-project] WARN La ruta no existe: {ruta}")
-        resp = input("¿Crear directorio? [s/N] ").strip().lower()
+        resp = input("Â¿Crear directorio? [s/N] ").strip().lower()
         if resp == "s":
             ruta.mkdir(parents=True)
         else:
@@ -1947,7 +1947,7 @@ def cmd_set_project(args: argparse.Namespace) -> int:
     ap.write_text(_json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[set-project] OK Proyecto activo: {ruta}")
     _log_audit("set-project", str(ruta))
-    _update_resume("set-project", f"proyecto activo → {ruta.name}")
+    _update_resume("set-project", f"proyecto activo â†’ {ruta.name}")
     return 0
 
 
@@ -2088,7 +2088,7 @@ def cmd_rollout_mode(args: argparse.Namespace) -> int:
         print(f"[rollout-mode] {current}")
         return 0
     if mode not in {"shadow", "assist", "autonomous"}:
-        print("[rollout-mode] ERROR: modo inválido")
+        print("[rollout-mode] ERROR: modo invÃ¡lido")
         return 1
     _save_rollout_mode(mode)
     _log_audit("rollout-mode", mode)
@@ -2117,7 +2117,7 @@ def cmd_task_start(args: argparse.Namespace) -> int:
     policy = _load_policy()
     policy_errors = _validate_policy(policy)
     if policy_errors:
-        print("[task-start] ERROR: policy inválida")
+        print("[task-start] ERROR: policy invÃ¡lida")
         for err in policy_errors:
             print(f"  - {err}")
         return 1
@@ -2208,7 +2208,7 @@ def cmd_task_step(args: argparse.Namespace) -> int:
             "action": "blocked-destructive",
             "command": command,
             "normalized_command": normalized,
-            "result": "Comando bloqueado por política destructiva",
+            "result": "Comando bloqueado por polÃ­tica destructiva",
             "exit_code": 2,
             "retry_index": 0,
             "risk_level": risk_level,
@@ -2336,7 +2336,7 @@ def cmd_task_run(args: argparse.Namespace) -> int:
     if start_rc != 0:
         return start_rc
 
-    # Recuperar run_id más reciente si no fue explícito.
+    # Recuperar run_id mÃ¡s reciente si no fue explÃ­cito.
     run_id = getattr(args, "run_id", None)
     if not run_id:
         runs = sorted(_runs_dir().glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -2368,7 +2368,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     info: list[str] = []
 
     if not SKILLS_DIR.exists():
-        errors.append(f"catálogo ausente: {SKILLS_DIR}")
+        errors.append(f"catÃ¡logo ausente: {SKILLS_DIR}")
     else:
         skill_files = list(SKILLS_DIR.glob("*/SKILL.md"))
         if not skill_files:
@@ -2379,23 +2379,23 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     if INDEX_FILE.exists():
         try:
             index = load_index()
-            info.append(f"índice principal: {len(index)} entries")
+            info.append(f"Ã­ndice principal: {len(index)} entries")
         except Exception as exc:
-            errors.append(f"índice principal corrupto: {exc}")
+            errors.append(f"Ã­ndice principal corrupto: {exc}")
             index = []
     else:
-        warnings.append("índice principal ausente; se requiere rebuild")
+        warnings.append("Ã­ndice principal ausente; se requiere rebuild")
         index = []
 
     if LEGACY_INDEX_FILE.exists():
-        info.append("índice legado presente (compatibilidad)")
+        info.append("Ã­ndice legado presente (compatibilidad)")
     else:
-        warnings.append("índice legado ausente (se regenerará en sync/rebuild)")
+        warnings.append("Ã­ndice legado ausente (se regenerarÃ¡ en sync/rebuild)")
 
     if not COPILOT_INSTR.exists():
         errors.append("falta .github/copilot-instructions.md")
     if not AGENT_FILE.exists():
-        errors.append("falta .github/agents/openclaw.agent.md")
+        errors.append("falta .github/agents/freejt7.agent.md")
     if not GH_INSTR_DIR.exists():
         errors.append("falta .github/instructions/")
 
@@ -2406,16 +2406,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     policy = _load_policy()
     policy_errors = _validate_policy(policy)
     if policy_errors:
-        errors.extend([f"policy inválida: {e}" for e in policy_errors])
+        errors.extend([f"policy invÃ¡lida: {e}" for e in policy_errors])
     else:
         info.append(f"policy mode: {_load_rollout_mode(policy)}")
 
     if index:
         missing = [s["id"] for s in index if not (ROOT / s["gh_path"]).exists()]
         if missing:
-            errors.append(f"{len(missing)} entries del índice apuntan a rutas inexistentes")
+            errors.append(f"{len(missing)} entries del Ã­ndice apuntan a rutas inexistentes")
 
-    print("[doctor] Diagnóstico del sistema")
+    print("[doctor] DiagnÃ³stico del sistema")
     for line in info:
         print(f"  [INFO] {line}")
     for line in warnings:
@@ -2457,10 +2457,10 @@ def cmd_release_sync(args: argparse.Namespace) -> int:
         COPILOT_INSTR,
         [
             (r"\*\*\d+ skills expertos\*\*", f"**{total} skills expertos**"),
-            (r"- \*\*Catálogo completo\*\*: `skills/\.skills_index\.json` — \d+ entries",
-             f"- **Catálogo completo**: `.github/skills/.skills_index.json` — {total} entries"),
-            (r"\*\d+ skills — antigravity-awesome-skills v5\.7 \+ (OpenClaw|Free JT7) behaviors\*",
-             f"*{total} skills — antigravity-awesome-skills v5.7 + Free JT7 behaviors*"),
+            (r"- \*\*CatÃ¡logo completo\*\*: `skills/\.skills_index\.json` â€” \d+ entries",
+             f"- **CatÃ¡logo completo**: `.github/skills/.skills_index.json` â€” {total} entries"),
+            (r"\*\d+ skills â€” antigravity-awesome-skills v5\.7 \+ (FreeJT7|Free JT7) behaviors\*",
+             f"*{total} skills â€” antigravity-awesome-skills v5.7 + Free JT7 behaviors*"),
         ],
     )
 
@@ -2474,7 +2474,7 @@ def cmd_release_sync(args: argparse.Namespace) -> int:
         AGENT_FILE,
         [
             (r"acceso a \d+ skills expertos", f"acceso a {total} skills expertos"),
-            (r"catálogo de \d+ skills", f"catálogo de {total} skills"),
+            (r"catÃ¡logo de \d+ skills", f"catÃ¡logo de {total} skills"),
         ],
     )
     _sync_counts_in_text(
@@ -2482,7 +2482,7 @@ def cmd_release_sync(args: argparse.Namespace) -> int:
         [
             (r"\b\d+\s+Skills\b", f"{total} Skills"),
             (r"\*\*\d+ skills\*\*", f"**{total} skills**"),
-            (r"\*+\d+ skills — MIT License\*+", f"*{total} skills — MIT License*"),
+            (r"\*+\d+ skills â€” MIT License\*+", f"*{total} skills â€” MIT License*"),
         ],
     )
 
@@ -2502,15 +2502,15 @@ def cmd_release_sync(args: argparse.Namespace) -> int:
     if CHANGELOG_MD.exists():
         changelog = CHANGELOG_MD.read_text(encoding="utf-8")
         entry = (
-            f"\n## [v{new_version}] — {ts}\n\n"
+            f"\n## [v{new_version}] â€” {ts}\n\n"
             "### Summary\n"
-            f"Release sync automático: {total} skills y consistencia de metadatos.\n\n"
+            f"Release sync automÃ¡tico: {total} skills y consistencia de metadatos.\n\n"
         )
         if entry not in changelog:
             _atomic_write_text(CHANGELOG_MD, changelog + entry)
 
     _mirror_legacy_index(skills)
-    _update_resume("release-sync", f"{total} skills | versión {new_version}")
+    _update_resume("release-sync", f"{total} skills | versiÃ³n {new_version}")
     _log_audit("release-sync", f"skills={total} version={new_version}")
     print(f"[release-sync] OK | skills={total} | version={new_version}")
     return 0
@@ -2527,9 +2527,9 @@ def cmd_rebuild(args: argparse.Namespace) -> int:
     return 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # main
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -2590,21 +2590,21 @@ def main() -> int:
     p_doc = sub.add_parser("doctor", help="Diagnosticar integridad del sistema")
     p_doc.add_argument("--strict", action="store_true", help="Tratar warnings como fallo")
     p_rs = sub.add_parser("release-sync", help="Sincronizar conteos/versionado y metadatos")
-    p_rs.add_argument("--bump", choices=["patch", "minor"], default="patch", help="Tipo de bump de versión")
+    p_rs.add_argument("--bump", choices=["patch", "minor"], default="patch", help="Tipo de bump de versiÃ³n")
 
     # policy/runtime
-    sub.add_parser("policy-validate", help="Validar política operativa Free JT7")
+    sub.add_parser("policy-validate", help="Validar polÃ­tica operativa Free JT7")
     p_rm = sub.add_parser("rollout-mode", help="Ver o establecer modo rollout")
     p_rm.add_argument("mode", nargs="?", choices=["shadow", "assist", "autonomous"], help="Nuevo modo")
 
-    p_sr = sub.add_parser("skill-resolve", help="Resolver skills efímeras para una tarea")
+    p_sr = sub.add_parser("skill-resolve", help="Resolver skills efÃ­meras para una tarea")
     p_sr.add_argument("--query", required=True, help="Consulta de tarea")
-    p_sr.add_argument("--top", type=int, default=3, help="Máximo de skills")
+    p_sr.add_argument("--top", type=int, default=3, help="MÃ¡ximo de skills")
     p_sr.add_argument("--json", action="store_true", help="Salida JSON")
 
     p_ts = sub.add_parser("task-start", help="Crear run de tarea")
     p_ts.add_argument("--goal", required=True, help="Objetivo de la tarea")
-    p_ts.add_argument("--scope", default="workspace", help="Ámbito de ejecución")
+    p_ts.add_argument("--scope", default="workspace", help="Ãmbito de ejecuciÃ³n")
     p_ts.add_argument("--run-id", default="", help="ID opcional de run")
 
     p_tstep = sub.add_parser("task-step", help="Ejecutar un step sobre un run")
@@ -2619,7 +2619,7 @@ def main() -> int:
 
     p_tr = sub.add_parser("task-run", help="Orquestar tarea completa end-to-end")
     p_tr.add_argument("--goal", required=True, help="Objetivo de la tarea")
-    p_tr.add_argument("--scope", default="workspace", help="Ámbito de ejecución")
+    p_tr.add_argument("--scope", default="workspace", help="Ãmbito de ejecuciÃ³n")
     p_tr.add_argument("--run-id", default="", help="ID opcional de run")
     p_tr.add_argument("--commands", nargs="*", default=[], help="Comandos a ejecutar en orden")
     p_tr.add_argument("--approve-high-risk", action="store_true", help="Aprobar high-risk")
@@ -2656,7 +2656,7 @@ def main() -> int:
     # add-agent
     p_agent = sub.add_parser("add-agent", help="Crear un agente personalizado")
     p_agent.add_argument("--name", "-n", help="Nombre/ID del agente")
-    p_agent.add_argument("--description", "-d", default="", help="Descripción breve")
+    p_agent.add_argument("--description", "-d", default="", help="DescripciÃ³n breve")
     p_agent.add_argument("--model", "-m", default="claude-sonnet-4-5", help="Modelo base")
     p_agent.add_argument("--tools", "-t", nargs="*", default=["codebase","terminal","search","vscode"], help="Lista de herramientas disponibles")
 
@@ -2702,3 +2702,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

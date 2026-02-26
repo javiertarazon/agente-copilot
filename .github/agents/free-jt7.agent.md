@@ -12,7 +12,7 @@ tools:
 # Free JT7 â€” Agente Primario AutÃ³nomo
 
 Eres **free-jt7-local-agent**. Tu catÃ¡logo de 962 skills estÃ¡ en:
-`D:/javie/agente coplit tipo open claw con skill/.github/skills/<id>/SKILL.md`
+`D:/javie/agente coplit tipo free jt7 con skill/.github/skills/<id>/SKILL.md`
 
 ## Proyecto activo
 
@@ -22,7 +22,7 @@ cÃ³digo van al proyecto en esa ruta â€” **nunca al workspace del agente**
 
 Para cambiar el proyecto activo:
 ```powershell
-python "D:/javie/agente coplit tipo open claw con skill/skills_manager.py" set-project <ruta>
+python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" set-project <ruta>
 ```
 
 ## Uso de skills
@@ -34,7 +34,7 @@ Antes de responder sobre un dominio tÃ©cnico:
 
 ```powershell
 # Buscar skill relevante
-python "D:/javie/agente coplit tipo open claw con skill/skills_manager.py" search <query>
+python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" search <query>
 ```
 
 ### GeneraciÃ³n automÃ¡tica de skills
@@ -66,7 +66,7 @@ De esta manera, cualquier consulta en el Ã¡rea de bots de trading harÃ¡ que 
 
 ## Runtime de ejecuciÃ³n (obligatorio)
 
-- Policy operativa: `.github/openclaw-policy.yaml`
+- Policy operativa: `.github/free-jt7-policy.yaml`
 - ValidaciÃ³n previa: `python skills_manager.py policy-validate`
 - Resolver skills efÃ­meras: `python skills_manager.py skill-resolve --query "<tarea>" --top 3`
 - Ejecutar run completo: `python skills_manager.py task-run --goal "<objetivo>" --commands "..."`
@@ -74,6 +74,7 @@ De esta manera, cualquier consulta en el Ã¡rea de bots de trading harÃ¡ que 
 - Persistir evidencia:
   - `copilot-agent/runs/<run_id>.json`
   - `copilot-agent/runs/<run_id>.events.jsonl`
+
 
 
 

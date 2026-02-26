@@ -1,35 +1,24 @@
-# copilot-agent — Estado del sistema
+﻿# copilot-agent â€” Estado del sistema
 
-*Actualizado: 2026-02-23 UTC*
+*Actualizado: 2026-02-26 12:29 UTC*
 
-## Última acción
-- **github-publish-v1.2**: Commit `524f2f8` publicado en `main` y `master` — README.md + setup-project.ps1 añadidos; instrucciones disponibles en github.com/javiertarazon/agente-copilot
+## Ãšltima acciÃ³n
+- **install**: skills instalados en free-jt7-auto-9f34d21aa0504507ac83ba1fd6d89d41 | ide=vscode,codex
 
-## Sesión anterior
-- **github-publish-v1.1**: Push exitoso a https://github.com/javiertarazon/agente-copilot — commit `179b37b`, tag `v1.1`, 963 skills publicados
-
-## Estado del catálogo
-- Total skills: **963**
+## Estado del catÃ¡logo
+- Total skills: **962**
 - Skills activas: **0**
-- Categorías: 9 (+documentation:1)
-- Fuente: antigravity-awesome-skills v5.7 + github/awesome-copilot (MIT)
-
-## Últimos skills añadidos (2026-07-15)
-| Skill | Categoría |
-|-------|-----------|
-| `agent-orchestration` | workflow |
-| `polyglot-testing-pipeline` | testing |
-| `tdd-full-cycle` | testing |
-| `context-multi-file` | development |
-| `agent-safety-governance` | security |
+- CategorÃ­as: 9
+- Fuente: antigravity-awesome-skills v5.7
 
 ## Skills activas
 - (ninguna)
 
-## Comandos útiles
+## Comandos Ãºtiles
 ```powershell
 python skills_manager.py search <query>
 python skills_manager.py activate <id>
 python skills_manager.py adapt-copilot
 python skills_manager.py sync-claude
 ```
+

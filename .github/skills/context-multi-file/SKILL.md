@@ -1,11 +1,11 @@
----
+﻿---
 name: context-multi-file
 description: "Context Architect pattern for autonomous multi-file changes. Plans and executes coordinated changes across multiple files by mapping dependencies, identifying impact, and applying changes in correct order. Use when refactoring, renaming, or implementing features that span multiple files."
 risk: medium
 source: github/awesome-copilot
 ---
 
-# Context Architect — Multi-File Autonomous Changes
+# Context Architect â€” Multi-File Autonomous Changes
 
 Plan and execute coordinated changes across multiple files while respecting dependencies and avoiding conflicts. Based on the **Context Architect** agent from github/awesome-copilot.
 
@@ -20,27 +20,27 @@ Plan and execute coordinated changes across multiple files while respecting depe
 ## Core Process
 
 ```
-1. SCAN     — Map all files that need changing
-2. ANALYZE  — Build dependency graph, find change order
-3. PLAN     — Create ordered change manifest
-4. EXECUTE  — Apply changes bottom-up (leaves first)
-5. VALIDATE — Verify nothing broke
+1. SCAN     â€” Map all files that need changing
+2. ANALYZE  â€” Build dependency graph, find change order
+3. PLAN     â€” Create ordered change manifest
+4. EXECUTE  â€” Apply changes bottom-up (leaves first)
+5. VALIDATE â€” Verify nothing broke
 ```
 
 ---
 
-## Stage 1 — SCAN
+## Stage 1 â€” SCAN
 
 **Identify all affected files:**
 
 ```
 Query: "Where is UserService used?"
-→ src/controllers/user.controller.ts
-→ src/routes/user.routes.ts
-→ src/middleware/auth.middleware.ts
-→ tests/unit/user.controller.spec.ts
-→ tests/integration/user.flow.spec.ts
-→ src/admin/user.admin.ts
+â†’ src/controllers/user.controller.ts
+â†’ src/routes/user.routes.ts
+â†’ src/middleware/auth.middleware.ts
+â†’ tests/unit/user.controller.spec.ts
+â†’ tests/integration/user.flow.spec.ts
+â†’ src/admin/user.admin.ts
 ```
 
 **Categories of changes:**
@@ -54,24 +54,24 @@ Query: "Where is UserService used?"
 
 ---
 
-## Stage 2 — ANALYZE
+## Stage 2 â€” ANALYZE
 
 Build a dependency graph to determine change order:
 
 ```
-UserService (CORE — change first)
-    ↑ imported by
-    ├── auth.middleware.ts (depends on UserService)
-    ├── user.controller.ts (depends on UserService)
-    │       ↑ imported by
-    │       └── user.routes.ts (depends on controller)
-    └── admin/user.admin.ts (depends on UserService)
-         ↑ imported by
-         └── admin/routes.ts
+UserService (CORE â€” change first)
+    â†‘ imported by
+    â”œâ”€â”€ auth.middleware.ts (depends on UserService)
+    â”œâ”€â”€ user.controller.ts (depends on UserService)
+    â”‚       â†‘ imported by
+    â”‚       â””â”€â”€ user.routes.ts (depends on controller)
+    â””â”€â”€ admin/user.admin.ts (depends on UserService)
+         â†‘ imported by
+         â””â”€â”€ admin/routes.ts
 
-Tests (change last — after production code):
-    ├── user.controller.spec.ts
-    └── user.flow.spec.ts
+Tests (change last â€” after production code):
+    â”œâ”€â”€ user.controller.spec.ts
+    â””â”€â”€ user.flow.spec.ts
 ```
 
 **Change order (bottom-up):**
@@ -83,7 +83,7 @@ Tests (change last — after production code):
 
 ---
 
-## Stage 3 — PLAN
+## Stage 3 â€” PLAN
 
 Create a detailed change manifest:
 
@@ -123,7 +123,7 @@ change_manifest:
 
 ---
 
-## Stage 4 — EXECUTE
+## Stage 4 â€” EXECUTE
 
 Apply changes in dependency order:
 
@@ -141,15 +141,15 @@ git stash  # or git commit --allow-empty -m "checkpoint: before multi-file chang
 ### If a change fails:
 ```
 Error in user.controller.ts: Type 'User[]' not assignable to 'PaginatedResult<User>'
-→ Re-read change manifest
-→ Was pagination.model.ts created successfully?
-→ Was user.service.ts updated first?
-→ Fix the dependency, retry
+â†’ Re-read change manifest
+â†’ Was pagination.model.ts created successfully?
+â†’ Was user.service.ts updated first?
+â†’ Fix the dependency, retry
 ```
 
 ---
 
-## Stage 5 — VALIDATE
+## Stage 5 â€” VALIDATE
 
 After all changes applied:
 
@@ -169,21 +169,21 @@ npx jest --no-coverage
 
 Expected output:
 ```
-✅ TypeScript: 0 errors
-✅ ESLint: 0 warnings  
-✅ Tests: 47 passed, 0 failed
-✅ New tests added: 3
+âœ… TypeScript: 0 errors
+âœ… ESLint: 0 warnings  
+âœ… Tests: 47 passed, 0 failed
+âœ… New tests added: 3
 ```
 
 ---
 
 ## Conflict Prevention Rules
 
-1. **Never edit the same file twice in one pass** — plan all changes to a file upfront
-2. **Imports first, exports last** — change what's imported before what imports it
-3. **Types before implementations** — update interfaces/types first
-4. **Tests last** — always update after production code
-5. **One concept at a time** — don't mix unrelated changes in a single multi-file operation
+1. **Never edit the same file twice in one pass** â€” plan all changes to a file upfront
+2. **Imports first, exports last** â€” change what's imported before what imports it
+3. **Types before implementations** â€” update interfaces/types first
+4. **Tests last** â€” always update after production code
+5. **One concept at a time** â€” don't mix unrelated changes in a single multi-file operation
 
 ---
 
@@ -215,9 +215,10 @@ Expected output:
 
 ---
 
-## Integration with OpenClaw
+## Integration with Free JT7
 
-- Use with `agent-orchestration` — Context Architect is the planning sub-agent
+- Use with `agent-orchestration` â€” Context Architect is the planning sub-agent
 - Use with `code-refactoring-refactor-clean` for the actual refactoring logic
 - Use with `polyglot-testing-pipeline` to update tests after multi-file changes
 - Use with `tdd-full-cycle` when the multi-file change is feature-driven
+

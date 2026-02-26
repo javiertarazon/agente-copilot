@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-adapt_skills.py — Adapta skills de antigravity-awesome-skills al sistema
-Copilot/OpenClaw del workspace.
+adapt_skills.py â€” Adapta skills de antigravity-awesome-skills al sistema
+Copilot/FreeJT7 del workspace.
 
 Acciones:
   1. Lee skills de _antigravity_tmp/skills/*/SKILL.md
   2. Categoriza con CATEGORY_KEYWORDS
-  3. Copia a .github/skills/<nombre>/SKILL.md  (formato OpenClaw/Copilot)
+  3. Copia a .github/skills/<nombre>/SKILL.md  (formato FreeJT7/Copilot)
   4. Copia a skills/<categoria>/<nombre>/SKILL.md  (para skills_manager.py)
   5. Genera .github/instructions/<categoria>.instructions.md  (auto-detect Copilot)
   6. Actualiza skills/.skills_index.json
@@ -22,7 +22,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# ─── Rutas ────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Rutas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 ROOT          = Path(__file__).resolve().parent
 SRC           = ROOT / "_antigravity_tmp" / "skills"
 GH_SKILLS     = ROOT / ".github" / "skills"
@@ -31,7 +31,7 @@ GH_INSTR      = ROOT / ".github" / "instructions"
 COPILOT_AGENT = ROOT / "copilot-agent"
 INDEX_FILE    = LOCAL_SKILLS / ".skills_index.json"
 
-# ─── Categorías ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ CategorÃ­as â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 CATEGORY_KEYWORDS: dict[str, list[str]] = {
     "architecture":   ["architect", "c4-", "cqrs", "event-sourcing", "adr",
                        "brainstorm", "refactor", "monorepo", "nestjs",
@@ -102,7 +102,7 @@ CATEGORY_APPLY_TO: dict[str, str] = {
 }
 
 
-# ─── Utilidades ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ Utilidades â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def parse_frontmatter(text: str) -> tuple[dict, str]:
     """Parsea YAML frontmatter simple."""
@@ -132,7 +132,7 @@ def ensure(path: Path) -> Path:
     return path
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def main() -> None:
     if not SRC.exists():
@@ -155,7 +155,7 @@ def main() -> None:
 
         # Saltar si ya fue procesado
         if (GH_SKILLS / skill_dir.name / "SKILL.md").exists():
-            # Aún lo indexamos aunque ya exista
+            # AÃºn lo indexamos aunque ya exista
             _meta, _ = parse_frontmatter(
                 (GH_SKILLS / skill_dir.name / "SKILL.md")
                 .read_bytes().decode("utf-8", errors="replace")
@@ -187,7 +187,7 @@ def main() -> None:
         description= meta.get("description", "")
         category   = categorize(skill_id, description)
 
-        # ── 1. Copiar a .github/skills/<nombre>/SKILL.md ──────────────────
+        # â”€â”€ 1. Copiar a .github/skills/<nombre>/SKILL.md â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         gh_dest = ensure(GH_SKILLS / skill_dir.name) / "SKILL.md"
         try:
             shutil.copy2(skill_md, gh_dest)
@@ -202,14 +202,14 @@ def main() -> None:
                 except Exception:
                     pass
 
-        # ── 2. Copiar a skills/<categoria>/<nombre>/SKILL.md ──────────────
+        # â”€â”€ 2. Copiar a skills/<categoria>/<nombre>/SKILL.md â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         local_dest = ensure(LOCAL_SKILLS / category / skill_dir.name) / "SKILL.md"
         try:
             shutil.copy2(skill_md, local_dest)
         except Exception:
             local_dest.write_text(raw, encoding="utf-8")
 
-        # ── 3. Registrar en índice ─────────────────────────────────────────
+        # â”€â”€ 3. Registrar en Ã­ndice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         entry = {
             "id":          skill_dir.name,
             "name":        skill_id,
@@ -229,13 +229,13 @@ def main() -> None:
 
     print(f"\nFase 1 completa: {len(index)} skills indexados ({errors} errores).\n")
 
-    # ── 4. Guardar índice local ────────────────────────────────────────────
+    # â”€â”€ 4. Guardar Ã­ndice local â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     INDEX_FILE.write_text(
         json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    print(f"Índice guardado: {INDEX_FILE}")
+    print(f"Ãndice guardado: {INDEX_FILE}")
 
-    # ── 5. Generar .github/instructions/<categoria>.instructions.md ───────
+    # â”€â”€ 5. Generar .github/instructions/<categoria>.instructions.md â”€â”€â”€â”€â”€â”€â”€
     ensure(GH_INSTR)
     for cat, entries in cat_skills.items():
         if not entries:
@@ -246,15 +246,15 @@ def main() -> None:
             f'applyTo: "{apply_to}"',
             f"---",
             f"",
-            f"# Skills de experto — categoría: {cat}",
+            f"# Skills de experto â€” categorÃ­a: {cat}",
             f"",
             f"Cuando el usuario haga una solicitud relacionada con **{cat}**, "
-            f"consulta automáticamente el SKILL.md correspondiente en "
+            f"consulta automÃ¡ticamente el SKILL.md correspondiente en "
             f"`.github/skills/<nombre>/SKILL.md` antes de responder.",
             f"",
-            f"## Skills disponibles en esta categoría ({len(entries)})",
+            f"## Skills disponibles en esta categorÃ­a ({len(entries)})",
             f"",
-            f"| ID | Descripción |",
+            f"| ID | DescripciÃ³n |",
             f"|-----|-------------|",
         ]
         for e in sorted(entries, key=lambda x: x["id"]):
@@ -262,32 +262,33 @@ def main() -> None:
             lines.append(f"| `{e['id']}` | {desc} |")
         lines += [
             "",
-            "## Instrucción de uso",
+            "## InstrucciÃ³n de uso",
             "",
-            "1. **Identifica** qué skill es más relevante para la solicitud.",
+            "1. **Identifica** quÃ© skill es mÃ¡s relevante para la solicitud.",
             "2. **Lee** el archivo `.github/skills/<id>/SKILL.md` para obtener "
-            "   contexto experto, metodología y mejores prácticas.",
+            "   contexto experto, metodologÃ­a y mejores prÃ¡cticas.",
             "3. **Aplica** ese conocimiento en tu respuesta.",
-            "4. Si múltiples skills son relevantes, combínalas.",
+            "4. Si mÃºltiples skills son relevantes, combÃ­nalas.",
         ]
         out = GH_INSTR / f"{cat}.instructions.md"
         out.write_text("\n".join(lines), encoding="utf-8")
 
     print(f"  {len(cat_skills)} archivos .instructions.md generados en .github/instructions/")
 
-    # ── 6. Estadísticas por categoría ─────────────────────────────────────
-    print("\nDistribución por categoría:")
+    # â”€â”€ 6. EstadÃ­sticas por categorÃ­a â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    print("\nDistribuciÃ³n por categorÃ­a:")
     for cat in sorted(cat_skills):
         n = len(cat_skills.get(cat, []))
-        bar = "█" * (n // 10)
+        bar = "â–ˆ" * (n // 10)
         print(f"  {cat:<20} {n:>4}  {bar}")
 
     total_ok = len(index)
     print(f"\nTotal: {total_ok} skills listos.")
-    print(f"  .github/skills/   → {total_ok} carpetas")
-    print(f"  skills/<cat>/     → {total_ok} carpetas categorizadas")
-    print(f"  .github/instructions/ → {len(cat_skills)} archivos auto-detect")
+    print(f"  .github/skills/   â†’ {total_ok} carpetas")
+    print(f"  skills/<cat>/     â†’ {total_ok} carpetas categorizadas")
+    print(f"  .github/instructions/ â†’ {len(cat_skills)} archivos auto-detect")
 
 
 if __name__ == "__main__":
     main()
+

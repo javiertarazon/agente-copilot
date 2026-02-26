@@ -1,4 +1,4 @@
-import tempfile
+﻿import tempfile
 import unittest
 from argparse import Namespace
 from contextlib import contextmanager
@@ -31,8 +31,8 @@ def isolated_workspace():
             "VERSION_FILE": root / "VERSION",
             "README_MD": root / "README.md",
             "CHANGELOG_MD": root / "CHANGELOG.md",
-            "AGENT_FILE": root / ".github" / "agents" / "openclaw.agent.md",
-            "POLICY_FILE": root / ".github" / "openclaw-policy.yaml",
+            "AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
+            "POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
             "ROLLOUT_FILE": root / "copilot-agent" / "rollout-mode.json",
         }
         for key, value in mappings.items():
@@ -88,7 +88,7 @@ class SkillsManagerAutonomyTests(unittest.TestCase):
             write_skill(root, "python-pro", "python", "development")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "openclaw.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
 
             sm.cmd_rollout_mode(Namespace(mode="shadow"))
             rc = sm.cmd_task_run(
@@ -111,3 +111,4 @@ class SkillsManagerAutonomyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -6,10 +6,11 @@ applyTo: "**/*.{yaml,yml,tf,dockerfile,sh,toml}"
 
 Cuando el usuario haga una solicitud relacionada con **infrastructure**, consulta automáticamente el SKILL.md correspondiente en `.github/skills/<nombre>/SKILL.md` antes de responder.
 
-## Skills disponibles en esta categoría (67)
+## Skills disponibles en esta categoría (71)
 
 | ID | Descripción |
 |-----|-------------|
+| `appinsights-instrumentation` | Instrument web apps for Azure Application Insights telemetry |
 | `aws-cost-cleanup` | Automated cleanup of unused AWS resources to reduce costs |
 | `aws-cost-optimizer` | Comprehensive AWS cost analysis and optimization recommendations using AWS CLI a |
 | `aws-serverless` | Specialized skill for building production-ready serverless applications on AWS.  |
@@ -24,6 +25,7 @@ Cuando el usuario haga una solicitud relacionada con **infrastructure**, consult
 | `azure-cosmos-py` | \| |
 | `azure-cosmos-ts` | \| |
 | `azure-data-tables-py` | \| |
+| `azure-deployment-preflight` | Bicep deployment validation, what-if analysis and permission checks |
 | `azure-eventgrid-py` | \| |
 | `azure-eventhub-py` | \| |
 | `azure-identity-py` | \| |
@@ -41,6 +43,7 @@ Cuando el usuario haga una solicitud relacionada con **infrastructure**, consult
 | `azure-search-documents-py` | \| |
 | `azure-servicebus-py` | \| |
 | `azure-speech-to-text-rest-py` | \| |
+| `azure-static-web-apps` | Create and deploy Azure Static Web Apps with SWA CLI |
 | `cicd-automation-workflow-automate` | You are a workflow automation expert specializing in creating efficient CI/CD pi |
 | `circleci-automation` | Automate CircleCI tasks via Rube MCP (Composio): trigger pipelines, monitor work |
 | `cloud-devops` | Cloud infrastructure and DevOps workflow covering AWS, Azure, GCP, Kubernetes, T |
@@ -65,6 +68,7 @@ Cuando el usuario haga una solicitud relacionada con **infrastructure**, consult
 | `security-compliance-compliance-check` | You are a compliance expert specializing in regulatory requirements for software |
 | `sql-pro` | Master modern SQL with cloud-native databases, OLTP/OLAP |
 | `stripe-integration` | Implement Stripe payment processing for robust, PCI-compliant payment flows incl |
+| `terraform-azurerm-set-diff-analyzer` | Analyze Terraform AzureRM plan JSON and detect false-positive diffs |
 | `terraform-infrastructure` | Terraform infrastructure as code workflow for provisioning cloud resources, crea |
 | `terraform-module-library` | Build reusable Terraform modules for AWS, Azure, and GCP infrastructure followin |
 | `terraform-skill` | Terraform infrastructure as code best practices |

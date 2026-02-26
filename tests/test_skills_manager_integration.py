@@ -1,4 +1,4 @@
-import tempfile
+﻿import tempfile
 import unittest
 from argparse import Namespace
 from contextlib import contextmanager
@@ -32,8 +32,8 @@ def isolated_workspace():
             "VERSION_FILE": root / "VERSION",
             "README_MD": root / "README.md",
             "CHANGELOG_MD": root / "CHANGELOG.md",
-            "AGENT_FILE": root / ".github" / "agents" / "openclaw.agent.md",
-            "POLICY_FILE": root / ".github" / "openclaw-policy.yaml",
+            "AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
+            "POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
             "ROLLOUT_FILE": root / "copilot-agent" / "rollout-mode.json",
         }
         for key, value in mappings.items():
@@ -73,7 +73,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
         with isolated_workspace() as root:
             write_skill(root, "python-pro", "python", "development")
             (root / ".github" / "copilot-instructions.md").write_text("skills", encoding="utf-8")
-            (root / ".github" / "agents" / "openclaw.agent.md").write_text("skills", encoding="utf-8")
+            (root / ".github" / "agents" / "freejt7.agent.md").write_text("skills", encoding="utf-8")
             sm._rebuild_index_from_disk()
 
             rc = sm.cmd_activate(Namespace(skill_ids=["python-pro"]))
@@ -89,7 +89,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             write_skill(root, "docker-expert", "docker", "infrastructure")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "openclaw.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
             target = root / "target-project"
             target.mkdir()
 
@@ -111,7 +111,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             write_skill(root, "planner-pro", "planning", "general")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "openclaw.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
             target = root / "project-all-ides"
             target.mkdir()
 
@@ -127,15 +127,15 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             self.assertEqual(rc, 0)
             self.assertTrue((target / ".vscode" / "settings.json").exists())
             self.assertTrue((target / ".cursor" / "settings.json").exists())
-            self.assertTrue((target / ".cursor" / "rules" / "openclaw.mdc").exists())
+            self.assertTrue((target / ".cursor" / "rules" / "freejt7.mdc").exists())
             self.assertTrue((target / ".kiro" / "settings.json").exists())
-            self.assertTrue((target / ".kiro" / "steering" / "openclaw.md").exists())
-            self.assertTrue((target / ".antigravity" / "openclaw.runtime.json").exists())
-            self.assertTrue((target / ".codex" / "openclaw-agent.md").exists())
+            self.assertTrue((target / ".kiro" / "steering" / "freejt7.md").exists())
+            self.assertTrue((target / ".antigravity" / "freejt7.runtime.json").exists())
+            self.assertTrue((target / ".codex" / "freejt7-agent.md").exists())
             self.assertTrue((target / "AGENTS.md").exists())
-            self.assertTrue((target / ".claude" / "openclaw-agent.md").exists())
+            self.assertTrue((target / ".claude" / "freejt7-agent.md").exists())
             self.assertTrue((target / "CLAUDE.md").exists())
-            self.assertTrue((target / ".gemini" / "openclaw-agent.md").exists())
+            self.assertTrue((target / ".gemini" / "freejt7-agent.md").exists())
             self.assertTrue((target / "GEMINI.md").exists())
 
     def test_install_updates_user_settings_for_selected_ides(self):
@@ -143,14 +143,14 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             write_skill(root, "qa-pro", "tests", "testing")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "openclaw.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
             target = root / "project-user-settings"
             target.mkdir()
             appdata_root = root / "appdata"
             appdata_root.mkdir(parents=True, exist_ok=True)
 
-            original = os.environ.get("OPENCLAW_APPDATA_ROOT")
-            os.environ["OPENCLAW_APPDATA_ROOT"] = str(appdata_root)
+            original = os.environ.get("FREE_JT7_APPDATA_ROOT")
+            os.environ["FREE_JT7_APPDATA_ROOT"] = str(appdata_root)
             try:
                 rc = sm.cmd_install(
                     Namespace(
@@ -163,9 +163,9 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
                 )
             finally:
                 if original is None:
-                    os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+                    os.environ.pop("FREE_JT7_APPDATA_ROOT", None)
                 else:
-                    os.environ["OPENCLAW_APPDATA_ROOT"] = original
+                    os.environ["FREE_JT7_APPDATA_ROOT"] = original
 
             self.assertEqual(rc, 0)
             self.assertTrue((appdata_root / "Code" / "User" / "settings.json").exists())
@@ -184,3 +184,4 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

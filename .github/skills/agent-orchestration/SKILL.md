@@ -1,11 +1,11 @@
----
+﻿---
 name: agent-orchestration
 description: "Multi-agent orchestration patterns using Gem/RUG Orchestrator style: decompose goals, delegate to sub-agents, validate and repeat until complete. Use when coordinating multiple specialized agents for complex autonomous tasks."
 risk: medium
 source: github/awesome-copilot
 ---
 
-# Agent Orchestration — Gem/RUG Pattern
+# Agent Orchestration â€” Gem/RUG Pattern
 
 Orchestrate multiple specialized sub-agents to accomplish complex goals autonomously. Based on the **Gem Orchestrator** and **RUG Orchestrator** patterns from github/awesome-copilot.
 
@@ -19,8 +19,8 @@ Orchestrate multiple specialized sub-agents to accomplish complex goals autonomo
 ## Core Orchestration Loop
 
 ```
-GOAL → DECOMPOSE → DELEGATE → COLLECT → VALIDATE → DONE?
-                                                  → repeat if not
+GOAL â†’ DECOMPOSE â†’ DELEGATE â†’ COLLECT â†’ VALIDATE â†’ DONE?
+                                                  â†’ repeat if not
 ```
 
 ### 1. Goal Decomposition
@@ -29,10 +29,10 @@ Break the goal into independent tasks with clear outputs:
 
 ```
 Goal: "Build a FastAPI endpoint with tests and docs"
-→ Task A: Research existing patterns in codebase
-→ Task B: Implement the endpoint
-→ Task C: Write unit + integration tests
-→ Task D: Generate OpenAPI documentation
+â†’ Task A: Research existing patterns in codebase
+â†’ Task B: Implement the endpoint
+â†’ Task C: Write unit + integration tests
+â†’ Task D: Generate OpenAPI documentation
 ```
 
 ### 2. Sub-agent Delegation
@@ -55,8 +55,8 @@ AgentTask {
 After each sub-agent completes:
 - Verify output matches expected format
 - Check acceptance criteria
-- If failed → retry with corrected context
-- If passed → pass result as context to next task
+- If failed â†’ retry with corrected context
+- If passed â†’ pass result as context to next task
 
 ### 4. Synthesis
 
@@ -66,7 +66,7 @@ Combine sub-agent outputs into final coherent result. Resolve conflicts between 
 
 ## RUG Pattern (Pure Orchestration)
 
-The RUG Orchestrator never writes code directly — it only:
+The RUG Orchestrator never writes code directly â€” it only:
 1. **Reads** the current state (files, errors, requirements)
 2. **Understands** what tasks are needed
 3. **Gets** the right sub-agent to do each task
@@ -117,19 +117,20 @@ Do NOT implement anything yourself.
 
 ## Safety Rules
 
-1. **Validate before proceeding** — never pass unvalidated output downstream
-2. **Idempotency** — sub-agents should be re-runnable without side effects
-3. **Context isolation** — each sub-agent gets only what it needs
-4. **Rollback plan** — maintain git checkpoint before starting orchestration
-5. **Max iterations** — set a hard limit (e.g., 10 cycles) to prevent infinite loops
+1. **Validate before proceeding** â€” never pass unvalidated output downstream
+2. **Idempotency** â€” sub-agents should be re-runnable without side effects
+3. **Context isolation** â€” each sub-agent gets only what it needs
+4. **Rollback plan** â€” maintain git checkpoint before starting orchestration
+5. **Max iterations** â€” set a hard limit (e.g., 10 cycles) to prevent infinite loops
 
 ---
 
-## Integration with OpenClaw
+## Integration with Free JT7
 
 Combine with other skills:
-- `dispatching-parallel-agents` — for truly independent parallel tasks
-- `context-multi-file` — when sub-agents need cross-file context
-- `polyglot-testing-pipeline` — for autonomous testing sub-tasks
-- `tdd-full-cycle` — when implementation follows TDD
-- `agent-safety-governance` — to validate agent actions before execution
+- `dispatching-parallel-agents` â€” for truly independent parallel tasks
+- `context-multi-file` â€” when sub-agents need cross-file context
+- `polyglot-testing-pipeline` â€” for autonomous testing sub-tasks
+- `tdd-full-cycle` â€” when implementation follows TDD
+- `agent-safety-governance` â€” to validate agent actions before execution
+

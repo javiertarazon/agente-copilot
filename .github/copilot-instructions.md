@@ -107,7 +107,7 @@ python skills_manager.py fetch --update
 
 ## Runtime Operacional (Task Runs)
 
-El agente debe ejecutar tareas bajo policy declarativa en `.github/openclaw-policy.yaml`.
+El agente debe ejecutar tareas bajo policy declarativa en `.github/free-jt7-policy.yaml`.
 
 Comandos operativos:
 
@@ -139,7 +139,7 @@ Reglas:
 
 Este agente opera de forma **global** desde cualquier espacio de trabajo de VS Code.
 El archivo de estado del proyecto activo estÃ¡ en:
-`D:/javie/agente coplit tipo open claw con skill/copilot-agent/active-project.json`
+`D:/javie/agente coplit tipo free jt7 con skill/copilot-agent/active-project.json`
 
 ### Reglas de contexto cruzado
 
@@ -151,22 +151,23 @@ El archivo de estado del proyecto activo estÃ¡ en:
 ### Cambiar el proyecto activo
 
 ```powershell
-python "D:/javie/agente coplit tipo open claw con skill/skills_manager.py" set-project <ruta>
+python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" set-project <ruta>
 # Ejemplo:
-python "D:/javie/agente coplit tipo open claw con skill/skills_manager.py" set-project "D:/javie/mi-proyecto"
+python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" set-project "D:/javie/mi-proyecto"
 ```
 
 ### Instalar skills en otro proyecto
 
 ```powershell
-python "D:/javie/agente coplit tipo open claw con skill/skills_manager.py" install <ruta>
+python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" install <ruta>
 # Crea symlinks de .github/skills/ e .github/instructions/ en el proyecto destino
 ```
 
 ### Workspace multi-proyecto
 
-Abre `open-claw-multiroot.code-workspace` para trabajar con el agente y tu proyecto
+Abre `free-jt7-multiroot.code-workspace` para trabajar con el agente y tu proyecto
 en el mismo VS Code. Edita la segunda carpeta (`../proyecto-activo`) con la ruta real.
+
 
 
 
