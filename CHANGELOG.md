@@ -5,6 +5,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+
+## [v2.0] - 2026-02-26
+
+### Summary
+OpenClaw autonomous runtime with policy, run telemetry, canary rollout, and strict quality gate.
+
+### Added
+- Declarative policy at `.github/openclaw-policy.yaml`.
+- Task runtime commands: `task-start/task-step/task-close/task-run`.
+- Ephemeral skill resolution with `skill-resolve`.
+- Canary rollout modes via `rollout-mode` (`shadow|assist|autonomous`).
+- Run telemetry at `copilot-agent/runs/<run_id>.json` and `events.jsonl` with sanitization.
+- Operational runbook at `copilot-agent/RUNBOOK.md`.
+
+### Changed
+- `doctor` now supports `--strict`.
+- `skills_manager.py` hardened for autonomous execution and quality gates.
+
 ## [v1.1] — 2026-07-15
 
 ### Summary
@@ -53,3 +71,9 @@ Initial release — 958 expert skills system built on top of:
 - `CLAUDE.md` and `.github/copilot-instructions.md` with system prompt for Copilot
 - `copilot-agent/` task tracking (tasks.yaml, audit-log, RESUME.md)
 - OpenClaw source in `OPEN CLAW/`
+
+## [v1.3] — 2026-02-26
+
+### Summary
+Release sync automático: 962 skills y consistencia de metadatos.
+

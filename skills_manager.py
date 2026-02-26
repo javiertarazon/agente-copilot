@@ -16,6 +16,10 @@ Comandos:
     add        Agregar una skill nueva o desde archivo
     github-search  Buscar repos de skills en GitHub
     sync-claude    Actualizar CLAUDE.md con skills activas
+    policy-validate  Validar policy de ejecución
+    rollout-mode     Ver/cambiar modo canary
+    skill-resolve    Resolver skills efímeras
+    task-run/task-*  Orquestar runs de tarea con evidencia
 """
 from __future__ import annotations
 
@@ -23,14 +27,27 @@ import argparse
 import json
 import os
 import re
+import shutil
+import shlex
+import subprocess
 import sys
 import time
 import urllib.request
 import urllib.parse
+import uuid
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
+
+# Evita caidas por UnicodeEncodeError en consolas Windows con cp1252.
+for stream_name in ("stdout", "stderr"):
+    stream = getattr(sys, stream_name, None)
+    if stream is not None and hasattr(stream, "reconfigure"):
+        try:
+            stream.reconfigure(errors="replace")
+        except Exception:
+            pass
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Constantes
@@ -42,11 +59,19 @@ SKILLS_DIR    = ROOT / ".github" / "skills"
 INDEX_FILE    = SKILLS_DIR / ".skills_index.json"
 ACTIVE_FILE   = SKILLS_DIR / ".active_skills.json"
 SOURCES_FILE  = SKILLS_DIR / ".sources.json"
+LEGACY_SKILLS_DIR = ROOT / "skills"
+LEGACY_INDEX_FILE = LEGACY_SKILLS_DIR / ".skills_index.json"
 CLAUDE_MD     = ROOT / "CLAUDE.md"
 COPILOT_AGENT = ROOT / "copilot-agent"
 GH_SKILLS_DIR = ROOT / ".github" / "skills"
 GH_INSTR_DIR  = ROOT / ".github" / "instructions"
 COPILOT_INSTR = ROOT / ".github" / "copilot-instructions.md"
+VERSION_FILE  = ROOT / "VERSION"
+README_MD     = ROOT / "README.md"
+CHANGELOG_MD  = ROOT / "CHANGELOG.md"
+AGENT_FILE    = ROOT / ".github" / "agents" / "openclaw.agent.md"
+POLICY_FILE   = ROOT / ".github" / "openclaw-policy.yaml"
+ROLLOUT_FILE  = COPILOT_AGENT / "rollout-mode.json"
 
 GITHUB_RAW  = "https://raw.githubusercontent.com"
 GITHUB_API  = "https://api.github.com"
@@ -55,6 +80,24 @@ DEFAULT_BRANCH = "main"
 
 SKILLS_START = "<!-- SKILLS_LIBRARY_START -->"
 SKILLS_END   = "<!-- SKILLS_LIBRARY_END -->"
+
+DEFAULT_POLICY: dict[str, Any] = {
+    "autonomy": {"mode": "autonomous"},
+    "risk": {
+        "thresholds": {
+            "low_keywords": ["list", "search", "read", "inspect", "analyze"],
+            "medium_keywords": ["install", "update", "configure", "build", "test"],
+            "high_keywords": ["delete", "drop", "format", "reset", "remove", "shutdown"],
+        },
+        "destructive_patterns": ["rm ", "rmdir", "del ", "drop ", "truncate ", "git reset --hard"],
+    },
+    "execution": {"retry": {"max_attempts": 3}},
+    "quality_gate": {"required": True},
+    "skills": {"activation": "ephemeral", "max_composed": 3},
+    "shell": {"strategy": "cross-shell", "default": "powershell"},
+    "telemetry": {"level": "full_sanitized"},
+    "report": {"style": "executive_technical"},
+}
 
 # Palabras clave para auto-categorizar skills
 CATEGORY_KEYWORDS: dict[str, list[str]] = {
@@ -102,9 +145,15 @@ def load_json(path: Path, default: Any) -> Any:
     return default
 
 
-def save_json(path: Path, data: Any) -> None:
+def _atomic_write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(content, encoding="utf-8")
+    tmp.replace(path)
+
+
+def save_json(path: Path, data: Any) -> None:
+    _atomic_write_text(path, json.dumps(data, indent=2, ensure_ascii=False))
 
 
 def load_index() -> list[dict]:
@@ -129,6 +178,332 @@ def load_sources() -> dict:
 
 def save_sources(data: dict) -> None:
     save_json(SOURCES_FILE, data)
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    out = dict(base)
+    for key, value in override.items():
+        if key in out and isinstance(out[key], dict) and isinstance(value, dict):
+            out[key] = _deep_merge(out[key], value)
+        else:
+            out[key] = value
+    return out
+
+
+def _parse_scalar(value: str) -> Any:
+    val = value.strip()
+    if val.lower() in {"true", "false"}:
+        return val.lower() == "true"
+    if re.fullmatch(r"-?\d+", val):
+        try:
+            return int(val)
+        except Exception:
+            return val
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        return val[1:-1]
+    if val.startswith("[") and val.endswith("]"):
+        items = [x.strip() for x in val[1:-1].split(",") if x.strip()]
+        return [item.strip("'\"") for item in items]
+    return val
+
+
+def _parse_simple_yaml(text: str) -> dict[str, Any]:
+    root: dict[str, Any] = {}
+    stack: list[tuple[int, dict[str, Any]]] = [(-1, root)]
+    for raw_line in text.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        line = raw_line.strip()
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip()
+        value = value.strip()
+        while len(stack) > 1 and indent <= stack[-1][0]:
+            stack.pop()
+        parent = stack[-1][1]
+        if value == "":
+            node: dict[str, Any] = {}
+            parent[key] = node
+            stack.append((indent, node))
+        else:
+            parent[key] = _parse_scalar(value)
+    return root
+
+
+def _to_yaml_lines(data: dict[str, Any], level: int = 0) -> list[str]:
+    lines: list[str] = []
+    prefix = " " * level
+    for key, value in data.items():
+        if isinstance(value, dict):
+            lines.append(f"{prefix}{key}:")
+            lines.extend(_to_yaml_lines(value, level + 2))
+        elif isinstance(value, list):
+            rendered = ", ".join(
+                f"'{x}'" if isinstance(x, str) and ("," in x or " " in x) else str(x)
+                for x in value
+            )
+            lines.append(f"{prefix}{key}: [{rendered}]")
+        elif isinstance(value, bool):
+            lines.append(f"{prefix}{key}: {'true' if value else 'false'}")
+        else:
+            lines.append(f"{prefix}{key}: {value}")
+    return lines
+
+
+def _write_policy(policy: dict[str, Any]) -> None:
+    lines = ["# OpenClaw policy file (autogenerated)", * _to_yaml_lines(policy), ""]
+    _atomic_write_text(POLICY_FILE, "\n".join(lines))
+
+
+def _load_policy() -> dict[str, Any]:
+    if not POLICY_FILE.exists():
+        _write_policy(DEFAULT_POLICY)
+        return DEFAULT_POLICY
+    try:
+        parsed = _parse_simple_yaml(POLICY_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        parsed = {}
+    return _deep_merge(DEFAULT_POLICY, parsed if isinstance(parsed, dict) else {})
+
+
+def _validate_policy(policy: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    mode = str(policy.get("autonomy", {}).get("mode", ""))
+    if mode not in {"shadow", "assist", "autonomous"}:
+        errors.append("autonomy.mode debe ser shadow|assist|autonomous")
+    strategy = str(policy.get("shell", {}).get("strategy", ""))
+    if strategy not in {"cross-shell", "powershell"}:
+        errors.append("shell.strategy debe ser cross-shell|powershell")
+    max_attempts = policy.get("execution", {}).get("retry", {}).get("max_attempts", 0)
+    if not isinstance(max_attempts, int) or max_attempts < 1 or max_attempts > 5:
+        errors.append("execution.retry.max_attempts debe ser entero entre 1 y 5")
+    level = str(policy.get("telemetry", {}).get("level", ""))
+    if level not in {"full_sanitized", "moderate", "minimal"}:
+        errors.append("telemetry.level inválido")
+    return errors
+
+
+def _load_rollout_mode(policy: dict[str, Any]) -> str:
+    if ROLLOUT_FILE.exists():
+        data = load_json(ROLLOUT_FILE, {})
+        mode = str(data.get("mode", ""))
+        if mode in {"shadow", "assist", "autonomous"}:
+            return mode
+    return str(policy.get("autonomy", {}).get("mode", "autonomous"))
+
+
+def _save_rollout_mode(mode: str) -> None:
+    COPILOT_AGENT.mkdir(parents=True, exist_ok=True)
+    save_json(ROLLOUT_FILE, {
+        "mode": mode,
+        "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    })
+
+
+def _runs_dir() -> Path:
+    return COPILOT_AGENT / "runs"
+
+
+def _run_paths(run_id: str) -> tuple[Path, Path]:
+    base = _runs_dir()
+    base.mkdir(parents=True, exist_ok=True)
+    return base / f"{run_id}.json", base / f"{run_id}.events.jsonl"
+
+
+def _redact_sensitive(text: str) -> str:
+    if not text:
+        return text
+    out = text
+    out = re.sub(
+        r"(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*['\"]?([^\s'\"`]+)",
+        r"\1=***REDACTED***",
+        out,
+    )
+    out = re.sub(r"(?i)bearer\s+([a-z0-9\._\-]+)", "Bearer ***REDACTED***", out)
+    out = re.sub(r"ghp_[A-Za-z0-9]{20,}", "***REDACTED***", out)
+    out = re.sub(r"sk-[A-Za-z0-9]{20,}", "***REDACTED***", out)
+    return out
+
+
+def _append_run_event(run_id: str, payload: dict[str, Any]) -> None:
+    _, events = _run_paths(run_id)
+    safe_payload = {
+        **payload,
+        "command": _redact_sensitive(str(payload.get("command", ""))),
+        "result": _redact_sensitive(str(payload.get("result", ""))),
+        "redaction_applied": True,
+    }
+    with open(events, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps(safe_payload, ensure_ascii=False) + "\n")
+
+
+def _classify_risk(text: str, policy: dict[str, Any]) -> str:
+    probe = text.lower()
+    thresholds = policy.get("risk", {}).get("thresholds", {})
+    if any(k in probe for k in thresholds.get("high_keywords", [])):
+        return "high"
+    if any(k in probe for k in thresholds.get("medium_keywords", [])):
+        return "medium"
+    return "low"
+
+
+def _is_destructive(command: str, policy: dict[str, Any]) -> bool:
+    probe = command.lower()
+    for pat in policy.get("risk", {}).get("destructive_patterns", []):
+        if pat.lower() in probe:
+            return True
+    return False
+
+
+def _normalize_shell_command(command: str, strategy: str) -> str:
+    if strategy != "cross-shell":
+        return command
+    trimmed = command.strip()
+    if trimmed == "ls":
+        return "Get-ChildItem"
+    if trimmed.startswith("cat "):
+        arg = trimmed[4:].strip()
+        return f"Get-Content -Path {arg}"
+    if trimmed == "pwd":
+        return "Get-Location"
+    if trimmed.startswith("grep "):
+        parts = shlex.split(trimmed)
+        if len(parts) >= 3:
+            pat = parts[1]
+            target = parts[2]
+            return f"Select-String -Path {target} -Pattern {pat}"
+    return command
+
+
+def _execute_powershell(command: str, timeout: int = 120000) -> tuple[int, str]:
+    try:
+        proc = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", command],
+            capture_output=True,
+            text=True,
+            timeout=timeout / 1000,
+            encoding="utf-8",
+            errors="replace",
+        )
+        output = (proc.stdout or "") + (proc.stderr or "")
+        return proc.returncode, output[:8000]
+    except subprocess.TimeoutExpired:
+        return 124, "command timed out"
+    except Exception as exc:
+        return 1, str(exc)
+
+
+def _resolve_skills_for_query(query: str, top_n: int = 3) -> list[dict[str, Any]]:
+    skills = load_index()
+    scored = [(s, _relevance(s, query)) for s in skills]
+    scored = [(s, score) for s, score in scored if score > 0]
+    scored.sort(key=lambda item: item[1], reverse=True)
+    picked = []
+    for skill, score in scored[:top_n]:
+        picked.append({
+            "id": skill["id"],
+            "category": skill.get("category", "general"),
+            "score": round(score, 3),
+            "gh_path": skill.get("gh_path", ""),
+        })
+    return picked
+def _backup_file(path: Path) -> Path | None:
+    if not path.exists():
+        return None
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup = path.with_name(f"{path.name}.bak.{stamp}")
+    shutil.copy2(path, backup)
+    return backup
+
+
+def _mirror_legacy_index(skills: list[dict]) -> None:
+    LEGACY_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
+    save_json(LEGACY_INDEX_FILE, skills)
+
+
+def _ensure_active_consistency(skills: list[dict]) -> list[dict]:
+    active_data = load_active()
+    active_set = set(active_data.get("active", []))
+    for skill in skills:
+        skill["active"] = skill.get("id") in active_set
+    return skills
+
+
+def _load_skills_from_disk(skills_dir: Path) -> list[dict]:
+    skills: list[dict] = []
+    active_set = set(load_active().get("active", []))
+    for skill_md in sorted(skills_dir.glob("*/SKILL.md")):
+        skill_id = skill_md.parent.name
+        with open(skill_md, "r", encoding="utf-8", errors="replace") as handle:
+            header_probe = handle.read(16384)
+        if not header_probe.startswith("---"):
+            header_probe = ""
+        meta, _ = parse_frontmatter(header_probe)
+        fm_meta = meta.get("metadata", {}) if isinstance(meta.get("metadata"), dict) else {}
+        name = str(meta.get("name", skill_id))
+        description = str(meta.get("description", "")).strip()
+        category = str(fm_meta.get("category", "")) or auto_categorize(skill_id, description)
+        skills.append({
+            "id": skill_id,
+            "name": name,
+            "description": description[:120],
+            "category": category,
+            "path": str(skill_md.relative_to(ROOT)).replace("\\", "/"),
+            "gh_path": str(skill_md.relative_to(ROOT)).replace("\\", "/"),
+            "tags": [t for t in skill_id.replace("-", " ").split() if len(t) > 2],
+            "risk": str(fm_meta.get("risk", "unknown")),
+            "source": str(fm_meta.get("source", "local")),
+            "active": skill_id in active_set,
+        })
+    return skills
+
+
+def _rebuild_index_from_disk() -> list[dict]:
+    if not SKILLS_DIR.exists():
+        raise RuntimeError(f"No existe el catálogo de skills: {SKILLS_DIR}")
+    skills = _load_skills_from_disk(SKILLS_DIR)
+    if not skills:
+        raise RuntimeError("No se encontraron SKILL.md en .github/skills")
+    skills.sort(key=lambda s: s["id"])
+    save_index(skills)
+    _mirror_legacy_index(skills)
+    return skills
+
+
+def _migrate_legacy_state() -> list[str]:
+    notes: list[str] = []
+    if LEGACY_INDEX_FILE.exists() and not INDEX_FILE.exists():
+        backup = _backup_file(LEGACY_INDEX_FILE)
+        if backup:
+            notes.append(f"backup legado creado: {backup.name}")
+    if not INDEX_FILE.exists() and SKILLS_DIR.exists():
+        skills = _load_skills_from_disk(SKILLS_DIR)
+        if skills:
+            save_index(skills)
+            _mirror_legacy_index(skills)
+            notes.append("índice reconstruido desde .github/skills")
+    elif INDEX_FILE.exists():
+        _mirror_legacy_index(load_index())
+        notes.append("espejo legado actualizado")
+    return notes
+
+
+def _preflight(require_index: bool = False, strict_active_project: bool = False) -> None:
+    if not SKILLS_DIR.exists():
+        raise RuntimeError(f"Catálogo no encontrado: {SKILLS_DIR}")
+    migrate_notes = _migrate_legacy_state()
+    if migrate_notes:
+        _log_audit("migrate", "; ".join(migrate_notes))
+    if require_index and not INDEX_FILE.exists():
+        _rebuild_index_from_disk()
+    if strict_active_project:
+        active_project = load_json(COPILOT_AGENT / "active-project.json", {})
+        if not active_project.get("path"):
+            raise RuntimeError(
+                "Proyecto activo no configurado. Ejecuta: python skills_manager.py set-project <ruta>"
+            )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -171,6 +546,7 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
             if v.startswith('[') and v.endswith(']'):
                 v = [x.strip().strip('"') for x in v[1:-1].split(',') if x.strip()]
             meta[k.strip()] = v
+            i += 1
         else:
             i += 1
             continue
@@ -261,6 +637,12 @@ def print_progress(done: int, total: int, label: str = "", width: int = 36) -> N
 
 def cmd_fetch(args: argparse.Namespace) -> int:
     """Importa skills desde un repositorio GitHub."""
+    try:
+        _preflight(require_index=False)
+    except RuntimeError as exc:
+        print(f"[fetch] ERROR: {exc}")
+        return 1
+
     repo   = args.repo   if hasattr(args, "repo")   and args.repo   else DEFAULT_REPO
     branch = args.branch if hasattr(args, "branch") and args.branch else DEFAULT_BRANCH
     force  = getattr(args, "update", False)
@@ -375,51 +757,8 @@ def cmd_fetch(args: argparse.Namespace) -> int:
 
 def _rebuild_index(remote_index: list[dict], repo: str) -> None:
     """Reconstruye .skills_index.json a partir de los archivos locales."""
-    active_data = load_active()
-    active_set  = set(active_data.get("active", []))
-
-    skills: list[dict] = []
-    for entry in remote_index:
-        skill_id    = entry.get("id", "")
-        skill_path  = entry.get("path", "")
-        description = entry.get("description", "")
-        category    = entry.get("category", "")
-        risk        = entry.get("risk", "unknown")
-
-        local_file = ROOT / skill_path / "SKILL.md"
-        if not local_file.exists():
-            continue
-
-        # Leer metadata real del archivo
-        try:
-            text = local_file.read_text(encoding="utf-8")
-            meta, _ = parse_frontmatter(text)
-            fm_meta = meta.get("metadata", {})
-            if isinstance(fm_meta, dict):
-                category = fm_meta.get("category", category) or category
-        except Exception:
-            pass
-
-        if not category or category == "uncategorized":
-            category = auto_categorize(skill_id, description)
-
-        # Extraer tags del ID
-        tags = [p for p in skill_id.replace("-", " ").split() if len(p) > 2]
-
-        skills.append({
-            "id":          skill_id,
-            "name":        skill_id,
-            "path":        str(local_file.relative_to(ROOT)).replace("\\", "/"),
-            "category":    category,
-            "description": description,
-            "tags":        tags,
-            "risk":        risk,
-            "source":      repo,
-            "active":      skill_id in active_set,
-        })
-
-    skills.sort(key=lambda s: s["id"])
-    save_index(skills)
+    del remote_index, repo
+    skills = _rebuild_index_from_disk()
     print(f"[index] {len(skills)} skills indexados.")
 
 
@@ -428,6 +767,11 @@ def _rebuild_index(remote_index: list[dict], repo: str) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def cmd_list(args: argparse.Namespace) -> int:
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[list] ERROR: {exc}")
+        return 1
     skills = load_index()
     if not skills:
         print("No hay skills en el indice. Ejecuta: python skills_manager.py fetch")
@@ -453,9 +797,9 @@ def cmd_list(args: argparse.Namespace) -> int:
         by_cat[s["category"]].append(s)
 
     total_active = sum(1 for s in skills if s.get("active"))
-    print(f"\n{'─'*68}")
-    print(f"  Skills Library  —  {len(skills)} skills  |  {total_active} activas")
-    print(f"{'─'*68}")
+    print(f"\n{'-'*68}")
+    print(f"  Skills Library  -  {len(skills)} skills  |  {total_active} activas")
+    print(f"{'-'*68}")
 
     for cat in sorted(by_cat.keys()):
         group = by_cat[cat]
@@ -500,6 +844,11 @@ def cmd_search(args: argparse.Namespace) -> int:
         print("Uso: python skills_manager.py search QUERY [--top N] [--category CAT]")
         return 1
 
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[search] ERROR: {exc}")
+        return 1
     skills = load_index()
     if not skills:
         print("No hay skills. Ejecuta: python skills_manager.py fetch")
@@ -519,7 +868,7 @@ def cmd_search(args: argparse.Namespace) -> int:
 
     print(f'\nResultados para: "{query}"  ({len(scored)} encontrados)\n')
     print(f"  {'Score':>5}  {'Categoria':<16}  {'Skill ID':<38}  Descripcion")
-    print(f"  {'─'*5}  {'─'*16}  {'─'*38}  {'─'*40}")
+    print(f"  {'-'*5}  {'-'*16}  {'-'*38}  {'-'*40}")
     for s, sc in scored:
         flag = " [ON]" if s.get("active") else "     "
         desc = s.get("description","")[:42]
@@ -538,6 +887,11 @@ def cmd_search(args: argparse.Namespace) -> int:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def cmd_activate(args: argparse.Namespace) -> int:
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[activate] ERROR: {exc}")
+        return 1
     skill_ids = args.skill_ids
     skills    = load_index()
     active    = load_active()
@@ -559,6 +913,7 @@ def cmd_activate(args: argparse.Namespace) -> int:
         active["last_changed"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         save_index(skills)
         save_active(active)
+        _mirror_legacy_index(skills)
         print(f"[activate] Activadas: {', '.join(activated)}")
         cmd_sync_claude(args)
     if not_found:
@@ -568,6 +923,11 @@ def cmd_activate(args: argparse.Namespace) -> int:
 
 
 def cmd_deactivate(args: argparse.Namespace) -> int:
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[deactivate] ERROR: {exc}")
+        return 1
     skill_ids = args.skill_ids
     skills    = load_index()
     active    = load_active()
@@ -586,6 +946,7 @@ def cmd_deactivate(args: argparse.Namespace) -> int:
         active["last_changed"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         save_index(skills)
         save_active(active)
+        _mirror_legacy_index(skills)
         print(f"[deactivate] Desactivadas: {', '.join(deactivated)}")
         cmd_sync_claude(args)
     return 0
@@ -597,12 +958,18 @@ def cmd_deactivate(args: argparse.Namespace) -> int:
 
 def cmd_add(args: argparse.Namespace) -> int:
     """Agrega una skill nueva al indice."""
+    try:
+        _preflight(require_index=False)
+    except RuntimeError as exc:
+        print(f"[add] ERROR: {exc}")
+        return 1
     name     = getattr(args, "name",      None)
     category = getattr(args, "category",  "general")
     desc     = getattr(args, "description", "")
     file_src = getattr(args, "file",      None)
     from_repo= getattr(args, "from_repo", None)
 
+    local_file: Path | None = None
     if from_repo:
         # Formato: OWNER/REPO/path/to/SKILL.md
         parts = from_repo.split("/", 2)
@@ -621,7 +988,7 @@ def cmd_add(args: argparse.Namespace) -> int:
             name = Path(path_in_repo).parent.name or Path(path_in_repo).stem
         if not category:
             category = auto_categorize(name, desc)
-        local_file = SKILLS_DIR / category / name / "SKILL.md"
+        local_file = SKILLS_DIR / name / "SKILL.md"
         local_file.parent.mkdir(parents=True, exist_ok=True)
         local_file.write_bytes(content)
         print(f"[add] Skill guardada en: {local_file}")
@@ -636,7 +1003,7 @@ def cmd_add(args: argparse.Namespace) -> int:
             name = src.stem
         if not category:
             category = auto_categorize(name, desc)
-        local_file = SKILLS_DIR / category / name / "SKILL.md"
+        local_file = SKILLS_DIR / name / "SKILL.md"
         local_file.parent.mkdir(parents=True, exist_ok=True)
         local_file.write_bytes(src.read_bytes())
         print(f"[add] Skill importada en: {local_file}")
@@ -649,7 +1016,7 @@ def cmd_add(args: argparse.Namespace) -> int:
             return 1
         if not category:
             category = auto_categorize(name, desc)
-        local_file = SKILLS_DIR / category / name / "SKILL.md"
+        local_file = SKILLS_DIR / name / "SKILL.md"
         local_file.parent.mkdir(parents=True, exist_ok=True)
         template = f"""---
 name: {name}
@@ -679,6 +1046,25 @@ metadata:
 -
 """
         local_file.write_text(template, encoding="utf-8")
+
+    if local_file is None:
+        print("[add] ERROR interno: no se pudo resolver ruta de salida.")
+        return 1
+
+    if not local_file.exists():
+        print(f"[add] ERROR: no se creó el archivo esperado: {local_file}")
+        return 1
+
+    try:
+        skills = _rebuild_index_from_disk()
+    except RuntimeError as exc:
+        print(f"[add] ERROR al reconstruir índice: {exc}")
+        return 1
+
+    _log_audit("add", f"{name} ({category})")
+    _update_resume("add", f"skill creada/importada: {name}")
+    print(f"[add] '{name}' agregada. Índice total: {len(skills)}")
+    return 0
 
 
 def cmd_add_agent(args: argparse.Namespace) -> int:
@@ -715,26 +1101,8 @@ Define aquí el comportamiento y las reglas del agente.
 """
     agent_file.write_text(template, encoding="utf-8")
     print(f"[add-agent] Agente creado en {agent_file}")
-    return 0
-
-    # Agregar al indice
-    skills = load_index()
-    existing_ids = {s["id"] for s in skills}
-    if name and name not in existing_ids:
-        skills.append({
-            "id":          name,
-            "name":        name,
-            "path":        str(Path(file_src).relative_to(ROOT)).replace("\\", "/"),
-            "category":    category,
-            "description": desc,
-            "tags":        [t for t in name.replace("-"," ").split() if len(t)>2],
-            "risk":        "safe",
-            "source":      "local",
-            "active":      False,
-        })
-        skills.sort(key=lambda s: s["id"])
-        save_index(skills)
-        print(f"[add] '{name}' agregada al indice. Total: {len(skills)}")
+    _log_audit("add-agent", agent_id)
+    _update_resume("add-agent", f"agente creado: {agent_id}")
     return 0
 
 
@@ -783,9 +1151,9 @@ def cmd_github_search(args: argparse.Namespace) -> int:
         print("  Tip: intenta sin GITHUB_TOKEN para busqueda publica.")
         return 0
 
-    print(f'\nRepositorios GitHub — "{query}"\n')
+    print(f'\nRepositorios GitHub - "{query}"\n')
     print(f"  {'Stars':>6}  {'Repositorio':<45}  Descripcion")
-    print(f"  {'─'*6}  {'─'*45}  {'─'*40}")
+    print(f"  {'-'*6}  {'-'*45}  {'-'*40}")
     for r in repos:
         stars_str = f"{r['stars']:,}" if r['stars'] else "0"
         print(f"  {stars_str:>6}  {r['repo']:<45}  {r['description']}")
@@ -821,6 +1189,11 @@ CATEGORY_APPLY_TO: dict[str, str] = {
 
 def cmd_adapt_copilot(args: argparse.Namespace) -> int:
     """Regenera .github/instructions/ y actualiza copilot-instructions.md."""
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[adapt-copilot] ERROR: {exc}")
+        return 1
     skills = load_index()
     if not skills:
         print("[adapt-copilot] No hay skills en el indice.")
@@ -948,6 +1321,12 @@ python skills_manager.py sync-claude
 
 
 def cmd_sync_claude(args: argparse.Namespace) -> int:
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[sync-claude] ERROR: {exc}")
+        return 1
+
     skills  = load_index()
     active_skills = [s for s in skills if s.get("active")]
     total   = len(skills)
@@ -958,7 +1337,7 @@ def cmd_sync_claude(args: argparse.Namespace) -> int:
         SKILLS_START,
         "## Skills Library — Contexto Experto",
         "",
-        f"Directorio: `skills/` — **{total} skills** en el indice.",
+        f"Directorio: `.github/skills/` — **{total} skills** en el indice.",
         f"Actualizacion: {ts}",
         "",
         "### Comandos de gestion",
@@ -1044,15 +1423,16 @@ Este directorio contiene el agente de trading automatico para MetaTrader5
 def cmd_set_project(args: argparse.Namespace) -> int:
     """Establece el proyecto activo donde se aplican los cambios."""
     import json as _json
-    ruta = pathlib.Path(args.path).resolve()
+    ruta = Path(args.path).resolve()
     if not ruta.exists():
-        print(f"[set-project] ⚠ La ruta no existe: {ruta}")
+        print(f"[set-project] WARN La ruta no existe: {ruta}")
         resp = input("¿Crear directorio? [s/N] ").strip().lower()
         if resp == "s":
             ruta.mkdir(parents=True)
         else:
             return 1
     ap = COPILOT_AGENT / "active-project.json"
+    COPILOT_AGENT.mkdir(parents=True, exist_ok=True)
     existing: dict = {}
     if ap.exists():
         try:
@@ -1072,7 +1452,7 @@ def cmd_set_project(args: argparse.Namespace) -> int:
         "history": history,
     }
     ap.write_text(_json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[set-project] ✅ Proyecto activo: {ruta}")
+    print(f"[set-project] OK Proyecto activo: {ruta}")
     _log_audit("set-project", str(ruta))
     _update_resume("set-project", f"proyecto activo → {ruta.name}")
     return 0
@@ -1080,25 +1460,29 @@ def cmd_set_project(args: argparse.Namespace) -> int:
 
 def cmd_install(args: argparse.Namespace) -> int:
     """Instala/vincula skills de este agente en otro proyecto."""
-    import shutil
-    target = pathlib.Path(args.path).resolve()
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[install] ERROR: {exc}")
+        return 1
+
+    target = Path(args.path).resolve()
     gh_target = target / ".github"
     skills_target = gh_target / "skills"
     instr_target = gh_target / "instructions"
     ci_target = gh_target / "copilot-instructions.md"
 
     if not target.exists():
-        print(f"[install] ✗ La ruta no existe: {target}")
-        return 1
+        target.mkdir(parents=True, exist_ok=True)
 
     gh_target.mkdir(parents=True, exist_ok=True)
 
     # copilot-instructions.md
     if not ci_target.exists() or args.force:
         shutil.copy2(ROOT / ".github" / "copilot-instructions.md", ci_target)
-        print(f"[install] ✅ copilot-instructions.md → {ci_target}")
+        print(f"[install] OK copilot-instructions.md -> {ci_target}")
     else:
-        print(f"[install] ⏭ copilot-instructions.md ya existe (usa --force para sobreescribir)")
+        print(f"[install] SKIP copilot-instructions.md ya existe (usa --force para sobreescribir)")
 
     # skills/ (symlink)
     if skills_target.exists() or skills_target.is_symlink():
@@ -1108,14 +1492,14 @@ def cmd_install(args: argparse.Namespace) -> int:
             else:
                 shutil.rmtree(skills_target)
         else:
-            print(f"[install] ⏭ .github/skills/ ya existe (usa --force)")
+            print(f"[install] SKIP .github/skills/ ya existe (usa --force)")
     if not skills_target.exists() and not skills_target.is_symlink():
         try:
             skills_target.symlink_to(GH_SKILLS_DIR, target_is_directory=True)
-            print(f"[install] 🔗 .github/skills/ → symlink a {GH_SKILLS_DIR}")
+            print(f"[install] LINK .github/skills/ -> symlink a {GH_SKILLS_DIR}")
         except OSError:
             shutil.copytree(GH_SKILLS_DIR, skills_target)
-            print(f"[install] 📋 .github/skills/ → copiado (sin privilegios de symlink)")
+            print(f"[install] COPY .github/skills/ -> copiado (sin privilegios de symlink)")
 
     # instructions/ (symlink)
     instr_src = ROOT / ".github" / "instructions"
@@ -1126,18 +1510,479 @@ def cmd_install(args: argparse.Namespace) -> int:
             else:
                 shutil.rmtree(instr_target)
         else:
-            print(f"[install] ⏭ .github/instructions/ ya existe (usa --force)")
+            print(f"[install] SKIP .github/instructions/ ya existe (usa --force)")
     if not instr_target.exists() and not instr_target.is_symlink():
         try:
             instr_target.symlink_to(instr_src, target_is_directory=True)
-            print(f"[install] 🔗 .github/instructions/ → symlink a {instr_src}")
+            print(f"[install] LINK .github/instructions/ -> symlink a {instr_src}")
         except OSError:
             shutil.copytree(instr_src, instr_target)
-            print(f"[install] 📋 .github/instructions/ → copiado")
+            print(f"[install] COPY .github/instructions/ -> copiado")
 
     _log_audit("install", str(target))
     _update_resume("install", f"skills instalados en {target.name}")
-    print(f"[install] ✅ Skills vinculados en: {target}")
+    print(f"[install] OK Skills vinculados en: {target}")
+    return 0
+
+
+def cmd_policy_validate(args: argparse.Namespace) -> int:
+    del args
+    policy = _load_policy()
+    errors = _validate_policy(policy)
+    if errors:
+        print("[policy-validate] ERROR")
+        for err in errors:
+            print(f"  - {err}")
+        return 1
+    print("[policy-validate] OK")
+    print(json.dumps(policy, indent=2, ensure_ascii=False))
+    return 0
+
+
+def cmd_rollout_mode(args: argparse.Namespace) -> int:
+    policy = _load_policy()
+    mode = getattr(args, "mode", None)
+    if not mode:
+        current = _load_rollout_mode(policy)
+        print(f"[rollout-mode] {current}")
+        return 0
+    if mode not in {"shadow", "assist", "autonomous"}:
+        print("[rollout-mode] ERROR: modo inválido")
+        return 1
+    _save_rollout_mode(mode)
+    _log_audit("rollout-mode", mode)
+    print(f"[rollout-mode] OK -> {mode}")
+    return 0
+
+
+def _create_run_record(run_id: str, payload: dict[str, Any]) -> None:
+    run_file, _ = _run_paths(run_id)
+    save_json(run_file, payload)
+
+
+def _load_run_record(run_id: str) -> dict[str, Any] | None:
+    run_file, _ = _run_paths(run_id)
+    if not run_file.exists():
+        return None
+    return load_json(run_file, {})
+
+
+def cmd_task_start(args: argparse.Namespace) -> int:
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[task-start] ERROR: {exc}")
+        return 1
+    policy = _load_policy()
+    policy_errors = _validate_policy(policy)
+    if policy_errors:
+        print("[task-start] ERROR: policy inválida")
+        for err in policy_errors:
+            print(f"  - {err}")
+        return 1
+
+    goal = str(getattr(args, "goal", "")).strip()
+    if not goal:
+        print("[task-start] ERROR: especifica --goal")
+        return 1
+    run_id = getattr(args, "run_id", None) or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
+    scope = str(getattr(args, "scope", "workspace"))
+    risk_level = _classify_risk(goal, policy)
+    skills_selected = _resolve_skills_for_query(goal, int(policy.get("skills", {}).get("max_composed", 3)))
+
+    run = {
+        "run_id": run_id,
+        "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "ended_at": "",
+        "user_goal": goal,
+        "scope": scope,
+        "risk_level": risk_level,
+        "status": "planned",
+        "skills_selected": skills_selected,
+        "quality_gate": {"required": bool(policy.get("quality_gate", {}).get("required", True)), "passed": False},
+        "steps": [],
+        "summary": "",
+        "rollout_mode": _load_rollout_mode(policy),
+    }
+    _create_run_record(run_id, run)
+    _append_run_event(run_id, {
+        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "step_id": "intake",
+        "action": "task-start",
+        "command": "",
+        "result": f"goal={goal}",
+        "exit_code": 0,
+        "retry_index": 0,
+        "evidence_ref": "",
+    })
+    print(f"[task-start] OK run_id={run_id} risk={risk_level} mode={run['rollout_mode']}")
+    return 0
+
+
+def cmd_skill_resolve(args: argparse.Namespace) -> int:
+    try:
+        _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[skill-resolve] ERROR: {exc}")
+        return 1
+    query = str(getattr(args, "query", "")).strip()
+    if not query:
+        print("[skill-resolve] ERROR: especifica --query")
+        return 1
+    top = int(getattr(args, "top", 3))
+    items = _resolve_skills_for_query(query, top)
+    if getattr(args, "json", False):
+        print(json.dumps(items, indent=2, ensure_ascii=False))
+        return 0
+    print(f"[skill-resolve] query='{query}' -> {len(items)} skills")
+    for item in items:
+        print(f"  - {item['id']} ({item['category']}) score={item['score']}")
+    return 0
+
+
+def cmd_task_step(args: argparse.Namespace) -> int:
+    run_id = str(getattr(args, "run_id", "")).strip()
+    if not run_id:
+        print("[task-step] ERROR: especifica --run-id")
+        return 1
+    run = _load_run_record(run_id)
+    if not run:
+        print(f"[task-step] ERROR: run no encontrado: {run_id}")
+        return 1
+    command = str(getattr(args, "command", "")).strip()
+    if not command:
+        print("[task-step] ERROR: especifica --command")
+        return 1
+
+    policy = _load_policy()
+    mode = run.get("rollout_mode", _load_rollout_mode(policy))
+    strategy = str(policy.get("shell", {}).get("strategy", "cross-shell"))
+    normalized = _normalize_shell_command(command, strategy)
+    risk_level = _classify_risk(command, policy)
+    destructive = _is_destructive(command, policy)
+
+    if destructive and not getattr(args, "allow_destructive", False):
+        step_result = {
+            "step_id": f"step-{len(run.get('steps', [])) + 1}",
+            "action": "blocked-destructive",
+            "command": command,
+            "normalized_command": normalized,
+            "result": "Comando bloqueado por política destructiva",
+            "exit_code": 2,
+            "retry_index": 0,
+            "risk_level": risk_level,
+            "mode": mode,
+        }
+        run.setdefault("steps", []).append(step_result)
+        run["status"] = "blocked"
+        _create_run_record(run_id, run)
+        _append_run_event(run_id, {
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "step_id": step_result["step_id"],
+            "action": step_result["action"],
+            "command": command,
+            "result": step_result["result"],
+            "exit_code": 2,
+            "retry_index": 0,
+            "evidence_ref": "",
+        })
+        print("[task-step] BLOCKED destructive command")
+        return 1
+
+    if risk_level == "high" and not getattr(args, "approve_high_risk", False):
+        print("[task-step] BLOCKED high-risk requires --approve-high-risk")
+        return 1
+
+    max_attempts = int(policy.get("execution", {}).get("retry", {}).get("max_attempts", 3))
+    run["status"] = "running"
+    attempts = [
+        normalized,
+        normalized + " 2>$null",
+        f"cmd /c {command}",
+    ]
+    attempts = attempts[:max_attempts]
+
+    if mode == "shadow":
+        exit_code, result = 0, f"[shadow] command simulated: {normalized}"
+        used_attempt = 0
+    else:
+        exit_code, result, used_attempt = 1, "", 0
+        for retry_index, candidate in enumerate(attempts):
+            code, out = _execute_powershell(candidate)
+            exit_code, result, used_attempt = code, out, retry_index
+            _append_run_event(run_id, {
+                "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "step_id": f"step-{len(run.get('steps', [])) + 1}",
+                "action": "task-step-attempt",
+                "command": candidate,
+                "result": out[:1000],
+                "exit_code": code,
+                "retry_index": retry_index,
+                "evidence_ref": "",
+            })
+            if code == 0:
+                break
+
+    step = {
+        "step_id": f"step-{len(run.get('steps', [])) + 1}",
+        "action": "task-step",
+        "command": command,
+        "normalized_command": normalized,
+        "result": result[:4000],
+        "exit_code": exit_code,
+        "retry_index": used_attempt,
+        "risk_level": risk_level,
+        "mode": mode,
+    }
+    run.setdefault("steps", []).append(step)
+    if exit_code != 0:
+        run["status"] = "failed"
+    _create_run_record(run_id, run)
+    print(f"[task-step] run_id={run_id} exit={exit_code} retries={used_attempt}")
+    return 0 if exit_code == 0 else 1
+
+
+def cmd_task_close(args: argparse.Namespace) -> int:
+    run_id = str(getattr(args, "run_id", "")).strip()
+    if not run_id:
+        print("[task-close] ERROR: especifica --run-id")
+        return 1
+    run = _load_run_record(run_id)
+    if not run:
+        print(f"[task-close] ERROR: run no encontrado: {run_id}")
+        return 1
+    steps = run.get("steps", [])
+    required = bool(run.get("quality_gate", {}).get("required", True))
+    passed = bool(steps) and all(int(s.get("exit_code", 1)) == 0 for s in steps)
+    if required and not passed:
+        run["status"] = "blocked"
+        run["quality_gate"]["passed"] = False
+        run["summary"] = "Bloqueado por quality gate: existen steps fallidos o sin evidencia."
+        _create_run_record(run_id, run)
+        print("[task-close] BLOCKED quality gate")
+        return 1
+    run["quality_gate"]["passed"] = passed
+    run["status"] = "succeeded" if passed else "failed"
+    run["ended_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    run["summary"] = str(getattr(args, "summary", "")).strip() or f"Run finalizado con {len(steps)} steps"
+    _create_run_record(run_id, run)
+    _append_run_event(run_id, {
+        "ts": run["ended_at"],
+        "step_id": "close",
+        "action": "task-close",
+        "command": "",
+        "result": run["summary"],
+        "exit_code": 0 if run["status"] == "succeeded" else 1,
+        "retry_index": 0,
+        "evidence_ref": "",
+    })
+    _log_audit("task-close", f"{run_id}:{run['status']}")
+    print(f"[task-close] OK run_id={run_id} status={run['status']}")
+    return 0 if run["status"] == "succeeded" else 1
+
+
+def cmd_task_run(args: argparse.Namespace) -> int:
+    goal = str(getattr(args, "goal", "")).strip()
+    commands = list(getattr(args, "commands", []) or [])
+    if not goal:
+        print("[task-run] ERROR: especifica --goal")
+        return 1
+    start_rc = cmd_task_start(argparse.Namespace(
+        goal=goal,
+        scope=getattr(args, "scope", "workspace"),
+        run_id=getattr(args, "run_id", None),
+    ))
+    if start_rc != 0:
+        return start_rc
+
+    # Recuperar run_id más reciente si no fue explícito.
+    run_id = getattr(args, "run_id", None)
+    if not run_id:
+        runs = sorted(_runs_dir().glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if not runs:
+            print("[task-run] ERROR: no se pudo resolver run_id")
+            return 1
+        run_id = runs[0].stem
+
+    rc = 0
+    for command in commands:
+        step_rc = cmd_task_step(argparse.Namespace(
+            run_id=run_id,
+            command=command,
+            approve_high_risk=getattr(args, "approve_high_risk", False),
+            allow_destructive=getattr(args, "allow_destructive", False),
+        ))
+        if step_rc != 0:
+            rc = step_rc
+            break
+
+    close_rc = cmd_task_close(argparse.Namespace(run_id=run_id, summary=getattr(args, "summary", "")))
+    return close_rc if rc == 0 else rc
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    strict = bool(getattr(args, "strict", False))
+    errors: list[str] = []
+    warnings: list[str] = []
+    info: list[str] = []
+
+    if not SKILLS_DIR.exists():
+        errors.append(f"catálogo ausente: {SKILLS_DIR}")
+    else:
+        skill_files = list(SKILLS_DIR.glob("*/SKILL.md"))
+        if not skill_files:
+            errors.append("no se encontraron SKILL.md en .github/skills")
+        else:
+            info.append(f"SKILL.md detectados: {len(skill_files)}")
+
+    if INDEX_FILE.exists():
+        try:
+            index = load_index()
+            info.append(f"índice principal: {len(index)} entries")
+        except Exception as exc:
+            errors.append(f"índice principal corrupto: {exc}")
+            index = []
+    else:
+        warnings.append("índice principal ausente; se requiere rebuild")
+        index = []
+
+    if LEGACY_INDEX_FILE.exists():
+        info.append("índice legado presente (compatibilidad)")
+    else:
+        warnings.append("índice legado ausente (se regenerará en sync/rebuild)")
+
+    if not COPILOT_INSTR.exists():
+        errors.append("falta .github/copilot-instructions.md")
+    if not AGENT_FILE.exists():
+        errors.append("falta .github/agents/openclaw.agent.md")
+    if not GH_INSTR_DIR.exists():
+        errors.append("falta .github/instructions/")
+
+    active_project = load_json(COPILOT_AGENT / "active-project.json", {})
+    if not active_project.get("path"):
+        warnings.append("active-project.json sin ruta (set-project recomendado)")
+
+    policy = _load_policy()
+    policy_errors = _validate_policy(policy)
+    if policy_errors:
+        errors.extend([f"policy inválida: {e}" for e in policy_errors])
+    else:
+        info.append(f"policy mode: {_load_rollout_mode(policy)}")
+
+    if index:
+        missing = [s["id"] for s in index if not (ROOT / s["gh_path"]).exists()]
+        if missing:
+            errors.append(f"{len(missing)} entries del índice apuntan a rutas inexistentes")
+
+    print("[doctor] Diagnóstico del sistema")
+    for line in info:
+        print(f"  [INFO] {line}")
+    for line in warnings:
+        print(f"  [WARN] {line}")
+    for line in errors:
+        print(f"  [ERR ] {line}")
+
+    _log_audit("doctor", f"errors={len(errors)} warnings={len(warnings)} strict={strict}")
+    if errors:
+        return 1
+    return 1 if strict and warnings else 0
+
+
+def _sync_counts_in_text(path: Path, replacements: list[tuple[str, str]]) -> None:
+    if not path.exists():
+        return
+    content = path.read_text(encoding="utf-8")
+    updated = content
+    for pattern, repl in replacements:
+        updated = re.sub(pattern, repl, updated, flags=re.MULTILINE)
+    if updated != content:
+        _atomic_write_text(path, updated)
+
+
+def cmd_release_sync(args: argparse.Namespace) -> int:
+    bump = getattr(args, "bump", "patch")
+    try:
+        skills = _rebuild_index_from_disk()
+    except RuntimeError as exc:
+        print(f"[release-sync] ERROR: {exc}")
+        return 1
+
+    by_cat: dict[str, int] = {}
+    for skill in skills:
+        by_cat[skill["category"]] = by_cat.get(skill["category"], 0) + 1
+    total = len(skills)
+
+    _sync_counts_in_text(
+        COPILOT_INSTR,
+        [
+            (r"\*\*\d+ skills expertos\*\*", f"**{total} skills expertos**"),
+            (r"- \*\*Catálogo completo\*\*: `skills/\.skills_index\.json` — \d+ entries",
+             f"- **Catálogo completo**: `.github/skills/.skills_index.json` — {total} entries"),
+            (r"\*\d+ skills — antigravity-awesome-skills v5\.7 \+ OpenClaw behaviors\*",
+             f"*{total} skills — antigravity-awesome-skills v5.7 + OpenClaw behaviors*"),
+        ],
+    )
+
+    for cat, count in by_cat.items():
+        _sync_counts_in_text(
+            COPILOT_INSTR,
+            [(rf"(\| `{re.escape(cat)}` \|)\s+\d+\s+(\|)", rf"\g<1> {count} \g<2>")],
+        )
+
+    _sync_counts_in_text(
+        AGENT_FILE,
+        [
+            (r"acceso a \d+ skills expertos", f"acceso a {total} skills expertos"),
+            (r"catálogo de \d+ skills", f"catálogo de {total} skills"),
+        ],
+    )
+    _sync_counts_in_text(
+        README_MD,
+        [
+            (r"\b\d+\s+Skills\b", f"{total} Skills"),
+            (r"\*\*\d+ skills\*\*", f"**{total} skills**"),
+            (r"\*+\d+ skills — MIT License\*+", f"*{total} skills — MIT License*"),
+        ],
+    )
+
+    version = VERSION_FILE.read_text(encoding="utf-8").strip() if VERSION_FILE.exists() else "0.0"
+    parts = [int(p) for p in version.split(".") if p.isdigit()]
+    while len(parts) < 2:
+        parts.append(0)
+    major, minor = parts[0], parts[1]
+    if bump == "minor":
+        minor += 1
+    else:
+        minor += 1
+    new_version = f"{major}.{minor}"
+    _atomic_write_text(VERSION_FILE, new_version + "\n")
+
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if CHANGELOG_MD.exists():
+        changelog = CHANGELOG_MD.read_text(encoding="utf-8")
+        entry = (
+            f"\n## [v{new_version}] — {ts}\n\n"
+            "### Summary\n"
+            f"Release sync automático: {total} skills y consistencia de metadatos.\n\n"
+        )
+        if entry not in changelog:
+            _atomic_write_text(CHANGELOG_MD, changelog + entry)
+
+    _mirror_legacy_index(skills)
+    _update_resume("release-sync", f"{total} skills | versión {new_version}")
+    _log_audit("release-sync", f"skills={total} version={new_version}")
+    print(f"[release-sync] OK | skills={total} | version={new_version}")
+    return 0
+
+
+def cmd_rebuild(args: argparse.Namespace) -> int:
+    del args
+    try:
+        skills = _rebuild_index_from_disk()
+    except RuntimeError as exc:
+        print(f"[rebuild] ERROR: {exc}")
+        return 1
+    print(f"[rebuild] indice reconstruido: {len(skills)}")
     return 0
 
 
@@ -1201,6 +2046,44 @@ def main() -> int:
 
     # rebuild (util interna)
     sub.add_parser("rebuild", help="Reconstruir indice desde archivos locales")
+    p_doc = sub.add_parser("doctor", help="Diagnosticar integridad del sistema")
+    p_doc.add_argument("--strict", action="store_true", help="Tratar warnings como fallo")
+    p_rs = sub.add_parser("release-sync", help="Sincronizar conteos/versionado y metadatos")
+    p_rs.add_argument("--bump", choices=["patch", "minor"], default="patch", help="Tipo de bump de versión")
+
+    # policy/runtime
+    sub.add_parser("policy-validate", help="Validar política operativa OpenClaw")
+    p_rm = sub.add_parser("rollout-mode", help="Ver o establecer modo rollout")
+    p_rm.add_argument("mode", nargs="?", choices=["shadow", "assist", "autonomous"], help="Nuevo modo")
+
+    p_sr = sub.add_parser("skill-resolve", help="Resolver skills efímeras para una tarea")
+    p_sr.add_argument("--query", required=True, help="Consulta de tarea")
+    p_sr.add_argument("--top", type=int, default=3, help="Máximo de skills")
+    p_sr.add_argument("--json", action="store_true", help="Salida JSON")
+
+    p_ts = sub.add_parser("task-start", help="Crear run de tarea")
+    p_ts.add_argument("--goal", required=True, help="Objetivo de la tarea")
+    p_ts.add_argument("--scope", default="workspace", help="Ámbito de ejecución")
+    p_ts.add_argument("--run-id", default="", help="ID opcional de run")
+
+    p_tstep = sub.add_parser("task-step", help="Ejecutar un step sobre un run")
+    p_tstep.add_argument("--run-id", required=True, help="ID de run")
+    p_tstep.add_argument("--command", required=True, help="Comando del step")
+    p_tstep.add_argument("--approve-high-risk", action="store_true", help="Aprobar step high-risk")
+    p_tstep.add_argument("--allow-destructive", action="store_true", help="Permitir comando destructivo")
+
+    p_tc = sub.add_parser("task-close", help="Cerrar run aplicando quality gate")
+    p_tc.add_argument("--run-id", required=True, help="ID de run")
+    p_tc.add_argument("--summary", default="", help="Resumen final")
+
+    p_tr = sub.add_parser("task-run", help="Orquestar tarea completa end-to-end")
+    p_tr.add_argument("--goal", required=True, help="Objetivo de la tarea")
+    p_tr.add_argument("--scope", default="workspace", help="Ámbito de ejecución")
+    p_tr.add_argument("--run-id", default="", help="ID opcional de run")
+    p_tr.add_argument("--commands", nargs="*", default=[], help="Comandos a ejecutar en orden")
+    p_tr.add_argument("--approve-high-risk", action="store_true", help="Aprobar high-risk")
+    p_tr.add_argument("--allow-destructive", action="store_true", help="Permitir comandos destructivos")
+    p_tr.add_argument("--summary", default="", help="Resumen final")
 
     # set-project
     p_sp = sub.add_parser("set-project", help="Establecer el proyecto activo (donde se aplican los cambios)")
@@ -1235,7 +2118,16 @@ def main() -> int:
         "github-search": cmd_github_search,
         "sync-claude":   cmd_sync_claude,
         "adapt-copilot": cmd_adapt_copilot,
-        "rebuild":       lambda a: (_rebuild_index([], DEFAULT_REPO), 0)[1],
+        "rebuild":       cmd_rebuild,
+        "doctor":        cmd_doctor,
+        "release-sync":  cmd_release_sync,
+        "policy-validate": cmd_policy_validate,
+        "rollout-mode":  cmd_rollout_mode,
+        "skill-resolve": cmd_skill_resolve,
+        "task-start":    cmd_task_start,
+        "task-step":     cmd_task_step,
+        "task-close":    cmd_task_close,
+        "task-run":      cmd_task_run,
         "set-project":   cmd_set_project,
         "install":       cmd_install,
         "add-agent":    cmd_add_agent,

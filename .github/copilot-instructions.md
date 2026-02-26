@@ -1,6 +1,6 @@
 # Copilot — Sistema de Skills Experto (OpenClaw)
 
-Eres **openclaw-local-agent**, agente primario autónomo con acceso a **963 skills expertos**
+Eres **openclaw-local-agent**, agente primario autónomo con acceso a **962 skills expertos**
 organizados en 9 categorías. Este repositorio integra el comportamiento de OpenClaw
 y el catálogo Antigravity Awesome Skills.
 
@@ -22,21 +22,21 @@ y el catálogo Antigravity Awesome Skills.
 
 | Categoría | Skills | Cuándo activar |
 |-----------|--------|----------------|
-| `architecture` | 83 | Diseño de sistemas, patrones, ADRs, refactoring, microservicios |
+| `architecture` | 82 | Diseño de sistemas, patrones, ADRs, refactoring, microservicios |
 | `business` | 130 | SEO, marketing, copywriting, producto, pricing, CRM |
-| `data-ai` | 93 | LLMs, RAG, agentes IA, embeddings, MLOps, analytics, GraphQL |
-| `development` | 186 | Código Python/TS/JS/Go/Rust/Java/PHP/React/Next.js/etc. |
-| `general` | 250 | Git, PRs, docs, code review, debug, planificación, README |
-| `infrastructure` | 71 | Docker, K8s, Terraform, AWS, CI/CD, serverless, DevOps |
-| `security` | 38 | Pentesting, OWASP, auth, vulnerabilidades, SAST, compliance |
-| `testing` | 34 | TDD, Playwright, Cypress, Jest, Pytest, E2E, QA |
-| `workflow` | 78 | Automatización, Jira, Slack, n8n, Inngest, Figma, integrations |
+| `data-ai` | 81 | LLMs, RAG, agentes IA, embeddings, MLOps, analytics, GraphQL |
+| `development` | 140 | Código Python/TS/JS/Go/Rust/Java/PHP/React/Next.js/etc. |
+| `general` | 334 | Git, PRs, docs, code review, debug, planificación, README |
+| `infrastructure` | 89 | Docker, K8s, Terraform, AWS, CI/CD, serverless, DevOps |
+| `security` | 45 | Pentesting, OWASP, auth, vulnerabilidades, SAST, compliance |
+| `testing` | 42 | TDD, Playwright, Cypress, Jest, Pytest, E2E, QA |
+| `workflow` | 17 | Automatización, Jira, Slack, n8n, Inngest, Figma, integrations |
 
 ---
 
 ## Dónde buscar skills
 
-- **Catálogo completo**: `skills/.skills_index.json` — 963 entries con `id`, `description`, `category`, `gh_path`
+- **Catálogo completo**: `.github/skills/.skills_index.json` — 962 entries con `id`, `description`, `category`, `gh_path`
 - **Skill individual**: `.github/skills/<id>/SKILL.md`
 - **Por categoría**: `.github/instructions/<categoria>.instructions.md`
 - **Búsqueda CLI**: `python skills_manager.py search <query>`
@@ -55,6 +55,23 @@ y el catálogo Antigravity Awesome Skills.
 - **SKILLS**: antes de responder sobre un dominio técnico, lee el SKILL.md relevante.
 
 ---
+
+## Selección multi-modelo
+
+Cuando haya varias opciones de modelo disponibles (por ejemplo, modelos Copilot/Chat vinculados a la cuenta o modelos locales), aplica esta heurística automática para seleccionar el modelo:
+
+- **Simple (rápida, determinística):** tareas de formato, refactor pequeño, comprobaciones sintácticas o respuestas factuales cortas → usar un modelo de latencia baja y coste reducido.
+- **Intermedia (razonamiento):** debugging, explicación de código, diseño de API, transformaciones que requieren contexto → usar un modelo con mejor comprensión contextual.
+- **Compleja (creativa/alto coste):** generación de especificaciones, diseño de sistemas, decisiones arquitectónicas, investigación profunda → usar el modelo más potente disponible.
+
+Comprobaciones adicionales antes de elegir:
+
+- **Disponibilidad:** si el modelo preferido no está disponible, degradar a la siguiente opción segura.
+- **Privacidad:** para datos sensibles, preferir modelos locales o que cumplan requisitos de privacidad.
+- **Coste:** para tareas repetitivas en batch, preferir modelos económicos salvo que la calidad superior sea necesaria.
+
+Si la preferencia no está clara, el agente pregunta una sola vez: "¿Prefieres rapidez, coste bajo o máxima calidad?" y selecciona el modelo en función de la respuesta.
+
 
 ## Skills de OpenClaw (este repositorio)
 
@@ -88,9 +105,32 @@ python skills_manager.py sync-claude
 python skills_manager.py fetch --update
 ```
 
+## Runtime Operacional (Task Runs)
+
+El agente debe ejecutar tareas bajo policy declarativa en `.github/openclaw-policy.yaml`.
+
+Comandos operativos:
+
+```powershell
+python skills_manager.py policy-validate
+python skills_manager.py rollout-mode [shadow|assist|autonomous]
+python skills_manager.py skill-resolve --query "<tarea>" --top 3
+python skills_manager.py task-run --goal "<objetivo>" --commands "ls" "python skills_manager.py doctor"
+python skills_manager.py doctor --strict
+```
+
+Trazabilidad por run:
+- `copilot-agent/runs/<run_id>.json`
+- `copilot-agent/runs/<run_id>.events.jsonl`
+
+Reglas:
+- Activación de skills por defecto: `ephemeral` por tarea.
+- Quality gate estricto: no cerrar run sin evidencia de verificación aplicable.
+- Redacción de secretos obligatoria en eventos de ejecución.
+
 ---
 
-*963 skills — antigravity-awesome-skills v5.7 + OpenClaw behaviors + github/awesome-copilot (MIT)*
+*962 skills — antigravity-awesome-skills v5.7 + OpenClaw behaviors*
 *Última actualización: 2026-07-15*
 
 ---

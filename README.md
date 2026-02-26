@@ -1,8 +1,8 @@
-# 🤖 Agente Copilot OpenClaw — 963 Skills
+# 🤖 Agente Copilot OpenClaw — 962 Skills
 
 Sistema de skills expertos para GitHub Copilot, basado en [OpenClaw](https://github.com/openclaw) y el catálogo [Antigravity Awesome Skills](https://github.com/sickn33/antigravity-awesome-skills).
 
-**963 skills** organizados en 9 categorías — disponibles **siempre** en cualquier proyecto VS Code y en github.com.
+**962 skills** organizados en 9 categorías — disponibles **siempre** en cualquier proyecto VS Code y en github.com.
 
 ---
 
@@ -30,6 +30,15 @@ Sistema de skills expertos para GitHub Copilot, basado en [OpenClaw](https://git
 # Desde la raíz de tu proyecto
 iwr https://raw.githubusercontent.com/javiertarazon/agente-copilot/master/setup-project.ps1 | iex
 ```
+
+> **alternativa offline:** si ya tienes este repositorio descargado puedes usar
+> el helper local `add-openclaw-agent.ps1` que hace exactamente lo mismo:
+>
+```powershell
+# en cualquier carpeta, path por defecto es el cwd
+.\add-openclaw-agent.ps1 -Path "C:\ruta\a\tu-proyecto" [-Force]
+```
+
 
 ### Opción 2: Clone + install
 
@@ -133,6 +142,39 @@ python skills_manager.py install "D:\mis-proyectos\mi-app"
 
 ---
 
+## 🧭 Operating Model (Autonomía)
+
+El agente soporta un runtime operacional con policy y runs trazables:
+
+```powershell
+# Validar policy operativa
+python skills_manager.py policy-validate
+
+# Ver/cambiar modo rollout
+python skills_manager.py rollout-mode
+python skills_manager.py rollout-mode shadow
+python skills_manager.py rollout-mode assist
+python skills_manager.py rollout-mode autonomous
+
+# Resolver skills efímeras para una tarea
+python skills_manager.py skill-resolve --query "docker kubernetes" --top 3
+
+# Orquestar run completo
+python skills_manager.py task-run --goal "auditar CI" --commands "ls" "python skills_manager.py doctor"
+
+# Modo granular
+python skills_manager.py task-start --goal "revisar seguridad"
+python skills_manager.py task-step --run-id <id> --command "Get-ChildItem"
+python skills_manager.py task-close --run-id <id> --summary "verificación completada"
+```
+
+Artefactos generados:
+- `copilot-agent/runs/<run_id>.json`
+- `copilot-agent/runs/<run_id>.events.jsonl`
+- Policy: `.github/openclaw-policy.yaml`
+
+---
+
 ## 📁 Estructura del repositorio
 
 ```
@@ -163,11 +205,11 @@ Las instrucciones están en la rama `master` (rama por defecto). Copilot en gith
 
 ## 📊 Versión actual
 
-- **v1.2** — 963 skills, Antigravity v5.7 + OpenClaw behaviors + awesome-copilot
-- Última actualización: 25 de febrero de 2026  (publicada en el repositorio remoto con el script de instalación global)
+- **v2.0** - runtime autonomo OpenClaw + policy operativa + 962 skills
+- Ultima actualizacion: 26 de febrero de 2026
 
-> 🚀 **Nota:** se ha subido una etiqueta/tags `v1.2` al repositorio remoto. Quien clone o actualice y ejecute `setup-project.ps1` obtendrá la configuración global en VS Code y Copilot automáticamente.
+> 🚀 **Nota:** se ha subido una etiqueta/tags `v2.0` al repositorio remoto. Quien clone o actualice y ejecute `setup-project.ps1` obtendrá la configuración global en VS Code y Copilot automáticamente.
 
 ---
 
-*963 skills — MIT License*
+*962 skills — MIT License*
