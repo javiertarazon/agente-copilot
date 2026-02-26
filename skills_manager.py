@@ -20,12 +20,14 @@ Comandos:
     rollout-mode     Ver/cambiar modo canary
     skill-resolve    Resolver skills efímeras
     task-run/task-*  Orquestar runs de tarea con evidencia
+    ide-detect       Detectar perfiles IDE instalados
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import platform
 import re
 import shutil
 import shlex
@@ -72,6 +74,59 @@ CHANGELOG_MD  = ROOT / "CHANGELOG.md"
 AGENT_FILE    = ROOT / ".github" / "agents" / "openclaw.agent.md"
 POLICY_FILE   = ROOT / ".github" / "openclaw-policy.yaml"
 ROLLOUT_FILE  = COPILOT_AGENT / "rollout-mode.json"
+
+SUPPORTED_IDES: tuple[str, ...] = (
+    "vscode",
+    "cursor",
+    "kiro",
+    "antigravity",
+    "codex",
+    "claude-code",
+    "gemini-cli",
+)
+IDE_ALIASES: dict[str, str] = {
+    "vscode": "vscode",
+    "vs-code": "vscode",
+    "code": "vscode",
+    "cursor": "cursor",
+    "kiro": "kiro",
+    "antigravity": "antigravity",
+    "codex": "codex",
+    "claude": "claude-code",
+    "claude-code": "claude-code",
+    "claudecode": "claude-code",
+    "gemini": "gemini-cli",
+    "gemini-cli": "gemini-cli",
+    "geminicli": "gemini-cli",
+}
+IDE_SETTINGS_SUBPATHS: dict[str, dict[str, tuple[str, ...]]] = {
+    "windows": {
+        "vscode": ("Code", "User", "settings.json"),
+        "cursor": ("Cursor", "User", "settings.json"),
+        "kiro": ("Kiro", "User", "settings.json"),
+        "antigravity": ("Antigravity", "User", "settings.json"),
+    },
+    "linux": {
+        "vscode": ("Code", "User", "settings.json"),
+        "cursor": ("Cursor", "User", "settings.json"),
+        "kiro": ("Kiro", "User", "settings.json"),
+        "antigravity": ("Antigravity", "User", "settings.json"),
+    },
+    "darwin": {
+        "vscode": ("Code", "User", "settings.json"),
+        "cursor": ("Cursor", "User", "settings.json"),
+        "kiro": ("Kiro", "User", "settings.json"),
+        "antigravity": ("Antigravity", "User", "settings.json"),
+    },
+}
+IDE_USER_SETTINGS_SUPPORTED: tuple[str, ...] = (
+    "vscode",
+    "cursor",
+    "kiro",
+    "antigravity",
+    "claude-code",
+    "gemini-cli",
+)
 
 GITHUB_RAW  = "https://raw.githubusercontent.com"
 GITHUB_API  = "https://api.github.com"
@@ -180,6 +235,444 @@ def save_sources(data: dict) -> None:
     save_json(SOURCES_FILE, data)
 
 
+def _normalize_ide_name(raw: str) -> str:
+    key = str(raw or "").strip().lower()
+    return IDE_ALIASES.get(key, key)
+
+
+def _platform_family() -> str:
+    sys_name = platform.system().lower()
+    if sys_name.startswith("win"):
+        return "windows"
+    if sys_name == "darwin":
+        return "darwin"
+    return "linux"
+
+
+def _codex_home() -> Path:
+    override = os.environ.get("OPENCLAW_CODEX_HOME", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    codex_home = os.environ.get("CODEX_HOME", "").strip()
+    if codex_home:
+        return Path(codex_home).expanduser().resolve()
+    return (Path.home() / ".codex").resolve()
+
+
+def _claude_home() -> Path:
+    override = os.environ.get("OPENCLAW_CLAUDE_HOME", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    return (Path.home() / ".claude").resolve()
+
+
+def _gemini_home() -> Path:
+    override = os.environ.get("OPENCLAW_GEMINI_HOME", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    return (Path.home() / ".gemini").resolve()
+
+
+def _command_exists(candidates: list[str]) -> bool:
+    for candidate in candidates:
+        if shutil.which(candidate):
+            return True
+    return False
+
+
+def _appdata_root() -> Path:
+    override = os.environ.get("OPENCLAW_APPDATA_ROOT", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    family = _platform_family()
+    if family == "windows":
+        appdata = os.environ.get("APPDATA", "").strip()
+        if appdata:
+            return Path(appdata).expanduser().resolve()
+        return (Path.home() / "AppData" / "Roaming").resolve()
+    if family == "darwin":
+        return (Path.home() / "Library" / "Application Support").resolve()
+    return (Path.home() / ".config").resolve()
+
+
+def _ide_settings_path(ide: str, appdata_root: Path | None = None) -> Path:
+    normalized = _normalize_ide_name(ide)
+    if normalized == "codex":
+        return _codex_home() / "config.toml"
+    if normalized == "claude-code":
+        if appdata_root is not None:
+            return appdata_root / "ClaudeCode" / "config.json"
+        return _claude_home() / "config.json"
+    if normalized == "gemini-cli":
+        if appdata_root is not None:
+            return appdata_root / "GeminiCLI" / "settings.json"
+        return _gemini_home() / "settings.json"
+    family = _platform_family()
+    table = IDE_SETTINGS_SUBPATHS.get(family, IDE_SETTINGS_SUBPATHS["linux"])
+    if normalized not in table:
+        raise RuntimeError(f"IDE no soportado: {ide}")
+    root = appdata_root or _appdata_root()
+    return root.joinpath(*table[normalized])
+
+
+def _detect_ide_profiles(appdata_root: Path | None = None) -> list[dict[str, Any]]:
+    profiles: list[dict[str, Any]] = []
+    root = appdata_root or _appdata_root()
+    for ide in SUPPORTED_IDES:
+        settings_path = _ide_settings_path(ide, root)
+        if ide == "codex":
+            codex_root = _codex_home()
+            installed = (
+                codex_root.exists()
+                or settings_path.exists()
+                or settings_path.parent.exists()
+                or _command_exists(["codex"])
+            )
+        elif ide == "claude-code":
+            installed = (
+                settings_path.exists()
+                or settings_path.parent.exists()
+                or _claude_home().exists()
+                or _command_exists(["claude", "claude-code"])
+            )
+        elif ide == "gemini-cli":
+            installed = (
+                settings_path.exists()
+                or settings_path.parent.exists()
+                or _gemini_home().exists()
+                or _command_exists(["gemini", "gemini-cli"])
+            )
+        else:
+            installed = settings_path.exists() or settings_path.parent.exists()
+        profiles.append({
+            "ide": ide,
+            "installed": installed,
+            "settings_path": str(settings_path),
+            "settings_exists": settings_path.exists(),
+        })
+    return profiles
+
+
+def _resolve_ide_targets(ide_value: str, appdata_root: Path | None = None) -> list[str]:
+    normalized = _normalize_ide_name(ide_value or "auto")
+    if normalized == "all":
+        return list(SUPPORTED_IDES)
+    if normalized == "auto":
+        detected = [p["ide"] for p in _detect_ide_profiles(appdata_root) if p["installed"]]
+        return detected if detected else ["vscode"]
+    if normalized not in SUPPORTED_IDES:
+        raise RuntimeError(
+            "IDE invalido. Usa: auto|all|vscode|cursor|kiro|antigravity|codex|claude-code|gemini-cli"
+        )
+    return [normalized]
+
+
+def _load_json_object(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _to_posix(path: Path) -> str:
+    return str(path).replace("\\", "/")
+
+
+def _same_path(a: Path, b: Path) -> bool:
+    try:
+        return a.resolve() == b.resolve()
+    except Exception:
+        return _to_posix(a) == _to_posix(b)
+
+
+def _append_instruction_entry(settings: dict[str, Any], instruction_file: str) -> None:
+    key = "github.copilot.chat.codeGeneration.instructions"
+    value = settings.get(key, [])
+    if not isinstance(value, list):
+        value = []
+    exists = any(isinstance(item, dict) and item.get("file") == instruction_file for item in value)
+    if not exists:
+        value.append({"file": instruction_file})
+    settings[key] = value
+
+
+def _append_agent_location(settings: dict[str, Any], agent_location: str) -> None:
+    key = "chat.agentFilesLocations"
+    value = settings.get(key, [])
+    if not isinstance(value, list):
+        value = []
+    if agent_location not in value:
+        value.append(agent_location)
+    settings[key] = value
+
+
+def _apply_openclaw_settings(
+    settings: dict[str, Any],
+    instruction_file: str,
+    agent_location: str,
+    ide: str,
+) -> None:
+    _append_instruction_entry(settings, instruction_file)
+    _append_agent_location(settings, agent_location)
+    settings["github.copilot.chat.codeGeneration.useInstructionFiles"] = True
+    settings["github.copilot.chat.customInstructionsInSystemMessage"] = True
+    settings["chat.agent.enabled"] = True
+    settings["freejt7.enabled"] = True
+    settings[f"freejt7.integrations.{ide}.enabled"] = True
+    settings["freejt7.skills.index"] = ".github/skills/.skills_index.json"
+    settings["freejt7.policy.file"] = ".github/openclaw-policy.yaml"
+    settings["openclaw.enabled"] = True
+    settings[f"openclaw.integrations.{ide}.enabled"] = True
+    settings["openclaw.skills.index"] = ".github/skills/.skills_index.json"
+    settings["openclaw.policy.file"] = ".github/openclaw-policy.yaml"
+
+
+def _save_json_object(path: Path, data: dict[str, Any]) -> None:
+    _atomic_write_text(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+
+def _write_text_if_needed(path: Path, content: str, force: bool) -> bool:
+    if path.exists() and not force:
+        return False
+    _atomic_write_text(path, content)
+    return True
+
+
+def _upsert_marked_block(
+    path: Path,
+    start_marker: str,
+    end_marker: str,
+    block_body: str,
+    header: str,
+) -> str:
+    block = f"{start_marker}\n{block_body.rstrip()}\n{end_marker}\n"
+    if path.exists():
+        content = path.read_text(encoding="utf-8")
+        if start_marker in content and end_marker in content:
+            start = content.index(start_marker)
+            end = content.index(end_marker) + len(end_marker)
+            updated = content[:start].rstrip() + "\n\n" + block
+            if not updated.endswith("\n"):
+                updated += "\n"
+            _atomic_write_text(path, updated)
+            return "updated"
+        updated = content.rstrip() + "\n\n" + block
+        _atomic_write_text(path, updated)
+        return "appended"
+    _atomic_write_text(path, header.rstrip() + "\n\n" + block)
+    return "created"
+
+
+def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[str]:
+    notes: list[str] = []
+    gh_dir = target / ".github"
+    instruction_file = ".github/copilot-instructions.md"
+    agent_location = ".github/agents"
+
+    if ide == "vscode":
+        settings_path = target / ".vscode" / "settings.json"
+        settings = _load_json_object(settings_path)
+        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        _save_json_object(settings_path, settings)
+        notes.append(f"workspace settings: {settings_path}")
+        return notes
+
+    if ide == "cursor":
+        settings_path = target / ".cursor" / "settings.json"
+        settings = _load_json_object(settings_path)
+        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        _save_json_object(settings_path, settings)
+        notes.append(f"workspace settings: {settings_path}")
+        rules_path = target / ".cursor" / "rules" / "openclaw.mdc"
+        rules_content = (
+            "---\n"
+            "description: Free JT7 runtime policy\n"
+            "alwaysApply: true\n"
+            "---\n\n"
+            "Use .github/copilot-instructions.md and .github/skills as canonical source.\n"
+            "Respect .github/openclaw-policy.yaml and task quality gate before closing work.\n"
+        )
+        if _write_text_if_needed(rules_path, rules_content, force):
+            notes.append(f"rules: {rules_path}")
+        return notes
+
+    if ide == "kiro":
+        settings_path = target / ".kiro" / "settings.json"
+        settings = _load_json_object(settings_path)
+        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        settings["kiro.openclaw.enabled"] = True
+        _save_json_object(settings_path, settings)
+        notes.append(f"workspace settings: {settings_path}")
+        steering_path = target / ".kiro" / "steering" / "openclaw.md"
+        steering_content = (
+            "# Free JT7 Steering\n\n"
+            "- Instructions: `.github/copilot-instructions.md`\n"
+            "- Skills index: `.github/skills/.skills_index.json`\n"
+            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Runs: `copilot-agent/runs/`\n"
+        )
+        if _write_text_if_needed(steering_path, steering_content, force):
+            notes.append(f"steering: {steering_path}")
+        if AGENT_FILE.exists():
+            kiro_agent = target / ".kiro" / "agents" / "openclaw.agent.md"
+            if not kiro_agent.exists() or force:
+                kiro_agent.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(AGENT_FILE, kiro_agent)
+                notes.append(f"agent: {kiro_agent}")
+        return notes
+
+    if ide == "antigravity":
+        manifest = target / ".antigravity" / "openclaw.runtime.json"
+        payload = {
+            "name": "openclaw-runtime",
+            "version": VERSION_FILE.read_text(encoding="utf-8").strip() if VERSION_FILE.exists() else "0.0",
+            "root": ".",
+            "sources": {
+                "instructions": str((gh_dir / "copilot-instructions.md").relative_to(target)).replace("\\", "/"),
+                "skills_dir": str((gh_dir / "skills").relative_to(target)).replace("\\", "/"),
+                "skills_index": str((gh_dir / "skills" / ".skills_index.json").relative_to(target)).replace("\\", "/"),
+                "policy": str((gh_dir / "openclaw-policy.yaml").relative_to(target)).replace("\\", "/"),
+            },
+            "permissions": ["read", "write", "terminal", "search"],
+            "activation": "ephemeral",
+        }
+        if not manifest.exists() or force:
+            _save_json_object(manifest, payload)
+            notes.append(f"manifest: {manifest}")
+        return notes
+
+    if ide == "codex":
+        codex_dir = target / ".codex"
+        codex_runtime = codex_dir / "openclaw-agent.md"
+        codex_content = (
+            "# Free JT7 Agent Bridge for Codex\n\n"
+            "- Instructions: `.github/copilot-instructions.md`\n"
+            "- Agent file: `.github/agents/openclaw.agent.md`\n"
+            "- Skills index: `.github/skills/.skills_index.json`\n"
+            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Runtime runs: `copilot-agent/runs/`\n"
+        )
+        if _write_text_if_needed(codex_runtime, codex_content, force):
+            notes.append(f"codex runtime: {codex_runtime}")
+
+        agents_path = target / "AGENTS.md"
+        status = _upsert_marked_block(
+            path=agents_path,
+            start_marker="<!-- OPENCLAW_CODEX_START -->",
+            end_marker="<!-- OPENCLAW_CODEX_END -->",
+            block_body=(
+                "## Free JT7 Codex Bridge\n"
+                "When operating in this workspace, prioritize Free JT7 runtime assets:\n"
+                "- `.github/copilot-instructions.md`\n"
+                "- `.github/agents/openclaw.agent.md`\n"
+                "- `.github/skills/.skills_index.json`\n"
+                "- `.github/openclaw-policy.yaml`\n"
+                "Use `python skills_manager.py task-run` for end-to-end execution with evidence.\n"
+            ),
+            header="# Workspace Agents",
+        )
+        notes.append(f"AGENTS bridge {status}: {agents_path}")
+        return notes
+
+    if ide == "claude-code":
+        claude_runtime = target / ".claude" / "openclaw-agent.md"
+        claude_content = (
+            "# Free JT7 Bridge for Claude Code\n\n"
+            "- Canonical instructions: `.github/copilot-instructions.md`\n"
+            "- Skills index: `.github/skills/.skills_index.json`\n"
+            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Runs: `copilot-agent/runs/`\n"
+        )
+        if _write_text_if_needed(claude_runtime, claude_content, force):
+            notes.append(f"claude runtime: {claude_runtime}")
+        claude_md = target / "CLAUDE.md"
+        status = _upsert_marked_block(
+            path=claude_md,
+            start_marker="<!-- OPENCLAW_CLAUDE_CODE_START -->",
+            end_marker="<!-- OPENCLAW_CLAUDE_CODE_END -->",
+            block_body=(
+                "## Free JT7 Claude Code Bridge\n"
+                "Use these files as source of truth:\n"
+                "- `.github/copilot-instructions.md`\n"
+                "- `.github/agents/openclaw.agent.md`\n"
+                "- `.github/skills/.skills_index.json`\n"
+                "- `.github/openclaw-policy.yaml`\n"
+                "Prefer `python skills_manager.py task-run` for full execution flow.\n"
+            ),
+            header="# CLAUDE Instructions",
+        )
+        notes.append(f"CLAUDE bridge {status}: {claude_md}")
+        return notes
+
+    if ide == "gemini-cli":
+        gemini_runtime = target / ".gemini" / "openclaw-agent.md"
+        gemini_content = (
+            "# Free JT7 Bridge for Gemini CLI\n\n"
+            "- Canonical instructions: `.github/copilot-instructions.md`\n"
+            "- Skills index: `.github/skills/.skills_index.json`\n"
+            "- Policy: `.github/openclaw-policy.yaml`\n"
+            "- Runs: `copilot-agent/runs/`\n"
+        )
+        if _write_text_if_needed(gemini_runtime, gemini_content, force):
+            notes.append(f"gemini runtime: {gemini_runtime}")
+        gemini_md = target / "GEMINI.md"
+        status = _upsert_marked_block(
+            path=gemini_md,
+            start_marker="<!-- OPENCLAW_GEMINI_CLI_START -->",
+            end_marker="<!-- OPENCLAW_GEMINI_CLI_END -->",
+            block_body=(
+                "## Free JT7 Gemini CLI Bridge\n"
+                "Use these files as source of truth:\n"
+                "- `.github/copilot-instructions.md`\n"
+                "- `.github/agents/openclaw.agent.md`\n"
+                "- `.github/skills/.skills_index.json`\n"
+                "- `.github/openclaw-policy.yaml`\n"
+                "Prefer `python skills_manager.py task-run` for full execution flow.\n"
+            ),
+            header="# GEMINI Instructions",
+        )
+        notes.append(f"GEMINI bridge {status}: {gemini_md}")
+        return notes
+
+    raise RuntimeError(f"IDE no soportado para adaptador workspace: {ide}")
+
+
+def _update_user_settings_for_ide(
+    ide: str,
+    appdata_root: Path | None = None,
+) -> Path:
+    ide = _normalize_ide_name(ide)
+    if ide not in IDE_USER_SETTINGS_SUPPORTED:
+        raise RuntimeError(f"IDE sin soporte de user settings: {ide}")
+    settings_path = _ide_settings_path(ide, appdata_root)
+    settings = _load_json_object(settings_path)
+    if ide in {"claude-code", "gemini-cli"}:
+        freejt7_payload = {
+            "enabled": True,
+            "instructions_file": _to_posix((ROOT / ".github" / "copilot-instructions.md").resolve()),
+            "agents_path": _to_posix((ROOT / ".github" / "agents").resolve()),
+            "skills_index": _to_posix((ROOT / ".github" / "skills" / ".skills_index.json").resolve()),
+            "policy_file": _to_posix((ROOT / ".github" / "openclaw-policy.yaml").resolve()),
+        }
+        settings["freejt7"] = freejt7_payload
+        settings["openclaw"] = {
+            **freejt7_payload
+        }
+    else:
+        instruction_file = _to_posix((ROOT / ".github" / "copilot-instructions.md").resolve())
+        agent_location = _to_posix((ROOT / ".github" / "agents").resolve())
+        _apply_openclaw_settings(settings, instruction_file, agent_location, ide)
+        if ide == "kiro":
+            settings["kiro.openclaw.enabled"] = True
+        if ide == "antigravity":
+            settings["antigravity.openclaw.enabled"] = True
+    _save_json_object(settings_path, settings)
+    return settings_path
+
+
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     out = dict(base)
     for key, value in override.items():
@@ -253,7 +746,7 @@ def _to_yaml_lines(data: dict[str, Any], level: int = 0) -> list[str]:
 
 
 def _write_policy(policy: dict[str, Any]) -> None:
-    lines = ["# OpenClaw policy file (autogenerated)", * _to_yaml_lines(policy), ""]
+    lines = ["# Free JT7 policy file (autogenerated)", * _to_yaml_lines(policy), ""]
     _atomic_write_text(POLICY_FILE, "\n".join(lines))
 
 
@@ -1255,7 +1748,7 @@ def cmd_adapt_copilot(args: argparse.Namespace) -> int:
             )
         content = re.sub(
             r'\*(\d+) skills — antigravity.*\*',
-            f'*{len(skills)} skills — antigravity-awesome-skills v5.7 + OpenClaw behaviors*',
+            f'*{len(skills)} skills — antigravity-awesome-skills v5.7 + Free JT7 behaviors*',
             content
         )
         COPILOT_INSTR.write_text(content, encoding="utf-8")
@@ -1458,10 +1951,34 @@ def cmd_set_project(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ide_detect(args: argparse.Namespace) -> int:
+    appdata_raw = str(getattr(args, "appdata_root", "")).strip()
+    appdata_root = Path(appdata_raw).expanduser().resolve() if appdata_raw else None
+    profiles = _detect_ide_profiles(appdata_root)
+    if getattr(args, "json", False):
+        print(json.dumps(profiles, indent=2, ensure_ascii=False))
+        return 0
+    print("[ide-detect] perfiles encontrados")
+    for profile in profiles:
+        state = "installed" if profile["installed"] else "missing"
+        suffix = "settings-ok" if profile["settings_exists"] else "settings-missing"
+        print(f" - {profile['ide']:<11s} {state:<9s} {suffix:<16s} {profile['settings_path']}")
+    return 0
+
+
 def cmd_install(args: argparse.Namespace) -> int:
     """Instala/vincula skills de este agente en otro proyecto."""
     try:
         _preflight(require_index=True)
+    except RuntimeError as exc:
+        print(f"[install] ERROR: {exc}")
+        return 1
+
+    appdata_raw = str(getattr(args, "appdata_root", "")).strip()
+    appdata_root = Path(appdata_raw).expanduser().resolve() if appdata_raw else None
+    ide_request = str(getattr(args, "ide", "auto") or "auto")
+    try:
+        ide_targets = _resolve_ide_targets(ide_request, appdata_root)
     except RuntimeError as exc:
         print(f"[install] ERROR: {exc}")
         return 1
@@ -1478,50 +1995,74 @@ def cmd_install(args: argparse.Namespace) -> int:
     gh_target.mkdir(parents=True, exist_ok=True)
 
     # copilot-instructions.md
-    if not ci_target.exists() or args.force:
-        shutil.copy2(ROOT / ".github" / "copilot-instructions.md", ci_target)
+    ci_source = ROOT / ".github" / "copilot-instructions.md"
+    if _same_path(ci_source, ci_target):
+        print("[install] SKIP copilot-instructions.md ya apunta al origen")
+    elif not ci_target.exists() or args.force:
+        shutil.copy2(ci_source, ci_target)
         print(f"[install] OK copilot-instructions.md -> {ci_target}")
     else:
         print(f"[install] SKIP copilot-instructions.md ya existe (usa --force para sobreescribir)")
 
     # skills/ (symlink)
-    if skills_target.exists() or skills_target.is_symlink():
-        if args.force:
-            if skills_target.is_symlink():
-                skills_target.unlink()
+    if _same_path(skills_target, GH_SKILLS_DIR):
+        print("[install] SKIP .github/skills/ ya apunta al origen")
+    else:
+        if skills_target.exists() or skills_target.is_symlink():
+            if args.force:
+                if skills_target.is_symlink():
+                    skills_target.unlink()
+                else:
+                    shutil.rmtree(skills_target)
             else:
-                shutil.rmtree(skills_target)
-        else:
-            print(f"[install] SKIP .github/skills/ ya existe (usa --force)")
-    if not skills_target.exists() and not skills_target.is_symlink():
-        try:
-            skills_target.symlink_to(GH_SKILLS_DIR, target_is_directory=True)
-            print(f"[install] LINK .github/skills/ -> symlink a {GH_SKILLS_DIR}")
-        except OSError:
-            shutil.copytree(GH_SKILLS_DIR, skills_target)
-            print(f"[install] COPY .github/skills/ -> copiado (sin privilegios de symlink)")
+                print(f"[install] SKIP .github/skills/ ya existe (usa --force)")
+        if not skills_target.exists() and not skills_target.is_symlink():
+            try:
+                skills_target.symlink_to(GH_SKILLS_DIR, target_is_directory=True)
+                print(f"[install] LINK .github/skills/ -> symlink a {GH_SKILLS_DIR}")
+            except OSError:
+                shutil.copytree(GH_SKILLS_DIR, skills_target)
+                print(f"[install] COPY .github/skills/ -> copiado (sin privilegios de symlink)")
 
     # instructions/ (symlink)
     instr_src = ROOT / ".github" / "instructions"
-    if instr_target.exists() or instr_target.is_symlink():
-        if args.force:
-            if instr_target.is_symlink():
-                instr_target.unlink()
+    if _same_path(instr_target, instr_src):
+        print("[install] SKIP .github/instructions/ ya apunta al origen")
+    else:
+        if instr_target.exists() or instr_target.is_symlink():
+            if args.force:
+                if instr_target.is_symlink():
+                    instr_target.unlink()
+                else:
+                    shutil.rmtree(instr_target)
             else:
-                shutil.rmtree(instr_target)
-        else:
-            print(f"[install] SKIP .github/instructions/ ya existe (usa --force)")
-    if not instr_target.exists() and not instr_target.is_symlink():
-        try:
-            instr_target.symlink_to(instr_src, target_is_directory=True)
-            print(f"[install] LINK .github/instructions/ -> symlink a {instr_src}")
-        except OSError:
-            shutil.copytree(instr_src, instr_target)
-            print(f"[install] COPY .github/instructions/ -> copiado")
+                print(f"[install] SKIP .github/instructions/ ya existe (usa --force)")
+        if not instr_target.exists() and not instr_target.is_symlink():
+            try:
+                instr_target.symlink_to(instr_src, target_is_directory=True)
+                print(f"[install] LINK .github/instructions/ -> symlink a {instr_src}")
+            except OSError:
+                shutil.copytree(instr_src, instr_target)
+                print(f"[install] COPY .github/instructions/ -> copiado")
+
+    for ide in ide_targets:
+        notes = _install_workspace_ide_adapter(target, ide, force=getattr(args, "force", False))
+        if notes:
+            print(f"[install] IDE {ide}:")
+            for note in notes:
+                print(f"  - {note}")
+
+    if getattr(args, "update_user_settings", False):
+        for ide in ide_targets:
+            try:
+                settings_path = _update_user_settings_for_ide(ide, appdata_root)
+                print(f"[install] IDE {ide} user settings -> {settings_path}")
+            except RuntimeError as exc:
+                print(f"[install] WARN IDE {ide} user settings: {exc}")
 
     _log_audit("install", str(target))
-    _update_resume("install", f"skills instalados en {target.name}")
-    print(f"[install] OK Skills vinculados en: {target}")
+    _update_resume("install", f"skills instalados en {target.name} | ide={','.join(ide_targets)}")
+    print(f"[install] OK Skills vinculados en: {target} | ide={','.join(ide_targets)}")
     return 0
 
 
@@ -1918,8 +2459,8 @@ def cmd_release_sync(args: argparse.Namespace) -> int:
             (r"\*\*\d+ skills expertos\*\*", f"**{total} skills expertos**"),
             (r"- \*\*Catálogo completo\*\*: `skills/\.skills_index\.json` — \d+ entries",
              f"- **Catálogo completo**: `.github/skills/.skills_index.json` — {total} entries"),
-            (r"\*\d+ skills — antigravity-awesome-skills v5\.7 \+ OpenClaw behaviors\*",
-             f"*{total} skills — antigravity-awesome-skills v5.7 + OpenClaw behaviors*"),
+            (r"\*\d+ skills — antigravity-awesome-skills v5\.7 \+ (OpenClaw|Free JT7) behaviors\*",
+             f"*{total} skills — antigravity-awesome-skills v5.7 + Free JT7 behaviors*"),
         ],
     )
 
@@ -2052,7 +2593,7 @@ def main() -> int:
     p_rs.add_argument("--bump", choices=["patch", "minor"], default="patch", help="Tipo de bump de versión")
 
     # policy/runtime
-    sub.add_parser("policy-validate", help="Validar política operativa OpenClaw")
+    sub.add_parser("policy-validate", help="Validar política operativa Free JT7")
     p_rm = sub.add_parser("rollout-mode", help="Ver o establecer modo rollout")
     p_rm.add_argument("mode", nargs="?", choices=["shadow", "assist", "autonomous"], help="Nuevo modo")
 
@@ -2090,9 +2631,26 @@ def main() -> int:
     p_sp.add_argument("path", help="Ruta del proyecto activo")
     p_sp.add_argument("--description", "-d", default="", help="Notas sobre el proyecto")
 
+    # ide-detect
+    p_ide = sub.add_parser("ide-detect", help="Detectar perfiles de IDE compatibles")
+    p_ide.add_argument("--json", action="store_true", help="Salida JSON")
+    p_ide.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+
     # install
     p_inst = sub.add_parser("install", help="Instalar skills (symlinks) en otro proyecto")
     p_inst.add_argument("path", help="Ruta del proyecto destino")
+    p_inst.add_argument(
+        "--ide",
+        default="auto",
+        choices=["auto", "all", "vscode", "cursor", "kiro", "antigravity", "codex", "claude-code", "gemini-cli"],
+        help="Objetivo IDE para adaptar instalacion",
+    )
+    p_inst.add_argument(
+        "--update-user-settings",
+        action="store_true",
+        help="Actualizar settings de usuario del IDE objetivo",
+    )
+    p_inst.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
     p_inst.add_argument("--force", "-f", action="store_true", help="Sobreescribir archivos existentes")
 
     # add-agent
@@ -2129,6 +2687,7 @@ def main() -> int:
         "task-close":    cmd_task_close,
         "task-run":      cmd_task_run,
         "set-project":   cmd_set_project,
+        "ide-detect":    cmd_ide_detect,
         "install":       cmd_install,
         "add-agent":    cmd_add_agent,
     }

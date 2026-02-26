@@ -1,7 +1,7 @@
-﻿# Instala Copilot-OpenClaw en un proyecto existente
+﻿# Instala Agente Free JT7 en un proyecto existente
 #
 # Uso:
-#   .\add-openclaw-agent.ps1 [-Path <ruta>] [-Force]
+#   .\add-openclaw-agent.ps1 [-Path <ruta>] [-Ide <auto|all|vscode|cursor|kiro|antigravity|codex|claude-code|gemini-cli>] [-UpdateUserSettings] [-Force]
 #
 # Si no se especifica Path, se toma el directorio de trabajo actual.
 # El script invoca el gestor de skills (skills_manager.py) y crea
@@ -9,6 +9,9 @@
 
 param(
     [string]$Path = ".",
+    [ValidateSet("auto", "all", "vscode", "cursor", "kiro", "antigravity", "codex", "claude-code", "gemini-cli")]
+    [string]$Ide = "auto",
+    [switch]$UpdateUserSettings,
     [switch]$Force
 )
 
@@ -25,7 +28,7 @@ if (-not (Test-Path $manager)) {
     exit 1
 }
 
-Write-Host "[add-openclaw-agent] instalando en: $targetDir"
+Write-Host "[add-free-jt7-agent] instalando en: $targetDir"
 
 # Construir comando
 $python = "python"
@@ -33,16 +36,16 @@ $python = "python"
 $venvPy = Join-Path $scriptDir ".venv\Scripts\python.exe"
 if (Test-Path $venvPy) { $python = $venvPy }
 
-if ($Force) {
-    Write-Host "ejecutando: $python `"$manager`" install `"$targetDir`" --force"
-    & $python $manager install $targetDir --force
-} else {
-    Write-Host "ejecutando: $python `"$manager`" install `"$targetDir`""
-    & $python $manager install $targetDir
-}
+$argsList = @($manager, "install", $targetDir, "--ide", $Ide)
+if ($UpdateUserSettings) { $argsList += "--update-user-settings" }
+if ($Force) { $argsList += "--force" }
+
+Write-Host "ejecutando: $python $($argsList -join ' ')"
+& $python @argsList
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "[add-openclaw-agent] OK agente ligado correctamente."
+    Write-Host "[add-free-jt7-agent] OK agente ligado correctamente."
 } else {
-    Write-Error "[add-openclaw-agent] ERROR durante la instalacion (codigo $LASTEXITCODE)."
+    Write-Error "[add-free-jt7-agent] ERROR durante la instalacion (codigo $LASTEXITCODE)."
 }
+

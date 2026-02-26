@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from argparse import Namespace
 from contextlib import contextmanager
+import os
 from pathlib import Path
 import sys
 
@@ -112,6 +113,53 @@ class SkillsManagerUnitTests(unittest.TestCase):
             self.assertEqual(rc, 0)
             active = sm.load_json(sm.COPILOT_AGENT / "active-project.json", {})
             self.assertEqual(active.get("name"), "my-project")
+
+    def test_resolve_ide_targets_auto_uses_detected_profiles(self):
+        with isolated_workspace() as root:
+            appdata = root / "appdata"
+            (appdata / "Cursor" / "User").mkdir(parents=True, exist_ok=True)
+            (appdata / "Cursor" / "User" / "settings.json").write_text("{}", encoding="utf-8")
+
+            original = os.environ.get("OPENCLAW_APPDATA_ROOT")
+            os.environ["OPENCLAW_APPDATA_ROOT"] = str(appdata)
+            try:
+                targets = sm._resolve_ide_targets("auto", appdata)
+            finally:
+                if original is None:
+                    os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+                else:
+                    os.environ["OPENCLAW_APPDATA_ROOT"] = original
+
+            self.assertIn("cursor", targets)
+
+    def test_appdata_root_supports_macos_and_linux_defaults(self):
+        original_pf = sm._platform_family
+        original_override = os.environ.get("OPENCLAW_APPDATA_ROOT")
+        try:
+            os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+            sm._platform_family = lambda: "darwin"
+            mac_root = sm._appdata_root()
+            self.assertIn("Library", str(mac_root))
+            self.assertIn("Application Support", str(mac_root))
+
+            sm._platform_family = lambda: "linux"
+            linux_root = sm._appdata_root()
+            self.assertTrue(str(linux_root).endswith(".config"))
+        finally:
+            sm._platform_family = original_pf
+            if original_override is None:
+                os.environ.pop("OPENCLAW_APPDATA_ROOT", None)
+            else:
+                os.environ["OPENCLAW_APPDATA_ROOT"] = original_override
+
+    def test_ide_settings_path_for_claude_and_gemini_with_override_root(self):
+        with isolated_workspace() as root:
+            appdata = root / "appdata"
+            appdata.mkdir(parents=True, exist_ok=True)
+            claude = sm._ide_settings_path("claude-code", appdata)
+            gemini = sm._ide_settings_path("gemini-cli", appdata)
+            self.assertTrue(str(claude).endswith("ClaudeCode\\config.json") or str(claude).endswith("ClaudeCode/config.json"))
+            self.assertTrue(str(gemini).endswith("GeminiCLI\\settings.json") or str(gemini).endswith("GeminiCLI/settings.json"))
 
 
 if __name__ == "__main__":

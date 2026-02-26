@@ -1,14 +1,14 @@
-# 🤖 Agente Copilot OpenClaw — 962 Skills
+﻿# ðŸ¤– Agente Copilot Free JT7 â€” 962 Skills
 
-Sistema de skills expertos para GitHub Copilot, basado en [OpenClaw](https://github.com/openclaw) y el catálogo [Antigravity Awesome Skills](https://github.com/sickn33/antigravity-awesome-skills).
+Sistema de skills expertos para GitHub Copilot, basado en [OpenClaw](https://github.com/openclaw) y el catÃ¡logo [Antigravity Awesome Skills](https://github.com/sickn33/antigravity-awesome-skills).
 
-**962 skills** organizados en 9 categorías — disponibles **siempre** en cualquier proyecto VS Code y en github.com.
+**962 skills** organizados en 9 categorÃ­as â€” disponibles **siempre** en cualquier proyecto VS Code y en github.com.
 
 ---
 
-## ✨ ¿Qué incluye?
+## âœ¨ Â¿QuÃ© incluye?
 
-| Categoría | Skills | Ejemplos |
+| CategorÃ­a | Skills | Ejemplos |
 |-----------|--------|---------|
 | `architecture` | 83 | C4, DDD, ADRs, microservices |
 | `business` | 130 | SEO, marketing, CRM, pricing |
@@ -22,12 +22,12 @@ Sistema de skills expertos para GitHub Copilot, basado en [OpenClaw](https://git
 
 ---
 
-## 🚀 Instalación rápida — cualquier proyecto
+## ðŸš€ InstalaciÃ³n rÃ¡pida â€” cualquier proyecto
 
-### Opción 1: Script automático (Windows)
+### OpciÃ³n 1: Script automÃ¡tico (Windows)
 
 ```powershell
-# Desde la raíz de tu proyecto
+# Desde la raÃ­z de tu proyecto
 iwr https://raw.githubusercontent.com/javiertarazon/agente-copilot/master/setup-project.ps1 | iex
 ```
 
@@ -36,11 +36,11 @@ iwr https://raw.githubusercontent.com/javiertarazon/agente-copilot/master/setup-
 >
 ```powershell
 # en cualquier carpeta, path por defecto es el cwd
-.\add-openclaw-agent.ps1 -Path "C:\ruta\a\tu-proyecto" [-Force]
+.\add-openclaw-agent.ps1 -Path "C:\ruta\a\tu-proyecto" -Ide cursor -UpdateUserSettings [-Force]
 ```
 
 
-### Opción 2: Clone + install
+### OpciÃ³n 2: Clone + install
 
 ```powershell
 # Clonar el agente (una sola vez)
@@ -50,18 +50,32 @@ python -m venv .venv; .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt 2>$null
 
 # Instalar en TU proyecto (crea symlinks)
-python skills_manager.py install "C:\ruta\a\tu-proyecto"
+python skills_manager.py install "C:\ruta\a\tu-proyecto" --ide auto
+# --ide auto instala solo IDEs detectados en tu entorno
+
+# Forzar compatibilidad en todos los IDE soportados
+python skills_manager.py install "C:\ruta\a\tu-proyecto" --ide all --update-user-settings
+
+# Detectar perfiles disponibles
+python skills_manager.py ide-detect
+
+# Integrar solo Codex en el workspace (AGENTS.md + .codex/)
+python skills_manager.py install "C:\ruta\a\tu-proyecto" --ide codex
+
+# Integrar Claude Code y Gemini CLI
+python skills_manager.py install "C:\ruta\a\tu-proyecto" --ide claude-code
+python skills_manager.py install "C:\ruta\a\tu-proyecto" --ide gemini-cli
 ```
 
-### Opción 3: Workspace multiroot (recomendado para desarrollo)
+### OpciÃ³n 3: Workspace multiroot (recomendado para desarrollo)
 
 Abre `open-claw-multiroot.code-workspace` en VS Code. Edita la segunda carpeta para apuntar a tu proyecto activo.
 
 ---
 
-## ⚙️ Configuración permanente en VS Code (ya hecha si seguiste el setup)
+## âš™ï¸ ConfiguraciÃ³n permanente en VS Code (ya hecha si seguiste el setup)
 
-Añade esto a tu `settings.json` de usuario (`Ctrl+Shift+P` → "Open User Settings JSON"):
+AÃ±ade esto a tu `settings.json` de usuario (`Ctrl+Shift+P` â†’ "Open User Settings JSON"):
 
 ```json
 {
@@ -77,40 +91,40 @@ Añade esto a tu `settings.json` de usuario (`Ctrl+Shift+P` → "Open User Setti
 }
 ```
 
-> 💡 **Con esta config, TODOS los proyectos VS Code usan automáticamente los 963 skills. No necesitas nada extra por proyecto.**
+> ðŸ’¡ **Con esta config, TODOS los proyectos VS Code usan automÃ¡ticamente los 963 skills. No necesitas nada extra por proyecto.**
 
 ---
 
-## 🎯 Uso de skills
+## ðŸŽ¯ Uso de skills
 
-### Automático (desde Copilot Chat)
+### AutomÃ¡tico (desde Copilot Chat)
 
 Copilot detecta el dominio de tu solicitud y carga el skill correcto:
 
 ```
-"crea un Dockerfile optimizado para Node.js"  → skill: docker-expert
-"diseña una arquitectura de microservicios"    → skill: microservices-patterns
-"escribe tests para esta función Python"       → skill: python-testing-patterns
-"optimiza esta query SQL"                      → skill: sql-optimization-patterns
+"crea un Dockerfile optimizado para Node.js"  â†’ skill: docker-expert
+"diseÃ±a una arquitectura de microservicios"    â†’ skill: microservices-patterns
+"escribe tests para esta funciÃ³n Python"       â†’ skill: python-testing-patterns
+"optimiza esta query SQL"                      â†’ skill: sql-optimization-patterns
 ```
 
-### Manual — carga un skill específico
+### Manual â€” carga un skill especÃ­fico
 
 ```
-@copilot Usa el skill react-state-management y ayúdame con Redux Toolkit
+@copilot Usa el skill react-state-management y ayÃºdame con Redux Toolkit
 ```
 
-### Modo agente OpenClaw
+### Modo agente Free JT7
 
-En VS Code Copilot Chat, selecciona el agente `openclaw` (aparece en el menú de agentes):
+En VS Code Copilot Chat, selecciona el agente `free-jt7` (aparece en el menÃº de agentes):
 
 ```
-@openclaw analiza la arquitectura de este proyecto y sugiere mejoras
+@free-jt7 analiza la arquitectura de este proyecto y sugiere mejoras
 ```
 
 ---
 
-## 🔧 Gestión de skills y agentes
+## ðŸ”§ GestiÃ³n de skills y agentes
 
 ```powershell
 cd "D:\agente-copilot"
@@ -119,7 +133,7 @@ cd "D:\agente-copilot"
 # Buscar un skill
 python skills_manager.py search "docker kubernetes"
 
-# Listar por categoría
+# Listar por categorÃ­a
 python skills_manager.py list --category development
 
 # Ver skills activos
@@ -129,7 +143,7 @@ python skills_manager.py list --active
 python skills_manager.py activate python-pro fastapi-pro
 
 # Generar una skill nueva desde plantilla
-python skills_manager.py add --name "mi-skill" --description "Descripción breve"
+python skills_manager.py add --name "mi-skill" --description "DescripciÃ³n breve"
 
 # Crear un agente personalizado
 python skills_manager.py add-agent --name "Mi Agente" --description "Ayuda con CI/CD" --model claude-2 --tools codebase terminal
@@ -138,11 +152,11 @@ python skills_manager.py add-agent --name "Mi Agente" --description "Ayuda con C
 python skills_manager.py install "D:\mis-proyectos\mi-app"
 ```
 
-> 🛠 **Nota:** los comandos `add` y `add-agent` generan los archivos necesarios automáticamente; edítalos después para completar la documentación y las reglas del skill/agent.
+> ðŸ›  **Nota:** los comandos `add` y `add-agent` generan los archivos necesarios automÃ¡ticamente; edÃ­talos despuÃ©s para completar la documentaciÃ³n y las reglas del skill/agent.
 
 ---
 
-## 🧭 Operating Model (Autonomía)
+## ðŸ§­ Operating Model (AutonomÃ­a)
 
 El agente soporta un runtime operacional con policy y runs trazables:
 
@@ -156,7 +170,7 @@ python skills_manager.py rollout-mode shadow
 python skills_manager.py rollout-mode assist
 python skills_manager.py rollout-mode autonomous
 
-# Resolver skills efímeras para una tarea
+# Resolver skills efÃ­meras para una tarea
 python skills_manager.py skill-resolve --query "docker kubernetes" --top 3
 
 # Orquestar run completo
@@ -165,7 +179,7 @@ python skills_manager.py task-run --goal "auditar CI" --commands "ls" "python sk
 # Modo granular
 python skills_manager.py task-start --goal "revisar seguridad"
 python skills_manager.py task-step --run-id <id> --command "Get-ChildItem"
-python skills_manager.py task-close --run-id <id> --summary "verificación completada"
+python skills_manager.py task-close --run-id <id> --summary "verificaciÃ³n completada"
 ```
 
 Artefactos generados:
@@ -175,41 +189,43 @@ Artefactos generados:
 
 ---
 
-## 📁 Estructura del repositorio
+## ðŸ“ Estructura del repositorio
 
 ```
 agente-copilot/
-├── .github/
-│   ├── copilot-instructions.md     # ← Instrucciones globales de Copilot
-│   ├── agents/
-│   │   └── openclaw.agent.md       # ← Definición del agente VS Code
-│   ├── skills/                     # ← 963 skills individuales
-│   │   └── <nombre>/SKILL.md
-│   └── instructions/               # ← Instrucciones por categoría
-├── skills/                         # ← Skills organizados por categoría
-├── skills_manager.py               # ← CLI de gestión
-├── setup-project.ps1               # ← Instalador rápido por proyecto
-├── open-claw-multiroot.code-workspace
-└── copilot-agent/
-    ├── active-project.json         # ← Proyecto activo actual
-    └── RESUME.md                   # ← Estado del agente
+â”œâ”€â”€ .github/
+â”‚   â”œâ”€â”€ copilot-instructions.md     # â† Instrucciones globales de Copilot
+â”‚   â”œâ”€â”€ agents/
+â”‚   â”‚   â””â”€â”€ openclaw.agent.md       # â† DefiniciÃ³n del agente VS Code
+â”‚   â”œâ”€â”€ skills/                     # â† 963 skills individuales
+â”‚   â”‚   â””â”€â”€ <nombre>/SKILL.md
+â”‚   â””â”€â”€ instructions/               # â† Instrucciones por categorÃ­a
+â”œâ”€â”€ skills/                         # â† Skills organizados por categorÃ­a
+â”œâ”€â”€ skills_manager.py               # â† CLI de gestiÃ³n
+â”œâ”€â”€ setup-project.ps1               # â† Instalador rÃ¡pido por proyecto
+â”œâ”€â”€ open-claw-multiroot.code-workspace
+â””â”€â”€ copilot-agent/
+    â”œâ”€â”€ active-project.json         # â† Proyecto activo actual
+    â””â”€â”€ RESUME.md                   # â† Estado del agente
 ```
 
 ---
 
-## 🌐 GitHub Copilot en github.com
+## ðŸŒ GitHub Copilot en github.com
 
-Las instrucciones están en la rama `master` (rama por defecto). Copilot en github.com las carga automáticamente cuando trabajas en cualquier pull request o código del repositorio.
+Las instrucciones estÃ¡n en la rama `master` (rama por defecto). Copilot en github.com las carga automÃ¡ticamente cuando trabajas en cualquier pull request o cÃ³digo del repositorio.
 
 ---
 
-## 📊 Versión actual
+## ðŸ“Š VersiÃ³n actual
 
-- **v2.0** - runtime autonomo OpenClaw + policy operativa + 962 skills
+- **v3.0** - Agente Free JT7 multi-ides + runtime operativo + 962 skills
 - Ultima actualizacion: 26 de febrero de 2026
 
-> 🚀 **Nota:** se ha subido una etiqueta/tags `v2.0` al repositorio remoto. Quien clone o actualice y ejecute `setup-project.ps1` obtendrá la configuración global en VS Code y Copilot automáticamente.
+> ðŸš€ **Nota:** se subirÃ¡ una etiqueta/tags `v3.0` al repositorio remoto para esta versiÃ³n.
 
 ---
 
-*962 skills — MIT License*
+*962 skills â€” MIT License*
+
+

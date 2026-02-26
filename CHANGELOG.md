@@ -1,9 +1,24 @@
-# Changelog — OpenClaw Copilot Agent
+# Changelog — Agente Free JT7
 
 All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+
+## [v3.0] - 2026-02-26
+
+### Summary
+Rebranding a **Agente Free JT7** + compatibilidad multi-IDE ampliada (VS Code, Cursor, Kiro, Antigravity, Codex, Claude Code y Gemini CLI).
+
+### Added
+- Integración de workspace para `claude-code` (`.claude/openclaw-agent.md` + bridge en `CLAUDE.md`).
+- Integración de workspace para `gemini-cli` (`.gemini/openclaw-agent.md` + bridge en `GEMINI.md`).
+- Detección `auto` ampliada para `codex`, `claude-code` y `gemini-cli`.
+
+### Changed
+- Nombre operativo del agente actualizado a **Free JT7** en documentación y prompts.
+- Scripts de instalación ajustados al branding Free JT7.
+- `skills_manager.py` actualizado para exponer branding Free JT7 manteniendo compatibilidad legacy.
 
 
 ## [v2.0] - 2026-02-26
