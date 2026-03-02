@@ -31,9 +31,14 @@ def isolated_workspace():
             "VERSION_FILE": root / "VERSION",
             "README_MD": root / "README.md",
             "CHANGELOG_MD": root / "CHANGELOG.md",
-            "AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
-            "POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
+            "AGENT_FILE": root / ".github" / "agents" / "free-jt7.agent.md",
+            "LEGACY_AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
+            "POLICY_FILE": root / ".github" / "free-jt7-policy.yaml",
+            "LEGACY_POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
+            "MODEL_ROUTING_FILE": root / ".github" / "free-jt7-model-routing.json",
+            "MODEL_ROUTING_LEGACY_FILE": root / ".github" / "freejt7-model-routing.json",
             "ROLLOUT_FILE": root / "copilot-agent" / "rollout-mode.json",
+            "OPENCLAW_REPO_DIR": root / "OPEN CLAW",
         }
         for key, value in mappings.items():
             originals[key] = getattr(sm, key)
@@ -88,7 +93,7 @@ class SkillsManagerAutonomyTests(unittest.TestCase):
             write_skill(root, "python-pro", "python", "development")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
 
             sm.cmd_rollout_mode(Namespace(mode="shadow"))
             rc = sm.cmd_task_run(
@@ -107,6 +112,61 @@ class SkillsManagerAutonomyTests(unittest.TestCase):
             self.assertTrue(run_file.exists())
             run_data = sm.load_json(run_file, {})
             self.assertEqual(run_data.get("status"), "succeeded")
+
+    def test_task_step_blocks_when_allowlist_enabled_and_bin_missing(self):
+        with isolated_workspace() as root:
+            write_skill(root, "ops-pro", "ops", "infrastructure")
+            sm._rebuild_index_from_disk()
+            (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
+            run_id = "allowlist-block-1"
+            rc = sm.cmd_task_start(Namespace(goal="probar allowlist", scope="workspace", run_id=run_id, ide="auto", profile="default", appdata_root=""))
+            self.assertEqual(rc, 0)
+            self.assertEqual(sm.cmd_exec_allowlist(Namespace(action="add", bins=["get-childitem"])), 0)
+            self.assertEqual(sm.cmd_exec_allowlist(Namespace(action="enable", bins=[])), 0)
+            blocked = sm.cmd_task_step(
+                Namespace(
+                    run_id=run_id,
+                    command="foobarbazcmd --version",
+                    approve_high_risk=False,
+                    allow_destructive=False,
+                )
+            )
+            self.assertEqual(blocked, 1)
+            run_data = sm.load_json(sm.COPILOT_AGENT / "runs" / f"{run_id}.json", {})
+            self.assertEqual(run_data.get("status"), "blocked")
+
+    def test_task_list_and_checklist_and_registry(self):
+        with isolated_workspace() as root:
+            write_skill(root, "infra-ops", "ops", "infrastructure")
+            sm._rebuild_index_from_disk()
+            (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
+            sm.cmd_rollout_mode(Namespace(mode="shadow"))
+
+            run_id = "run-checklist-1"
+            rc = sm.cmd_task_run(
+                Namespace(
+                    goal="validar checklist",
+                    scope="workspace",
+                    run_id=run_id,
+                    commands=["ls"],
+                    approve_high_risk=False,
+                    allow_destructive=False,
+                    summary="ok",
+                    ide="auto",
+                    profile="default",
+                    appdata_root="",
+                )
+            )
+            self.assertEqual(rc, 0)
+            self.assertEqual(sm.cmd_task_list(Namespace(status="", limit=10, json=False)), 0)
+            self.assertEqual(sm.cmd_task_checklist(Namespace(run_id=run_id, json=False)), 0)
+            tasks_yaml = sm.COPILOT_AGENT / "tasks.yaml"
+            self.assertTrue(tasks_yaml.exists())
+            content = tasks_yaml.read_text(encoding="utf-8")
+            self.assertIn(run_id, content)
+            self.assertIn("estado: \"completado\"", content)
 
 
 if __name__ == "__main__":

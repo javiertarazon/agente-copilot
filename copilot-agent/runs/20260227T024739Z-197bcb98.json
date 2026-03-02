@@ -1,0 +1,66 @@
+{
+  "run_id": "20260227T024739Z-197bcb98",
+  "started_at": "2026-02-27T02:47:40Z",
+  "ended_at": "",
+  "user_goal": "fallback autostart gateway sin scheduled task",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "blocked",
+  "skills_selected": [
+    {
+      "id": "whatsapp-automation",
+      "category": "general",
+      "score": 2.25,
+      "gh_path": ".github/skills/whatsapp-automation/SKILL.md"
+    },
+    {
+      "id": "upstash-qstash",
+      "category": "infrastructure",
+      "score": 2.244,
+      "gh_path": ".github/skills/upstash-qstash/SKILL.md"
+    },
+    {
+      "id": "fp-ts-errors",
+      "category": "development",
+      "score": 2.112,
+      "gh_path": ".github/skills/fp-ts-errors/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": false
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "=Join-Path C:\\Users\\javie\\AppData\\Roaming 'Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\openclaw-gateway-autostart.cmd'; Test-Path",
+      "normalized_command": "=Join-Path C:\\Users\\javie\\AppData\\Roaming 'Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\openclaw-gateway-autostart.cmd'; Test-Path",
+      "result": "\"Join-Path\" no se reconoce como un comando interno o externo,\nprograma o archivo por lotes ejecutable.\nTest-Path : No se puede procesar el comando porque faltan uno o varios de los parámetros obligatorios:  Path.\nEn línea: 1 Carácter: 135\n+ ... t Menu\\\\Programs\\\\Startup\\\\openclaw-gateway-autostart.cmd'; Test-Path\n+                                                                 ~~~~~~~~~\n    + CategoryInfo          : InvalidArgument: (:) [Test-Path], ParameterBindingException\n    + FullyQualifiedErrorId : MissingMandatoryParameter,Microsoft.PowerShell.Commands.TestPathCommand\n \n",
+      "exit_code": 1,
+      "retry_index": 2,
+      "risk_level": "medium",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Bloqueado por quality gate: existen steps fallidos o sin evidencia.",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

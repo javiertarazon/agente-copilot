@@ -1,0 +1,67 @@
+{
+  "run_id": "20260227T000146Z-d21fdda4",
+  "started_at": "2026-02-27T00:01:46Z",
+  "ended_at": "2026-02-27T00:01:46Z",
+  "user_goal": "prueba resolucion ide claude",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "claude-code-guide",
+      "category": "general",
+      "score": 3.213,
+      "gh_path": ".github/skills/claude-code-guide/SKILL.md"
+    },
+    {
+      "id": "web-design-guidelines",
+      "category": "general",
+      "score": 1.827,
+      "gh_path": ".github/skills/web-design-guidelines/SKILL.md"
+    },
+    {
+      "id": "varlock-claude-skill",
+      "category": "development",
+      "score": 1.8,
+      "gh_path": ".github/skills/varlock-claude-skill/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "python --version",
+      "normalized_command": "python --version",
+      "result": "Python 3.11.9\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 1 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "claude-code",
+    "profile": "default",
+    "provider": "claude-code",
+    "model": "claude-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\.claude\\config.json",
+      "claude:C:\\Users\\javie\\.claude\\config.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

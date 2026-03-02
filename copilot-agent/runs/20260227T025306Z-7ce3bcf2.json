@@ -1,0 +1,77 @@
+{
+  "run_id": "20260227T025306Z-7ce3bcf2",
+  "started_at": "2026-02-27T02:53:06Z",
+  "ended_at": "2026-02-27T02:53:28Z",
+  "user_goal": "estado final gateway sin servicio programado",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "startup-business-analyst-business-case",
+      "category": "business",
+      "score": 1.754,
+      "gh_path": ".github/skills/startup-business-analyst-business-case/SKILL.md"
+    },
+    {
+      "id": "startup-business-analyst-financial-projections",
+      "category": "business",
+      "score": 1.749,
+      "gh_path": ".github/skills/startup-business-analyst-financial-projections/SKILL.md"
+    },
+    {
+      "id": "notion-template-business",
+      "category": "business",
+      "score": 1.712,
+      "gh_path": ".github/skills/notion-template-business/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "openclaw status",
+      "normalized_command": "openclaw status",
+      "result": "OpenClaw status\n\nOverview\n┌─────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────┐\n│ Item            │ Value                                                                                             │\n├─────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┤\n│ Dashboard       │ http://127.0.0.1:18789/                                                                           │\n│ OS              │ windows 10.0.26200 (x64) · node 24.13.1                                                           │\n│ Tailscale       │ off                                                                                               │\n│ Channel         │ stable (default)                                                                                  │\n│ Update          │ available · pnpm · npm update 2026.2.26                                                           │\n│ Gateway         │ local · ws://127.0.0.1:18789 (local loopback) · reachable 87ms · auth token · jt7ingenieria (10.  │\n│                 │ 2.0.2) app 2026.2.25 windows 10.0.26200                                                           │\n│ Gateway service │ Scheduled Task not installed                                                                      │\n│ Node service    │ Scheduled Task not installed                                                                      │\n│ Agents          │ 1 · 1 bootstrap file present · sessions 0 · default main active unknown                           │\n│ Memory          │ 0 files · 0 chunks · dirty · sources memory · plugin memory-core · vector unknown · fts ready ·   │\n│                 │ cache on (0)                                                                                      │\n│ Probes          │ skipped (use --deep)                                                                              │\n│ Events          │ none                                                                                              │\n│ Heartbeat       │ 30m (main)                                                                                        │\n│ Sessions        │ 0 active · default claude-opus-4-6 (200k ctx) · ~\\.openclaw\\agents\\main\\sessions\\sessions.json    │\n└─────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────┘\n\nSecurity audit\nSummary: 0 critical · 1 warn · 1 info\n  WARN Reverse proxy headers are not trusted\n    gateway.bind is loopback and gateway.trustedProxies is empty. If you expose the Control UI through a reverse proxy, configure trusted proxies so local-client c…\n    Fix: Set gateway.trustedProxies to your proxy IPs or keep the Control UI local-only.\nFull report: openclaw security audit\nDeep probe: openclaw security audit --deep\n\nChannels\n┌──────────┬─────────┬────────┬───────────────────────────────────────────────────────────────────────────────────────┐\n│ Channel  │ Enabled │ State  │ Detail                                                                                │\n├──────────┼─────────┼────────┼───────────────────────────────────────────────────────────────────────────────────────┤\n└──────────┴─────────┴────────┴───────────────────────────────────────────────────────────────────────────────────────┘\n\nSessions\n┌────────────────────────────────────────────────────────────────────┬──────┬─────────┬──────────────┬────────────────┐\n│ Key                                                                │ Kind │ Age     │ Model        │ Tokens         │\n├────────────────────────────────────────────────────────────────────┼──────┼─────────┼──────────────┼────────────────┤\n│ no sessions yet                                                    │      │         │              │                │\n└────────────────────────────────────────────────────────────────────┴──────┴─────────┴──────────────┴────────────────┘\n\nFAQ: https://docs.openclaw.ai/faq\nTroubl",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    },
+    {
+      "step_id": "step-2",
+      "action": "task-step",
+      "command": "openclaw gateway probe --json",
+      "normalized_command": "openclaw gateway probe --json",
+      "result": "{\n  \"ok\": true,\n  \"ts\": 1772160807894,\n  \"durationMs\": 156,\n  \"timeoutMs\": 3000,\n  \"primaryTargetId\": \"localLoopback\",\n  \"warnings\": [],\n  \"network\": {\n    \"localLoopbackUrl\": \"ws://127.0.0.1:18789\",\n    \"localTailnetUrl\": null,\n    \"tailnetIPv4\": null\n  },\n  \"discovery\": {\n    \"timeoutMs\": 1200,\n    \"count\": 0,\n    \"beacons\": []\n  },\n  \"targets\": [\n    {\n      \"id\": \"localLoopback\",\n      \"kind\": \"localLoopback\",\n      \"url\": \"ws://127.0.0.1:18789\",\n      \"active\": true,\n      \"tunnel\": null,\n      \"connect\": {\n        \"ok\": true,\n        \"latencyMs\": 91,\n        \"error\": null,\n        \"close\": null\n      },\n      \"self\": {\n        \"host\": \"jt7ingenieria\",\n        \"ip\": \"10.2.0.2\",\n        \"version\": \"2026.2.25\",\n        \"platform\": \"windows 10.0.26200\"\n      },\n      \"config\": {\n        \"path\": \"d:\\\\javie\\\\agente coplit tipo open claw con skill\\\\.openclaw\\\\openclaw.json\",\n        \"exists\": true,\n        \"valid\": true,\n        \"issues\": [],\n        \"legacyIssues\": [],\n        \"gateway\": {\n          \"mode\": \"local\",\n          \"bind\": \"loopback\",\n          \"port\": 18789,\n          \"controlUiEnabled\": null,\n          \"controlUiBasePath\": null,\n          \"authMode\": \"token\",\n          \"authTokenConfigured\": true,\n          \"authPasswordConfigured\": false,\n          \"remoteUrl\": null,\n          \"remoteTokenConfigured\": false,\n          \"remotePasswordConfigured\": false,\n          \"tailscaleMode\": null\n        },\n        \"discovery\": {\n          \"wideAreaEnabled\": null\n        }\n      },\n      \"health\": {\n        \"ok\": true,\n        \"ts\": 1772160800268,\n        \"durationMs\": 438,\n        \"channels\": {\n          \"telegram\": {\n            \"configured\": true,\n            \"running\": false,\n            \"lastStartAt\": null,\n            \"lastStopAt\": null,\n            \"lastError\": null,\n            \"tokenSource\": \"none\",\n            \"probe\": {\n              \"ok\": true,\n              \"status\": null,\n              \"error\": null,\n              \"elapsedMs\": 426,\n              \"bot\": {\n                \"id\": 8631504141,\n                \"username\": \"Agentefreejt7bot\",\n                \"canJoinGroups\": true,\n                \"canReadAllGroupMessages\": false,\n                \"supportsInlineQueries\": false\n              },\n              \"webhook\": {\n                \"url\": \"\",\n                \"hasCustomCert\": false\n              }\n            },\n            \"lastProbeAt\": 1772160800257,\n            \"mode\": null,\n            \"accountId\": \"default\",\n            \"accounts\": {\n              \"default\": {\n                \"configured\": true,\n                \"running\": false,\n                \"lastStartAt\": null,\n                \"lastStopAt\": null,\n                \"lastError\": null,\n                \"tokenSource\": \"none\",\n                \"probe\": {\n                  \"ok\": true,\n                  \"status\": null,\n                  \"error\": null,\n                  \"elapsedMs\": 426,\n                  \"bot\": {\n                    \"id\": 8631504141,\n                    \"username\": \"Agentefreejt7bot\",\n                    \"canJoinGroups\": true,\n                    \"canReadAllGroupMessages\": false,\n                    \"supportsInlineQueries\": false\n                  },\n                  \"webhook\": {\n                    \"url\": \"\",\n                    \"hasCustomCert\": false\n                  }\n                },\n                \"lastProbeAt\": 1772160800257,\n                \"mode\": null,\n                \"accountId\": \"default\"\n              }\n            }\n          },\n          \"whatsapp\": {\n            \"configured\": true,\n            \"linked\": true,\n            \"authAgeMs\": 15005308.976074219,\n            \"self\": {\n              \"e164\": \"+584243703569\",\n              \"jid\": \"584243703569:9@s.whatsapp.net\"\n            },\n            \"running\": false,\n            \"connected\": false,\n            \"lastConnectedAt\": null,\n            \"lastDisconnect\": null,\n            \"lastMessageAt\": null,\n            \"lastEventAt\": null,\n            \"lastError\": null,\n            \"accountId\"",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 2 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

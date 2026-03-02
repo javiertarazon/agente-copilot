@@ -1,0 +1,36 @@
+{
+  "kind": "gateway-resilience",
+  "created_at": "2026-02-26T15:25:23Z",
+  "project": "D:\\javie\\agente coplit tipo open claw con skill",
+  "dry_run": true,
+  "attempts": 3,
+  "min_success_ratio": 1.0,
+  "success_ratio": 1.0,
+  "success": true,
+  "probes": [
+    {
+      "name": "probe-1",
+      "command": "gateway status",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 6,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' gateway status"
+    },
+    {
+      "name": "probe-2",
+      "command": "gateway status",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 14,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' gateway status"
+    },
+    {
+      "name": "probe-3",
+      "command": "gateway status",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 24,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' gateway status"
+    }
+  ]
+}

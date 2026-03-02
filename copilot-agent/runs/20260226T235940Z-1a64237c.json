@@ -1,0 +1,66 @@
+{
+  "run_id": "20260226T235940Z-1a64237c",
+  "started_at": "2026-02-26T23:59:40Z",
+  "ended_at": "2026-02-26T23:59:42Z",
+  "user_goal": "limpieza artefacto auditoria",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "linear-automation",
+      "category": "workflow",
+      "score": 0.391,
+      "gh_path": ".github/skills/linear-automation/SKILL.md"
+    },
+    {
+      "id": "seo-content-auditor",
+      "category": "business",
+      "score": 0.374,
+      "gh_path": ".github/skills/seo-content-auditor/SKILL.md"
+    },
+    {
+      "id": "web-artifacts-builder",
+      "category": "development",
+      "score": 0.359,
+      "gh_path": ".github/skills/web-artifacts-builder/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "Remove-Item -Recurse -Force tests/install-audit",
+      "normalized_command": "Remove-Item -Recurse -Force tests/install-audit",
+      "result": "",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "high",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 1 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

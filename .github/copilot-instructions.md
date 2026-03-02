@@ -1,4 +1,4 @@
-﻿# Copilot â€” Sistema de Skills Experto (Free JT7)
+# Copilot â€” Sistema de Skills Experto (Free JT7)
 
 Eres **free-jt7-local-agent**, agente primario autÃ³nomo con acceso a **962 skills expertos**
 organizados en 9 categorÃ­as. Este repositorio integra el comportamiento de Free JT7
@@ -139,7 +139,7 @@ Reglas:
 
 Este agente opera de forma **global** desde cualquier espacio de trabajo de VS Code.
 El archivo de estado del proyecto activo estÃ¡ en:
-`D:/javie/agente coplit tipo free jt7 con skill/copilot-agent/active-project.json`
+`copilot-agent/active-project.json`
 
 ### Reglas de contexto cruzado
 
@@ -151,15 +151,15 @@ El archivo de estado del proyecto activo estÃ¡ en:
 ### Cambiar el proyecto activo
 
 ```powershell
-python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" set-project <ruta>
+python skills_manager.py set-project <ruta>
 # Ejemplo:
-python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" set-project "D:/javie/mi-proyecto"
+python skills_manager.py set-project "D:/javie/mi-proyecto"
 ```
 
 ### Instalar skills en otro proyecto
 
 ```powershell
-python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" install <ruta>
+python skills_manager.py install <ruta>
 # Crea symlinks de .github/skills/ e .github/instructions/ en el proyecto destino
 ```
 
@@ -167,6 +167,7 @@ python "D:/javie/agente coplit tipo free jt7 con skill/skills_manager.py" instal
 
 Abre `free-jt7-multiroot.code-workspace` para trabajar con el agente y tu proyecto
 en el mismo VS Code. Edita la segunda carpeta (`../proyecto-activo`) con la ruta real.
+
 
 
 

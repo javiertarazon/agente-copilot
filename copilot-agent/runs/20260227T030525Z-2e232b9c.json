@@ -1,0 +1,66 @@
+{
+  "run_id": "20260227T030525Z-2e232b9c",
+  "started_at": "2026-02-27T03:05:25Z",
+  "ended_at": "2026-02-27T03:05:26Z",
+  "user_goal": "Verificar agente free-jt7 tras ajuste de metadata",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "free-jt7-global-runtime-audit",
+      "category": "general",
+      "score": 2.746,
+      "gh_path": ".github/skills/free-jt7-global-runtime-audit/SKILL.md"
+    },
+    {
+      "id": "meeting-minutes",
+      "category": "general",
+      "score": 2.175,
+      "gh_path": ".github/skills/meeting-minutes/SKILL.md"
+    },
+    {
+      "id": "infinite-gratitude",
+      "category": "testing",
+      "score": 1.787,
+      "gh_path": ".github/skills/infinite-gratitude/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "python skills_manager.py doctor --strict",
+      "normalized_command": "python skills_manager.py doctor --strict",
+      "result": "[doctor] Diagnóstico del sistema\n  [INFO] SKILL.md detectados: 964\n  [INFO] índice principal: 964 entries\n  [INFO] índice legado presente (compatibilidad)\n  [INFO] policy mode: autonomous\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 1 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

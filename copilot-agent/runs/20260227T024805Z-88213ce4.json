@@ -1,0 +1,66 @@
+{
+  "run_id": "20260227T024805Z-88213ce4",
+  "started_at": "2026-02-27T02:48:05Z",
+  "ended_at": "2026-02-27T02:48:20Z",
+  "user_goal": "estado final gateway",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "aws-serverless",
+      "category": "infrastructure",
+      "score": 1.094,
+      "gh_path": ".github/skills/aws-serverless/SKILL.md"
+    },
+    {
+      "id": "testing-patterns",
+      "category": "testing",
+      "score": 0.4,
+      "gh_path": ".github/skills/testing-patterns/SKILL.md"
+    },
+    {
+      "id": "test-fixing",
+      "category": "testing",
+      "score": 0.361,
+      "gh_path": ".github/skills/test-fixing/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "openclaw status",
+      "normalized_command": "openclaw status",
+      "result": "OpenClaw status\n\nOverview\n┌─────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────┐\n│ Item            │ Value                                                                                             │\n├─────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┤\n│ Dashboard       │ http://127.0.0.1:18789/                                                                           │\n│ OS              │ windows 10.0.26200 (x64) · node 24.13.1                                                           │\n│ Tailscale       │ off                                                                                               │\n│ Channel         │ stable (default)                                                                                  │\n│ Update          │ available · pnpm · npm update 2026.2.26                                                           │\n│ Gateway         │ local · ws://127.0.0.1:18789 (local loopback) · reachable 89ms · auth token · jt7ingenieria (10.  │\n│                 │ 2.0.2) app 2026.2.25 windows 10.0.26200                                                           │\n│ Gateway service │ Scheduled Task installed · missing · unknown (Error: El sistema no puede encontrar el archivo     │\n│                 │ especificado.)                                                                                    │\n│ Node service    │ Scheduled Task not installed                                                                      │\n│ Agents          │ 1 · 1 bootstrap file present · sessions 0 · default main active unknown                           │\n│ Memory          │ 0 files · 0 chunks · dirty · sources memory · plugin memory-core · vector unknown · fts ready ·   │\n│                 │ cache on (0)                                                                                      │\n│ Probes          │ skipped (use --deep)                                                                              │\n│ Events          │ none                                                                                              │\n│ Heartbeat       │ 30m (main)                                                                                        │\n│ Sessions        │ 0 active · default claude-opus-4-6 (200k ctx) · ~\\.openclaw\\agents\\main\\sessions\\sessions.json    │\n└─────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────┘\n\nSecurity audit\nSummary: 0 critical · 1 warn · 1 info\n  WARN Reverse proxy headers are not trusted\n    gateway.bind is loopback and gateway.trustedProxies is empty. If you expose the Control UI through a reverse proxy, configure trusted proxies so local-client c…\n    Fix: Set gateway.trustedProxies to your proxy IPs or keep the Control UI local-only.\nFull report: openclaw security audit\nDeep probe: openclaw security audit --deep\n\nChannels\n┌──────────┬─────────┬────────┬───────────────────────────────────────────────────────────────────────────────────────┐\n│ Channel  │ Enabled │ State  │ Detail                                                                                │\n├──────────┼─────────┼────────┼───────────────────────────────────────────────────────────────────────────────────────┤\n└──────────┴─────────┴────────┴───────────────────────────────────────────────────────────────────────────────────────┘\n\nSessions\n┌────────────────────────────────────────────────────────────────────┬──────┬─────────┬──────────────┬────────────────┐\n│ Key                                                                │ Kind │ Age     │ Model        │ Tokens         │\n├────────────────────────────────────────────────────────────────────┼──────┼─────────┼──────────────┼────────────────┤\n│ no sessions yet                                                    │      │         │              │                │\n└────────────────────────────────────────",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 1 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

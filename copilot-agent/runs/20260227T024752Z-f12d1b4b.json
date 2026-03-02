@@ -1,0 +1,66 @@
+{
+  "run_id": "20260227T024752Z-f12d1b4b",
+  "started_at": "2026-02-27T02:47:52Z",
+  "ended_at": "",
+  "user_goal": "fallback autostart gateway verificacion",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "blocked",
+  "skills_selected": [
+    {
+      "id": "aws-serverless",
+      "category": "infrastructure",
+      "score": 1.181,
+      "gh_path": ".github/skills/aws-serverless/SKILL.md"
+    },
+    {
+      "id": "slack-automation",
+      "category": "business",
+      "score": 0.378,
+      "gh_path": ".github/skills/slack-automation/SKILL.md"
+    },
+    {
+      "id": "cal-com-automation",
+      "category": "general",
+      "score": 0.337,
+      "gh_path": ".github/skills/cal-com-automation/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": false
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "cmd /c if exist \" %APPDATA%\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\openclaw-gateway-autostart.cmd\\",
+      "normalized_command": "cmd /c if exist \" %APPDATA%\\\\Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup\\\\openclaw-gateway-autostart.cmd\\",
+      "result": "Falta la cadena en el terminador: \".\n    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException\n    + FullyQualifiedErrorId : TerminatorExpectedAtEndOfString\n \n",
+      "exit_code": 1,
+      "retry_index": 2,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Bloqueado por quality gate: existen steps fallidos o sin evidencia.",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

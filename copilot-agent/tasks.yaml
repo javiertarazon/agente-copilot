@@ -38,4 +38,143 @@ tareas:
       9 archivos .github/instructions/<cat>.instructions.md,
       .github/copilot-instructions.md maestro,
       skills/.skills_index.json con 907 entries.
-
+  - id: "20260227T002050Z-284f271e"
+    fecha: "2026-02-27"
+    titulo: "global runtime audit free jt7"
+    descripcion: >
+      global runtime audit free jt7
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["free-jt7-global-runtime-audit", "seo-content-auditor", "production-code-audit"]
+    resultado: >
+      Run finalizado con 2 steps
+  - id: "20260227T012806Z-3b809d10"
+    fecha: "2026-02-27"
+    titulo: "cleanup audit temp dirs"
+    descripcion: >
+      cleanup audit temp dirs
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["codebase-cleanup-deps-audit", "wcag-audit-patterns", "seo-content-auditor"]
+    resultado: >
+      Run finalizado con 2 steps
+  - id: "20260227T024513Z-ee196ec1"
+    fecha: "2026-02-27"
+    titulo: "remediacion final gateway openclaw"
+    descripcion: >
+      remediacion final gateway openclaw
+    estado: "bloqueado"
+    riesgo: "low"
+    skills_usados: ["aws-serverless", "deployment-validation-config-validate", "embedding-strategies"]
+    resultado: >
+      Bloqueado por quality gate: existen steps fallidos o sin evidencia.
+  - id: "20260227T024549Z-9fbb897b"
+    fecha: "2026-02-27"
+    titulo: "remediacion final gateway openclaw verificacion"
+    descripcion: >
+      remediacion final gateway openclaw verificacion
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["aws-serverless", "framework-migration-legacy-modernize", "azure-communication-callingserver-java"]
+    resultado: >
+      Run finalizado con 3 steps
+  - id: "20260227T024739Z-197bcb98"
+    fecha: "2026-02-27"
+    titulo: "fallback autostart gateway sin scheduled task"
+    descripcion: >
+      fallback autostart gateway sin scheduled task
+    estado: "bloqueado"
+    riesgo: "low"
+    skills_usados: ["whatsapp-automation", "upstash-qstash", "fp-ts-errors"]
+    resultado: >
+      Bloqueado por quality gate: existen steps fallidos o sin evidencia.
+  - id: "20260227T024752Z-f12d1b4b"
+    fecha: "2026-02-27"
+    titulo: "fallback autostart gateway verificacion"
+    descripcion: >
+      fallback autostart gateway verificacion
+    estado: "bloqueado"
+    riesgo: "low"
+    skills_usados: ["aws-serverless", "slack-automation", "cal-com-automation"]
+    resultado: >
+      Bloqueado por quality gate: existen steps fallidos o sin evidencia.
+  - id: "20260227T024805Z-88213ce4"
+    fecha: "2026-02-27"
+    titulo: "estado final gateway"
+    descripcion: >
+      estado final gateway
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["aws-serverless", "testing-patterns", "test-fixing"]
+    resultado: >
+      Run finalizado con 1 steps
+  - id: "20260227T025005Z-065ee3cf"
+    fecha: "2026-02-27"
+    titulo: "validacion final runtime free jt7"
+    descripcion: >
+      validacion final runtime free jt7
+    estado: "bloqueado"
+    riesgo: "low"
+    skills_usados: ["free-jt7-global-runtime-audit", "free-tool-strategy", "bun-development"]
+    resultado: >
+      Bloqueado por quality gate: existen steps fallidos o sin evidencia.
+  - id: "20260227T025037Z-1425c167"
+    fecha: "2026-02-27"
+    titulo: "validacion final runtime free jt7"
+    descripcion: >
+      validacion final runtime free jt7
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["free-jt7-global-runtime-audit", "free-tool-strategy", "bun-development"]
+    resultado: >
+      Run finalizado con 2 steps
+  - id: "20260227T025156Z-e795d654"
+    fecha: "2026-02-27"
+    titulo: "validacion operativa gateway"
+    descripcion: >
+      validacion operativa gateway
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["aws-serverless", "deployment-validation-config-validate", "infinite-gratitude"]
+    resultado: >
+      Run finalizado con 2 steps
+  - id: "20260227T025306Z-7ce3bcf2"
+    fecha: "2026-02-27"
+    titulo: "estado final gateway sin servicio programado"
+    descripcion: >
+      estado final gateway sin servicio programado
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["startup-business-analyst-business-case", "startup-business-analyst-financial-projections", "notion-template-business"]
+    resultado: >
+      Run finalizado con 2 steps
+  - id: "20260227T030007Z-2c088900"
+    fecha: "2026-02-27"
+    titulo: "Validar activacion Free JT7 en Copilot Chat"
+    descripcion: >
+      Validar activacion Free JT7 en Copilot Chat
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["free-jt7-global-runtime-audit", "free-tool-strategy", "azure-communication-chat-java"]
+    resultado: >
+      Run finalizado con 2 steps
+  - id: "20260227T030525Z-2e232b9c"
+    fecha: "2026-02-27"
+    titulo: "Verificar agente free-jt7 tras ajuste de metadata"
+    descripcion: >
+      Verificar agente free-jt7 tras ajuste de metadata
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["free-jt7-global-runtime-audit", "meeting-minutes", "infinite-gratitude"]
+    resultado: >
+      Run finalizado con 1 steps
+  - id: "20260227T030907Z-9a5dccb1"
+    fecha: "2026-02-27"
+    titulo: "Corregir integracion Free JT7 en Copilot Chat"
+    descripcion: >
+      Corregir integracion Free JT7 en Copilot Chat
+    estado: "completado"
+    riesgo: "low"
+    skills_usados: ["free-jt7-global-runtime-audit", "free-tool-strategy", "azure-communication-chat-java"]
+    resultado: >
+      Run finalizado con 2 steps

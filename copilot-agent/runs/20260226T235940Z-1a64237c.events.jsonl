@@ -1,0 +1,3 @@
+{"ts": "2026-02-26T23:59:40Z", "step_id": "intake", "action": "task-start", "command": "", "result": "goal=limpieza artefacto auditoria", "exit_code": 0, "retry_index": 0, "evidence_ref": "", "redaction_applied": true}
+{"ts": "2026-02-26T23:59:42Z", "step_id": "step-1", "action": "task-step-attempt", "command": "Remove-Item -Recurse -Force tests/install-audit", "result": "", "exit_code": 0, "retry_index": 0, "evidence_ref": "", "redaction_applied": true}
+{"ts": "2026-02-26T23:59:42Z", "step_id": "close", "action": "task-close", "command": "", "result": "Run finalizado con 1 steps", "exit_code": 0, "retry_index": 0, "evidence_ref": "", "redaction_applied": true}

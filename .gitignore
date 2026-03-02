@@ -25,6 +25,8 @@ desktop.ini
 *.pem
 *.key
 .secrets
+.openclaw/
+.env.free-jt7
 
 # Temporal / compilados grandes
 *.bin

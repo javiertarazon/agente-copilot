@@ -1,0 +1,68 @@
+{
+  "run_id": "20260227T000138Z-23c20400",
+  "started_at": "2026-02-27T00:01:38Z",
+  "ended_at": "2026-02-27T00:01:38Z",
+  "user_goal": "prueba resolucion ide codex",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "web-design-guidelines",
+      "category": "general",
+      "score": 1.8,
+      "gh_path": ".github/skills/web-design-guidelines/SKILL.md"
+    },
+    {
+      "id": "incident-responder",
+      "category": "security",
+      "score": 1.784,
+      "gh_path": ".github/skills/incident-responder/SKILL.md"
+    },
+    {
+      "id": "incident-response-incident-response",
+      "category": "security",
+      "score": 1.784,
+      "gh_path": ".github/skills/incident-response-incident-response/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "python --version",
+      "normalized_command": "python --version",
+      "result": "Python 3.11.9\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 1 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "codex",
+    "profile": "default",
+    "provider": "codex",
+    "model": "codex-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\.codex\\config.toml",
+      "codex:C:\\Users\\javie\\.codex\\auth.json",
+      "codex:C:\\Users\\javie\\.codex\\config.toml"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

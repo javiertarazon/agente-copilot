@@ -1,0 +1,101 @@
+{
+  "kind": "phase7-smoke",
+  "created_at": "2026-02-26T15:25:20Z",
+  "project": "D:\\javie\\agente coplit tipo open claw con skill",
+  "dry_run": true,
+  "openclaw_repo": "",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\javie\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  },
+  "policy_errors": [],
+  "plugins": [
+    {
+      "id": "device-pair",
+      "enabled": true,
+      "source": "local",
+      "path": "D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\extensions\\device-pair",
+      "manifest": "D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\extensions\\device-pair\\openclaw.plugin.json",
+      "package": "",
+      "manifest_name": "Device Pairing",
+      "manifest_version": "",
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "id 'device-pair' distinto a manifest.name 'Device Pairing' (sugerido: device-pairing)"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "name": "gateway-status",
+      "command": "gateway status",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 11,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' gateway status"
+    },
+    {
+      "name": "channel-status",
+      "command": "channels status --probe",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 13,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' channels status --probe"
+    },
+    {
+      "name": "login-whatsapp",
+      "command": "channels login --channel whatsapp",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 12,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' channels login --channel whatsapp"
+    },
+    {
+      "name": "login-telegram",
+      "command": "channels login --channel telegram",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 13,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' channels login --channel telegram"
+    },
+    {
+      "name": "pairing-list-telegram",
+      "command": "pairing list telegram",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 18,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' pairing list telegram"
+    },
+    {
+      "name": "pairing-approve-telegram",
+      "command": "pairing approve telegram DEMO-CODE",
+      "exit_code": 0,
+      "ok": true,
+      "duration_ms": 24,
+      "output": "[dry-run] 'C:\\Program Files\\nodejs\\node.EXE' 'D:\\javie\\agente coplit tipo open claw con skill\\OPEN CLAW\\openclaw.mjs' pairing approve telegram DEMO-CODE"
+    }
+  ],
+  "summary": {
+    "steps_total": 6,
+    "steps_ok": 6,
+    "model_ok": true,
+    "policy_ok": true,
+    "plugins_ok": true,
+    "success": true
+  }
+}

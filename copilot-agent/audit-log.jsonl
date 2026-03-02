@@ -55,3 +55,107 @@
 {"ts": "2026-02-26T12:28:55Z", "action": "migrate", "detail": "espejo legado actualizado"}
 {"ts": "2026-02-26T12:29:18Z", "action": "install", "detail": "C:\\Users\\javie\\AppData\\Local\\Temp\\free-jt7-auto-9f34d21aa0504507ac83ba1fd6d89d41"}
 
+{"ts": "2026-02-26T14:35:21Z", "action": "model-profiles-init", "detail": "D:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"}
+{"ts": "2026-02-26T14:35:22Z", "action": "model-resolve", "detail": "vscode:default:ide-profile"}
+{"ts": "2026-02-26T14:39:09Z", "action": "model-resolve", "detail": "vscode:default:ide-profile"}
+{"ts": "2026-02-26T14:47:57Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=vscode profile=default"}
+{"ts": "2026-02-26T15:01:16Z", "action": "doctor", "detail": "errors=0 warnings=1 strict=True"}
+{"ts": "2026-02-26T15:01:29Z", "action": "set-project", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T15:01:29Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-26T15:01:40Z", "action": "model-resolve", "detail": "claude-code:default:unavailable"}
+{"ts": "2026-02-26T15:01:40Z", "action": "model-resolve", "detail": "gemini-cli:default:unavailable"}
+{"ts": "2026-02-26T15:01:40Z", "action": "model-resolve", "detail": "codex:default:ide-profile"}
+{"ts": "2026-02-26T15:01:40Z", "action": "model-resolve", "detail": "vscode:default:ide-profile"}
+{"ts": "2026-02-26T15:01:54Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=codex profile=default"}
+{"ts": "2026-02-26T15:05:16Z", "action": "model-resolve", "detail": "codex:default:ide-profile"}
+{"ts": "2026-02-26T15:05:16Z", "action": "model-resolve", "detail": "codex:work:unavailable"}
+{"ts": "2026-02-26T15:05:49Z", "action": "model-resolve", "detail": "codex:work:api-key-env"}
+{"ts": "2026-02-26T15:25:18Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=codex profile=default"}
+{"ts": "2026-02-26T15:25:19Z", "action": "plugin-enable", "detail": "device-pair project=D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T17:38:01Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=codex profile=default"}
+{"ts": "2026-02-26T17:38:45Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=codex profile=default"}
+{"ts": "2026-02-26T17:38:46Z", "action": "plugin-enable", "detail": "device-pair project=D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T17:41:24Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=codex profile=default"}
+{"ts": "2026-02-26T17:41:25Z", "action": "plugin-enable", "detail": "device-pair project=D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T19:16:25Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=vscode profile=default"}
+{"ts": "2026-02-26T19:16:25Z", "action": "credentials-apply", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T19:17:47Z", "action": "gateway-bootstrap", "detail": "D:\\javie\\agente coplit tipo open claw con skill ide=vscode profile=default"}
+{"ts": "2026-02-26T22:46:30Z", "action": "model-resolve", "detail": "vscode:default:ide-profile"}
+{"ts": "2026-02-26T23:12:06Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-26T23:12:06Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T23:20:31Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-26T23:20:31Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T23:22:54Z", "action": "host-mode", "detail": "full project=D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T23:26:27Z", "action": "set-project", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T23:27:19Z", "action": "set-project", "detail": "D:\\javie"}
+{"ts": "2026-02-26T23:27:26Z", "action": "set-project", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-26T23:52:05Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-26T23:53:28Z", "action": "model-resolve", "detail": "codex:default:ide-profile"}
+{"ts": "2026-02-26T23:53:28Z", "action": "model-resolve", "detail": "vscode:default:ide-profile"}
+{"ts": "2026-02-26T23:54:02Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-26T23:54:08Z", "action": "task-close", "detail": "20260226T235402Z-cca7aecb:succeeded"}
+{"ts": "2026-02-26T23:54:31Z", "action": "model-resolve", "detail": "claude-code:default:ide-profile"}
+{"ts": "2026-02-26T23:54:31Z", "action": "model-resolve", "detail": "gemini-cli:default:ide-profile"}
+{"ts": "2026-02-26T23:59:17Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-26T23:59:22Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill\\tests\\install-audit"}
+{"ts": "2026-02-26T23:59:40Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-26T23:59:42Z", "action": "task-close", "detail": "20260226T235940Z-1a64237c:succeeded"}
+{"ts": "2026-02-27T00:01:38Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:01:38Z", "action": "task-close", "detail": "20260227T000138Z-23c20400:succeeded"}
+{"ts": "2026-02-27T00:01:46Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:01:46Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:01:46Z", "action": "task-close", "detail": "20260227T000146Z-d21fdda4:succeeded"}
+{"ts": "2026-02-27T00:01:46Z", "action": "task-close", "detail": "20260227T000146Z-9196d623:succeeded"}
+{"ts": "2026-02-27T00:19:42Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:19:59Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:20:34Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:20:43Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:20:43Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:20:43Z", "action": "sync-claude", "detail": "1 activas de 964"}
+{"ts": "2026-02-27T00:20:50Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:20:52Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T00:20:52Z", "action": "task-close", "detail": "20260227T002050Z-284f271e:succeeded"}
+{"ts": "2026-02-27T00:21:24Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:21:30Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill\\tests\\user-settings-audit\\project"}
+{"ts": "2026-02-27T00:21:51Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T00:21:51Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-27T00:22:06Z", "action": "model-resolve", "detail": "codex:default:ide-profile"}
+{"ts": "2026-02-27T00:22:09Z", "action": "model-resolve", "detail": "claude-code:default:ide-profile"}
+{"ts": "2026-02-27T00:22:09Z", "action": "model-resolve", "detail": "gemini-cli:default:ide-profile"}
+{"ts": "2026-02-27T01:28:06Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T01:28:09Z", "action": "task-close", "detail": "20260227T012806Z-3b809d10:succeeded"}
+{"ts": "2026-02-27T01:33:56Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T02:45:13Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:45:49Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:46:25Z", "action": "task-close", "detail": "20260227T024549Z-9fbb897b:succeeded"}
+{"ts": "2026-02-27T02:47:39Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:47:52Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:48:05Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:48:20Z", "action": "task-close", "detail": "20260227T024805Z-88213ce4:succeeded"}
+{"ts": "2026-02-27T02:49:33Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=False"}
+{"ts": "2026-02-27T02:50:05Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:50:37Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:50:38Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=False"}
+{"ts": "2026-02-27T02:50:39Z", "action": "task-close", "detail": "20260227T025037Z-1425c167:succeeded"}
+{"ts": "2026-02-27T02:51:26Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:51:27Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-27T02:51:56Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:52:18Z", "action": "task-close", "detail": "20260227T025156Z-e795d654:succeeded"}
+{"ts": "2026-02-27T02:53:06Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T02:53:28Z", "action": "task-close", "detail": "20260227T025306Z-7ce3bcf2:succeeded"}
+{"ts": "2026-02-27T03:00:07Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T03:00:07Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T03:00:08Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T03:00:09Z", "action": "task-close", "detail": "20260227T030007Z-2c088900:succeeded"}
+{"ts": "2026-02-27T03:04:16Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T03:04:16Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-27T03:05:25Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T03:05:25Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T03:05:26Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T03:05:27Z", "action": "task-close", "detail": "20260227T030525Z-2e232b9c:succeeded"}
+{"ts": "2026-02-27T03:08:39Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T03:08:39Z", "action": "install", "detail": "D:\\javie\\agente coplit tipo open claw con skill"}
+{"ts": "2026-02-27T03:09:07Z", "action": "migrate", "detail": "espejo legado actualizado"}
+{"ts": "2026-02-27T03:09:08Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}
+{"ts": "2026-02-27T03:09:10Z", "action": "task-close", "detail": "20260227T030907Z-9a5dccb1:succeeded"}
+{"ts": "2026-02-27T03:10:04Z", "action": "doctor", "detail": "errors=0 warnings=0 strict=True"}

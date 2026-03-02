@@ -32,9 +32,14 @@ def isolated_workspace():
             "VERSION_FILE": root / "VERSION",
             "README_MD": root / "README.md",
             "CHANGELOG_MD": root / "CHANGELOG.md",
-            "AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
-            "POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
+            "AGENT_FILE": root / ".github" / "agents" / "free-jt7.agent.md",
+            "LEGACY_AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
+            "POLICY_FILE": root / ".github" / "free-jt7-policy.yaml",
+            "LEGACY_POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
+            "MODEL_ROUTING_FILE": root / ".github" / "free-jt7-model-routing.json",
+            "MODEL_ROUTING_LEGACY_FILE": root / ".github" / "freejt7-model-routing.json",
             "ROLLOUT_FILE": root / "copilot-agent" / "rollout-mode.json",
+            "OPENCLAW_REPO_DIR": root / "OPEN CLAW",
         }
         for key, value in mappings.items():
             originals[key] = getattr(sm, key)
@@ -73,7 +78,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
         with isolated_workspace() as root:
             write_skill(root, "python-pro", "python", "development")
             (root / ".github" / "copilot-instructions.md").write_text("skills", encoding="utf-8")
-            (root / ".github" / "agents" / "freejt7.agent.md").write_text("skills", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("skills", encoding="utf-8")
             sm._rebuild_index_from_disk()
 
             rc = sm.cmd_activate(Namespace(skill_ids=["python-pro"]))
@@ -89,7 +94,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             write_skill(root, "docker-expert", "docker", "infrastructure")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
             target = root / "target-project"
             target.mkdir()
 
@@ -104,6 +109,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             )
             self.assertEqual(rc, 0)
             self.assertTrue((target / ".github" / "copilot-instructions.md").exists())
+            self.assertTrue((target / ".github" / "free-jt7-model-routing.json").exists())
             self.assertTrue((target / ".vscode" / "settings.json").exists())
 
     def test_install_all_ides_writes_workspace_adapters(self):
@@ -111,7 +117,7 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             write_skill(root, "planner-pro", "planning", "general")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
             target = root / "project-all-ides"
             target.mkdir()
 
@@ -137,13 +143,14 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             self.assertTrue((target / "CLAUDE.md").exists())
             self.assertTrue((target / ".gemini" / "freejt7-agent.md").exists())
             self.assertTrue((target / "GEMINI.md").exists())
+            self.assertTrue((target / ".github" / "free-jt7-model-routing.json").exists())
 
     def test_install_updates_user_settings_for_selected_ides(self):
         with isolated_workspace() as root:
             write_skill(root, "qa-pro", "tests", "testing")
             sm._rebuild_index_from_disk()
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
             target = root / "project-user-settings"
             target.mkdir()
             appdata_root = root / "appdata"
@@ -174,12 +181,171 @@ class SkillsManagerIntegrationTests(unittest.TestCase):
             self.assertTrue((appdata_root / "Antigravity" / "User" / "settings.json").exists())
             self.assertTrue((appdata_root / "ClaudeCode" / "config.json").exists())
             self.assertTrue((appdata_root / "GeminiCLI" / "settings.json").exists())
-            self.assertFalse((appdata_root / ".codex" / "config.toml").exists())
+            self.assertTrue((appdata_root / ".codex" / "config.toml").exists())
+            self.assertTrue((appdata_root / ".codex" / "freejt7.config.json").exists())
 
     def test_doctor_detects_missing_files(self):
         with isolated_workspace():
             rc = sm.cmd_doctor(Namespace())
             self.assertEqual(rc, 1)
+
+    def test_gateway_bootstrap_writes_runtime_files(self):
+        with isolated_workspace() as root:
+            project = root / "gateway-project"
+            rc = sm.cmd_gateway_bootstrap(
+                Namespace(
+                    project=str(project),
+                    ide="vscode",
+                    profile="default",
+                    owner_phone="+34123456789",
+                    telegram_bot_token="123:abc",
+                    appdata_root="",
+                    force=True,
+                )
+            )
+            self.assertEqual(rc, 0)
+            self.assertTrue((project / ".openclaw" / "openclaw.json").exists())
+            self.assertTrue((project / ".openclaw" / "free-jt7-model-resolution.json").exists())
+            self.assertTrue((project / ".env.free-jt7.example").exists())
+            self.assertTrue((project / "FREEJT7_GATEWAY.md").exists())
+
+    def test_easy_onboard_dry_run_writes_credentials_and_runtime_config(self):
+        with isolated_workspace() as root:
+            project = root / "easy-onboard-project"
+            rc = sm.cmd_easy_onboard(
+                Namespace(
+                    project=str(project),
+                    owner_phone="+34123456789",
+                    telegram_bot_token="123456:abc",
+                    openai_api_key="sk-demo-openai",
+                    anthropic_api_key="",
+                    gemini_api_key="",
+                    interactive=False,
+                    ide="vscode",
+                    profile="default",
+                    appdata_root="",
+                    force=True,
+                    openclaw_repo="",
+                    dry_run=True,
+                    timeout_ms=1000,
+                    port=18789,
+                    verbose=False,
+                    skip_start=False,
+                    skip_whatsapp_login=False,
+                    strict=True,
+                )
+            )
+            self.assertEqual(rc, 0)
+
+            cred_path = project / ".secrets" / "free-jt7.env"
+            self.assertTrue(cred_path.exists())
+            cred_text = cred_path.read_text(encoding="utf-8")
+            self.assertIn("OWNER_PHONE=+34123456789", cred_text)
+            self.assertIn("TELEGRAM_BOT_TOKEN=123456:abc", cred_text)
+            self.assertIn("OPENAI_API_KEY=sk-demo-openai", cred_text)
+
+            cfg = sm.load_json(project / ".openclaw" / "openclaw.json", {})
+            self.assertEqual(cfg.get("gateway", {}).get("mode"), "local")
+            self.assertEqual(cfg.get("channels", {}).get("whatsapp", {}).get("allowFrom"), ["+34123456789"])
+            self.assertEqual(cfg.get("channels", {}).get("telegram", {}).get("botToken"), "123456:abc")
+
+    def test_plugin_enable_disable_validate_flow(self):
+        with isolated_workspace() as root:
+            project = root / "plugin-project"
+            plugin_dir = project / "plugins" / "device-pair"
+            plugin_dir.mkdir(parents=True, exist_ok=True)
+            (plugin_dir / "openclaw.plugin.json").write_text(
+                '{"name":"device-pair","version":"1.0.0"}',
+                encoding="utf-8",
+            )
+
+            rc = sm.cmd_plugin_enable(
+                Namespace(
+                    project=str(project),
+                    plugin_id="device-pair",
+                    source="local",
+                    path=str(plugin_dir),
+                    manifest="",
+                    package="",
+                )
+            )
+            self.assertEqual(rc, 0)
+
+            rc = sm.cmd_plugin_validate(
+                Namespace(
+                    project=str(project),
+                    plugin_id="device-pair",
+                    json=False,
+                )
+            )
+            self.assertEqual(rc, 0)
+
+            cfg = sm.load_json(project / ".openclaw" / "openclaw.json", {})
+            entries = cfg.get("plugins", {}).get("entries", {})
+            self.assertTrue(entries.get("device-pair", {}).get("enabled"))
+
+            rc = sm.cmd_plugin_disable(
+                Namespace(
+                    project=str(project),
+                    plugin_id="device-pair",
+                )
+            )
+            self.assertEqual(rc, 0)
+            cfg = sm.load_json(project / ".openclaw" / "openclaw.json", {})
+            entries = cfg.get("plugins", {}).get("entries", {})
+            self.assertFalse(entries.get("device-pair", {}).get("enabled"))
+
+    def test_phase7_smoke_and_resilience_dry_run_emit_reports(self):
+        with isolated_workspace() as root:
+            project = root / "phase7-project"
+            project.mkdir(parents=True, exist_ok=True)
+            self.assertEqual(
+                sm.cmd_gateway_bootstrap(
+                    Namespace(
+                        project=str(project),
+                        ide="vscode",
+                        profile="default",
+                        owner_phone="",
+                        telegram_bot_token="",
+                        appdata_root="",
+                        force=True,
+                    )
+                ),
+                0,
+            )
+
+            smoke_rc = sm.cmd_phase7_smoke(
+                Namespace(
+                    project=str(project),
+                    openclaw_repo="",
+                    timeout_ms=1000,
+                    approve_code="DEMO-CODE",
+                    ide="vscode",
+                    profile="default",
+                    appdata_root="",
+                    live=False,
+                )
+            )
+            self.assertEqual(smoke_rc, 0)
+
+            resilience_rc = sm.cmd_gateway_resilience(
+                Namespace(
+                    project=str(project),
+                    openclaw_repo="",
+                    attempts=3,
+                    interval_ms=1,
+                    timeout_ms=1000,
+                    min_success_ratio=1.0,
+                    live=False,
+                )
+            )
+            self.assertEqual(resilience_rc, 0)
+
+            phase7_dir = sm.COPILOT_AGENT / "phase7"
+            smoke_reports = list(phase7_dir.glob("smoke-*.json"))
+            resilience_reports = list(phase7_dir.glob("resilience-*.json"))
+            self.assertTrue(smoke_reports)
+            self.assertTrue(resilience_reports)
 
 
 if __name__ == "__main__":

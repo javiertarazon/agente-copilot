@@ -18,9 +18,14 @@ Comandos:
     sync-claude    Actualizar CLAUDE.md con skills activas
     policy-validate  Validar policy de ejecuciÃ³n
     rollout-mode     Ver/cambiar modo canary
+    host-mode        Ver/cambiar modo de ejecucion host (safe/full)
     skill-resolve    Resolver skills efÃ­meras
     task-run/task-*  Orquestar runs de tarea con evidencia
+    task-list        Listar tareas/runs y su estado
+    task-checklist   Ver checklist detallado de un run
     ide-detect       Detectar perfiles IDE instalados
+    credentials-*    Guardar/aplicar credenciales de canales/modelos
+    easy-onboard     Flujo simple 1-comando para activar Free JT7 gateway
 """
 from __future__ import annotations
 
@@ -41,6 +46,11 @@ from datetime import datetime, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib  # py3.11+
+except Exception:
+    tomllib = None
 
 # Evita caidas por UnicodeEncodeError en consolas Windows con cp1252.
 for stream_name in ("stdout", "stderr"):
@@ -71,9 +81,14 @@ COPILOT_INSTR = ROOT / ".github" / "copilot-instructions.md"
 VERSION_FILE  = ROOT / "VERSION"
 README_MD     = ROOT / "README.md"
 CHANGELOG_MD  = ROOT / "CHANGELOG.md"
-AGENT_FILE    = ROOT / ".github" / "agents" / "freejt7.agent.md"
-POLICY_FILE   = ROOT / ".github" / "freejt7-policy.yaml"
+AGENT_FILE    = ROOT / ".github" / "agents" / "free-jt7.agent.md"
+LEGACY_AGENT_FILE = ROOT / ".github" / "agents" / "freejt7.agent.md"
+POLICY_FILE   = ROOT / ".github" / "free-jt7-policy.yaml"
+LEGACY_POLICY_FILE = ROOT / ".github" / "freejt7-policy.yaml"
+MODEL_ROUTING_FILE = ROOT / ".github" / "free-jt7-model-routing.json"
+MODEL_ROUTING_LEGACY_FILE = ROOT / ".github" / "freejt7-model-routing.json"
 ROLLOUT_FILE  = COPILOT_AGENT / "rollout-mode.json"
+OPENCLAW_REPO_DIR = ROOT / "OPEN CLAW"
 
 SUPPORTED_IDES: tuple[str, ...] = (
     "vscode",
@@ -124,6 +139,7 @@ IDE_USER_SETTINGS_SUPPORTED: tuple[str, ...] = (
     "cursor",
     "kiro",
     "antigravity",
+    "codex",
     "claude-code",
     "gemini-cli",
 )
@@ -139,6 +155,8 @@ SKILLS_END   = "<!-- SKILLS_LIBRARY_END -->"
 DEFAULT_POLICY: dict[str, Any] = {
     "autonomy": {"mode": "autonomous"},
     "risk": {
+        "allow_high_risk_without_approval": False,
+        "allow_destructive": False,
         "thresholds": {
             "low_keywords": ["list", "search", "read", "inspect", "analyze"],
             "medium_keywords": ["install", "update", "configure", "build", "test"],
@@ -146,12 +164,101 @@ DEFAULT_POLICY: dict[str, Any] = {
         },
         "destructive_patterns": ["rm ", "rmdir", "del ", "drop ", "truncate ", "git reset --hard"],
     },
-    "execution": {"retry": {"max_attempts": 3}},
+    "execution": {
+        "retry": {"max_attempts": 3},
+        "allowlist": {
+            "enabled": False,
+            "bins": [
+                "get-childitem",
+                "get-content",
+                "select-string",
+                "python",
+                "git",
+                "node",
+                "npm",
+                "pnpm",
+                "powershell",
+                "pwsh",
+                "cmd",
+            ],
+        },
+    },
     "quality_gate": {"required": True},
     "skills": {"activation": "ephemeral", "max_composed": 3},
     "shell": {"strategy": "cross-shell", "default": "powershell"},
     "telemetry": {"level": "full_sanitized"},
     "report": {"style": "executive_technical"},
+}
+
+DEFAULT_MODEL_ROUTING: dict[str, Any] = {
+    "version": 1,
+    "default": {
+        "profile": "default",
+        "preferIdeProfile": True,
+        "allowApiFallback": True,
+        "apiFallback": {
+            "provider": "openai",
+            "model": "gpt-5-mini",
+            "env": ["OPENAI_API_KEY"],
+        },
+    },
+    "apiEnvByProvider": {
+        "openai": ["OPENAI_API_KEY"],
+        "anthropic": ["ANTHROPIC_API_KEY"],
+        "google": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"],
+    },
+    "ideProfiles": {
+        "codex": {
+            "provider": "codex",
+            "model": "codex-default",
+            "apiFallback": {"provider": "openai", "model": "gpt-5-codex", "env": ["OPENAI_API_KEY"]},
+            "profiles": {"default": {}},
+        },
+        "claude-code": {
+            "provider": "claude-code",
+            "model": "claude-default",
+            "apiFallback": {
+                "provider": "anthropic",
+                "model": "claude-sonnet-4-5",
+                "env": ["ANTHROPIC_API_KEY"],
+            },
+            "profiles": {"default": {}},
+        },
+        "gemini-cli": {
+            "provider": "gemini-cli",
+            "model": "gemini-default",
+            "apiFallback": {
+                "provider": "google",
+                "model": "gemini-2.5-pro",
+                "env": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
+            },
+            "profiles": {"default": {}},
+        },
+        "vscode": {
+            "provider": "github-copilot",
+            "model": "copilot-default",
+            "apiFallback": {"provider": "openai", "model": "gpt-5-mini", "env": ["OPENAI_API_KEY"]},
+            "profiles": {"default": {}},
+        },
+        "cursor": {
+            "provider": "cursor",
+            "model": "cursor-default",
+            "apiFallback": {"provider": "openai", "model": "gpt-5-mini", "env": ["OPENAI_API_KEY"]},
+            "profiles": {"default": {}},
+        },
+        "kiro": {
+            "provider": "kiro",
+            "model": "kiro-default",
+            "apiFallback": {"provider": "openai", "model": "gpt-5-mini", "env": ["OPENAI_API_KEY"]},
+            "profiles": {"default": {}},
+        },
+        "antigravity": {
+            "provider": "antigravity",
+            "model": "antigravity-default",
+            "apiFallback": {"provider": "openai", "model": "gpt-5-mini", "env": ["OPENAI_API_KEY"]},
+            "profiles": {"default": {}},
+        },
+    },
 }
 
 # Palabras clave para auto-categorizar skills
@@ -320,6 +427,7 @@ def _detect_ide_profiles(appdata_root: Path | None = None) -> list[dict[str, Any
     root = appdata_root or _appdata_root()
     for ide in SUPPORTED_IDES:
         settings_path = _ide_settings_path(ide, root)
+        detected_profiles = _detect_ide_profile_names(ide, root)
         if ide == "codex":
             codex_root = _codex_home()
             installed = (
@@ -349,6 +457,7 @@ def _detect_ide_profiles(appdata_root: Path | None = None) -> list[dict[str, Any
             "installed": installed,
             "settings_path": str(settings_path),
             "settings_exists": settings_path.exists(),
+            "profiles": detected_profiles,
         })
     return profiles
 
@@ -401,11 +510,12 @@ def _append_instruction_entry(settings: dict[str, Any], instruction_file: str) -
 
 def _append_agent_location(settings: dict[str, Any], agent_location: str) -> None:
     key = "chat.agentFilesLocations"
-    value = settings.get(key, [])
-    if not isinstance(value, list):
-        value = []
-    if agent_location not in value:
-        value.append(agent_location)
+    value = settings.get(key, {})
+    if isinstance(value, list):
+        value = {str(item): True for item in value if isinstance(item, str) and item.strip()}
+    elif not isinstance(value, dict):
+        value = {}
+    value[agent_location] = True
     settings[key] = value
 
 
@@ -423,15 +533,32 @@ def _apply_freejt7_settings(
     settings["freejt7.enabled"] = True
     settings[f"freejt7.integrations.{ide}.enabled"] = True
     settings["freejt7.skills.index"] = ".github/skills/.skills_index.json"
-    settings["freejt7.policy.file"] = ".github/freejt7-policy.yaml"
+    settings["freejt7.policy.file"] = ".github/free-jt7-policy.yaml"
+    settings["freejt7.models.routing"] = ".github/free-jt7-model-routing.json"
+    settings["freejt7.models.ide"] = ide
     settings["freejt7.enabled"] = True
     settings[f"freejt7.integrations.{ide}.enabled"] = True
     settings["freejt7.skills.index"] = ".github/skills/.skills_index.json"
-    settings["freejt7.policy.file"] = ".github/freejt7-policy.yaml"
+    settings["freejt7.policy.file"] = ".github/free-jt7-policy.yaml"
+    settings["freejt7.models.routing"] = ".github/free-jt7-model-routing.json"
+    settings["freejt7.models.ide"] = ide
 
 
 def _save_json_object(path: Path, data: dict[str, Any]) -> None:
     _atomic_write_text(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+
+def _upsert_text_block(content: str, start_marker: str, end_marker: str, block_body: str) -> str:
+    block = f"{start_marker}\n{block_body.rstrip()}\n{end_marker}\n"
+    if start_marker in content and end_marker in content:
+        start = content.index(start_marker)
+        end = content.index(end_marker) + len(end_marker)
+        updated = content[:start].rstrip() + "\n\n" + block
+        return updated if updated.endswith("\n") else (updated + "\n")
+    if not content.strip():
+        return block
+    updated = content.rstrip() + "\n\n" + block
+    return updated if updated.endswith("\n") else (updated + "\n")
 
 
 def _write_text_if_needed(path: Path, content: str, force: bool) -> bool:
@@ -493,7 +620,7 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
             "alwaysApply: true\n"
             "---\n\n"
             "Use .github/copilot-instructions.md and .github/skills as canonical source.\n"
-            "Respect .github/freejt7-policy.yaml and task quality gate before closing work.\n"
+            "Respect .github/free-jt7-policy.yaml and task quality gate before closing work.\n"
         )
         if _write_text_if_needed(rules_path, rules_content, force):
             notes.append(f"rules: {rules_path}")
@@ -511,16 +638,17 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
             "# Free JT7 Steering\n\n"
             "- Instructions: `.github/copilot-instructions.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/freejt7-policy.yaml`\n"
+            "- Policy: `.github/free-jt7-policy.yaml`\n"
             "- Runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(steering_path, steering_content, force):
             notes.append(f"steering: {steering_path}")
-        if AGENT_FILE.exists():
+        source_agent = _agent_file_path()
+        if source_agent.exists():
             kiro_agent = target / ".kiro" / "agents" / "freejt7.agent.md"
             if not kiro_agent.exists() or force:
                 kiro_agent.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(AGENT_FILE, kiro_agent)
+                shutil.copy2(source_agent, kiro_agent)
                 notes.append(f"agent: {kiro_agent}")
         return notes
 
@@ -534,7 +662,7 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
                 "instructions": str((gh_dir / "copilot-instructions.md").relative_to(target)).replace("\\", "/"),
                 "skills_dir": str((gh_dir / "skills").relative_to(target)).replace("\\", "/"),
                 "skills_index": str((gh_dir / "skills" / ".skills_index.json").relative_to(target)).replace("\\", "/"),
-                "policy": str((gh_dir / "freejt7-policy.yaml").relative_to(target)).replace("\\", "/"),
+                "policy": str((gh_dir / "free-jt7-policy.yaml").relative_to(target)).replace("\\", "/"),
             },
             "permissions": ["read", "write", "terminal", "search"],
             "activation": "ephemeral",
@@ -550,9 +678,9 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
         codex_content = (
             "# Free JT7 Agent Bridge for Codex\n\n"
             "- Instructions: `.github/copilot-instructions.md`\n"
-            "- Agent file: `.github/agents/freejt7.agent.md`\n"
+            "- Agent file: `.github/agents/free-jt7.agent.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/freejt7-policy.yaml`\n"
+            "- Policy: `.github/free-jt7-policy.yaml`\n"
             "- Runtime runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(codex_runtime, codex_content, force):
@@ -567,9 +695,9 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
                 "## Free JT7 Codex Bridge\n"
                 "When operating in this workspace, prioritize Free JT7 runtime assets:\n"
                 "- `.github/copilot-instructions.md`\n"
-                "- `.github/agents/freejt7.agent.md`\n"
+                "- `.github/agents/free-jt7.agent.md`\n"
                 "- `.github/skills/.skills_index.json`\n"
-                "- `.github/freejt7-policy.yaml`\n"
+                "- `.github/free-jt7-policy.yaml`\n"
                 "Use `python skills_manager.py task-run` for end-to-end execution with evidence.\n"
             ),
             header="# Workspace Agents",
@@ -583,7 +711,7 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
             "# Free JT7 Bridge for Claude Code\n\n"
             "- Canonical instructions: `.github/copilot-instructions.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/freejt7-policy.yaml`\n"
+            "- Policy: `.github/free-jt7-policy.yaml`\n"
             "- Runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(claude_runtime, claude_content, force):
@@ -597,9 +725,9 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
                 "## Free JT7 Claude Code Bridge\n"
                 "Use these files as source of truth:\n"
                 "- `.github/copilot-instructions.md`\n"
-                "- `.github/agents/freejt7.agent.md`\n"
+                "- `.github/agents/free-jt7.agent.md`\n"
                 "- `.github/skills/.skills_index.json`\n"
-                "- `.github/freejt7-policy.yaml`\n"
+                "- `.github/free-jt7-policy.yaml`\n"
                 "Prefer `python skills_manager.py task-run` for full execution flow.\n"
             ),
             header="# CLAUDE Instructions",
@@ -613,7 +741,7 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
             "# Free JT7 Bridge for Gemini CLI\n\n"
             "- Canonical instructions: `.github/copilot-instructions.md`\n"
             "- Skills index: `.github/skills/.skills_index.json`\n"
-            "- Policy: `.github/freejt7-policy.yaml`\n"
+            "- Policy: `.github/free-jt7-policy.yaml`\n"
             "- Runs: `copilot-agent/runs/`\n"
         )
         if _write_text_if_needed(gemini_runtime, gemini_content, force):
@@ -627,9 +755,9 @@ def _install_workspace_ide_adapter(target: Path, ide: str, force: bool) -> list[
                 "## Free JT7 Gemini CLI Bridge\n"
                 "Use these files as source of truth:\n"
                 "- `.github/copilot-instructions.md`\n"
-                "- `.github/agents/freejt7.agent.md`\n"
+                "- `.github/agents/free-jt7.agent.md`\n"
                 "- `.github/skills/.skills_index.json`\n"
-                "- `.github/freejt7-policy.yaml`\n"
+                "- `.github/free-jt7-policy.yaml`\n"
                 "Prefer `python skills_manager.py task-run` for full execution flow.\n"
             ),
             header="# GEMINI Instructions",
@@ -649,13 +777,37 @@ def _update_user_settings_for_ide(
         raise RuntimeError(f"IDE sin soporte de user settings: {ide}")
     settings_path = _ide_settings_path(ide, appdata_root)
     settings = _load_json_object(settings_path)
+    if ide == "codex":
+        codex_root = (appdata_root / ".codex").resolve() if appdata_root is not None else _codex_home()
+        settings_path = codex_root / "config.toml"
+        freejt7_payload = {
+            "enabled": True,
+            "instructions_file": _to_posix((ROOT / ".github" / "copilot-instructions.md").resolve()),
+            "agents_path": _to_posix((ROOT / ".github" / "agents").resolve()),
+            "skills_index": _to_posix((ROOT / ".github" / "skills" / ".skills_index.json").resolve()),
+            "policy_file": _to_posix((ROOT / ".github" / "free-jt7-policy.yaml").resolve()),
+            "model_routing": _to_posix((ROOT / ".github" / "free-jt7-model-routing.json").resolve()),
+        }
+        codex_payload = codex_root / "freejt7.config.json"
+        _save_json_object(codex_payload, freejt7_payload)
+        current = settings_path.read_text(encoding="utf-8") if settings_path.exists() else ""
+        pointer = _to_posix(codex_payload.resolve())
+        block_body = f'freejt7_config = "{pointer}"'
+        updated = _upsert_text_block(
+            current,
+            "# FREE_JT7_CODEX_START",
+            "# FREE_JT7_CODEX_END",
+            block_body,
+        )
+        _atomic_write_text(settings_path, updated)
+        return settings_path
     if ide in {"claude-code", "gemini-cli"}:
         freejt7_payload = {
             "enabled": True,
             "instructions_file": _to_posix((ROOT / ".github" / "copilot-instructions.md").resolve()),
             "agents_path": _to_posix((ROOT / ".github" / "agents").resolve()),
             "skills_index": _to_posix((ROOT / ".github" / "skills" / ".skills_index.json").resolve()),
-            "policy_file": _to_posix((ROOT / ".github" / "freejt7-policy.yaml").resolve()),
+            "policy_file": _to_posix((ROOT / ".github" / "free-jt7-policy.yaml").resolve()),
         }
         settings["freejt7"] = freejt7_payload
         settings["freejt7"] = {
@@ -747,15 +899,16 @@ def _to_yaml_lines(data: dict[str, Any], level: int = 0) -> list[str]:
 
 def _write_policy(policy: dict[str, Any]) -> None:
     lines = ["# Free JT7 policy file (autogenerated)", * _to_yaml_lines(policy), ""]
-    _atomic_write_text(POLICY_FILE, "\n".join(lines))
+    _atomic_write_text(_policy_file_path(), "\n".join(lines))
 
 
 def _load_policy() -> dict[str, Any]:
-    if not POLICY_FILE.exists():
+    path = _policy_file_path()
+    if not path.exists():
         _write_policy(DEFAULT_POLICY)
         return DEFAULT_POLICY
     try:
-        parsed = _parse_simple_yaml(POLICY_FILE.read_text(encoding="utf-8"))
+        parsed = _parse_simple_yaml(path.read_text(encoding="utf-8"))
     except Exception:
         parsed = {}
     return _deep_merge(DEFAULT_POLICY, parsed if isinstance(parsed, dict) else {})
@@ -772,6 +925,21 @@ def _validate_policy(policy: dict[str, Any]) -> list[str]:
     max_attempts = policy.get("execution", {}).get("retry", {}).get("max_attempts", 0)
     if not isinstance(max_attempts, int) or max_attempts < 1 or max_attempts > 5:
         errors.append("execution.retry.max_attempts debe ser entero entre 1 y 5")
+    allowlist = policy.get("execution", {}).get("allowlist", {})
+    if not isinstance(allowlist, dict):
+        errors.append("execution.allowlist debe ser un objeto")
+    else:
+        bins = allowlist.get("bins", [])
+        if not isinstance(bins, list):
+            errors.append("execution.allowlist.bins debe ser una lista")
+        elif any(not str(item).strip() for item in bins):
+            errors.append("execution.allowlist.bins no admite entradas vacias")
+    risk = policy.get("risk", {})
+    if isinstance(risk, dict):
+        if "allow_high_risk_without_approval" in risk and not isinstance(risk.get("allow_high_risk_without_approval"), bool):
+            errors.append("risk.allow_high_risk_without_approval debe ser bool")
+        if "allow_destructive" in risk and not isinstance(risk.get("allow_destructive"), bool):
+            errors.append("risk.allow_destructive debe ser bool")
     level = str(policy.get("telemetry", {}).get("level", ""))
     if level not in {"full_sanitized", "moderate", "minimal"}:
         errors.append("telemetry.level invÃ¡lido")
@@ -793,6 +961,843 @@ def _save_rollout_mode(mode: str) -> None:
         "mode": mode,
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     })
+
+
+def _coerce_bool(raw: Any, default: bool = False) -> bool:
+    if isinstance(raw, bool):
+        return raw
+    value = str(raw or "").strip().lower()
+    if value in {"1", "true", "yes", "y", "on"}:
+        return True
+    if value in {"0", "false", "no", "n", "off"}:
+        return False
+    return default
+
+
+def _agent_file_path() -> Path:
+    if AGENT_FILE.exists():
+        return AGENT_FILE
+    if LEGACY_AGENT_FILE.exists():
+        return LEGACY_AGENT_FILE
+    return AGENT_FILE
+
+
+def _policy_file_path() -> Path:
+    if POLICY_FILE.exists():
+        return POLICY_FILE
+    if LEGACY_POLICY_FILE.exists():
+        return LEGACY_POLICY_FILE
+    return POLICY_FILE
+
+
+def _model_routing_path() -> Path:
+    if MODEL_ROUTING_FILE.exists():
+        return MODEL_ROUTING_FILE
+    if MODEL_ROUTING_LEGACY_FILE.exists():
+        return MODEL_ROUTING_LEGACY_FILE
+    return MODEL_ROUTING_FILE
+
+
+def _load_model_routing() -> dict[str, Any]:
+    path = _model_routing_path()
+    if not path.exists():
+        save_json(path, DEFAULT_MODEL_ROUTING)
+        return json.loads(json.dumps(DEFAULT_MODEL_ROUTING))
+    data = load_json(path, {})
+    if not isinstance(data, dict):
+        data = {}
+    return _deep_merge(DEFAULT_MODEL_ROUTING, data)
+
+
+def _save_model_routing(data: dict[str, Any]) -> Path:
+    path = _model_routing_path()
+    save_json(path, data)
+    return path
+
+
+def _ensure_target_model_routing(target: Path, force: bool = False) -> Path:
+    route = _load_model_routing()
+    out = target / ".github" / "free-jt7-model-routing.json"
+    if out.exists() and not force:
+        return out
+    save_json(out, route)
+    return out
+
+
+def _env_key_present(candidates: list[str]) -> str:
+    for name in candidates:
+        if str(os.environ.get(name, "")).strip():
+            return name
+    return ""
+
+
+def _normalize_profile_name(raw: str) -> str:
+    value = str(raw or "").strip()
+    return value or "default"
+
+
+def _collect_profile_names_from_json(data: Any) -> set[str]:
+    names: set[str] = set()
+
+    def _push(value: Any) -> None:
+        if isinstance(value, str):
+            item = value.strip()
+            if item:
+                names.add(item)
+
+    if isinstance(data, dict):
+        for key in ("profile", "defaultProfile", "activeProfile", "selectedProfile", "currentProfile"):
+            _push(data.get(key))
+        profiles = data.get("profiles")
+        if isinstance(profiles, dict):
+            for key, value in profiles.items():
+                _push(str(key))
+                if isinstance(value, dict):
+                    for nested in ("name", "id", "profile"):
+                        _push(value.get(nested))
+        elif isinstance(profiles, list):
+            for item in profiles:
+                if isinstance(item, dict):
+                    for nested in ("name", "id", "profile"):
+                        _push(item.get(nested))
+                else:
+                    _push(item)
+    return names
+
+
+def _collect_profile_names_from_toml(data: Any) -> set[str]:
+    names: set[str] = set()
+
+    def _push(value: Any) -> None:
+        if isinstance(value, str):
+            item = value.strip()
+            if item:
+                names.add(item)
+
+    if not isinstance(data, dict):
+        return names
+    for key in ("profile", "default_profile", "active_profile", "current_profile"):
+        _push(data.get(key))
+    profiles = data.get("profiles")
+    if isinstance(profiles, dict):
+        for key, value in profiles.items():
+            _push(str(key))
+            if isinstance(value, dict):
+                for nested in ("name", "id", "profile"):
+                    _push(value.get(nested))
+    return names
+
+
+def _detect_ide_profile_names(ide: str, appdata_root: Path | None = None) -> list[str]:
+    normalized = _normalize_ide_name(ide)
+    names: set[str] = set()
+    settings = _ide_settings_path(normalized, appdata_root)
+
+    if normalized == "codex":
+        cfg = _codex_home() / "config.toml"
+        candidates = [cfg, settings]
+        for path in candidates:
+            if not path.exists():
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            if tomllib is not None:
+                try:
+                    parsed = tomllib.loads(text)
+                    names.update(_collect_profile_names_from_toml(parsed))
+                except Exception:
+                    pass
+            names.update(re.findall(r"(?m)^\s*\[profiles\.([A-Za-z0-9._-]+)\]\s*$", text))
+            names.update(re.findall(r"""(?m)^\s*profile\s*=\s*["']([^"']+)["']\s*$""", text))
+    elif normalized in {"claude-code", "gemini-cli"}:
+        home_cfg = (_claude_home() if normalized == "claude-code" else _gemini_home()) / (
+            "config.json" if normalized == "claude-code" else "settings.json"
+        )
+        candidates = [home_cfg, settings]
+        for path in candidates:
+            data = _load_json_object(path)
+            names.update(_collect_profile_names_from_json(data))
+    else:
+        data = _load_json_object(settings)
+        names.update(_collect_profile_names_from_json(data))
+
+    return sorted({name for name in names if name.strip()})
+
+
+def _ide_auth_probe(
+    ide: str,
+    profile: str = "default",
+    appdata_root: Path | None = None,
+) -> dict[str, Any]:
+    normalized = _normalize_ide_name(ide)
+    requested_profile = _normalize_profile_name(profile)
+    settings = _ide_settings_path(normalized, appdata_root)
+    evidence: list[str] = []
+    available = False
+    if settings.exists():
+        available = True
+        evidence.append(f"settings:{settings}")
+    if normalized == "codex":
+        codex_home = _codex_home()
+        for item in ("auth.json", "credentials.json", "config.toml"):
+            fp = codex_home / item
+            if fp.exists():
+                available = True
+                evidence.append(f"codex:{fp}")
+    elif normalized == "claude-code":
+        claude_home = _claude_home()
+        for item in ("auth.json", "credentials.json", "config.json"):
+            fp = claude_home / item
+            if fp.exists():
+                available = True
+                evidence.append(f"claude:{fp}")
+    elif normalized == "gemini-cli":
+        gemini_home = _gemini_home()
+        for item in ("auth.json", "credentials.json", "settings.json"):
+            fp = gemini_home / item
+            if fp.exists():
+                available = True
+                evidence.append(f"gemini:{fp}")
+    detected_profiles = _detect_ide_profile_names(normalized, appdata_root)
+    lowered = {item.lower() for item in detected_profiles}
+    if lowered:
+        profile_available = requested_profile.lower() in lowered
+    else:
+        profile_available = requested_profile.lower() == "default"
+    available = available and profile_available
+    return {
+        "ide": normalized,
+        "available": available,
+        "evidence": evidence,
+        "settings_path": str(settings),
+        "profile_requested": requested_profile,
+        "profile_available": profile_available,
+        "detected_profiles": detected_profiles,
+    }
+
+
+def _resolve_model_for_ide(
+    ide: str,
+    profile: str = "default",
+    appdata_root: Path | None = None,
+) -> dict[str, Any]:
+    normalized = _normalize_ide_name(ide)
+    requested_profile = _normalize_profile_name(profile)
+    if normalized not in SUPPORTED_IDES:
+        raise RuntimeError(f"IDE no soportado para modelos: {ide}")
+    routing = _load_model_routing()
+    base = routing.get("default", {})
+    ide_cfg = routing.get("ideProfiles", {}).get(normalized, {})
+    merged = _deep_merge(base if isinstance(base, dict) else {}, ide_cfg if isinstance(ide_cfg, dict) else {})
+    profiles = merged.get("profiles", {})
+    if isinstance(profiles, dict) and requested_profile in profiles and isinstance(profiles.get(requested_profile), dict):
+        merged = _deep_merge(merged, profiles[requested_profile])
+    prefer_ide = _coerce_bool(merged.get("preferIdeProfile", True), True)
+    allow_fallback = _coerce_bool(merged.get("allowApiFallback", True), True)
+    provider = str(merged.get("provider", "openai"))
+    model = str(merged.get("model", "auto"))
+    ide_probe = _ide_auth_probe(normalized, profile=requested_profile, appdata_root=appdata_root)
+
+    fallback = merged.get("apiFallback", {})
+    if not isinstance(fallback, dict):
+        fallback = {}
+    fallback_provider = str(fallback.get("provider", "openai"))
+    fallback_model = str(fallback.get("model", "gpt-5-mini"))
+    fallback_env = fallback.get("env", [])
+    if not isinstance(fallback_env, list):
+        fallback_env = []
+    if not fallback_env:
+        provider_env = routing.get("apiEnvByProvider", {}).get(fallback_provider, [])
+        fallback_env = provider_env if isinstance(provider_env, list) else []
+    selected_env = _env_key_present([str(item) for item in fallback_env if str(item).strip()])
+
+    auth_mode = "unavailable"
+    reason = "no ide profile and no api key"
+    selected_provider = provider
+    selected_model = model
+    if prefer_ide and ide_probe["available"]:
+        auth_mode = "ide-profile"
+        reason = "ide profile detected"
+    elif allow_fallback and selected_env:
+        auth_mode = "api-key-env"
+        reason = f"env:{selected_env}"
+        selected_provider = fallback_provider
+        selected_model = fallback_model
+    elif ide_probe["available"]:
+        auth_mode = "ide-profile"
+        reason = "ide profile detected"
+    elif not bool(ide_probe.get("profile_available", True)):
+        reason = f"profile '{requested_profile}' not detected in IDE auth"
+    return {
+        "ide": normalized,
+        "profile": requested_profile,
+        "provider": selected_provider,
+        "model": selected_model,
+        "auth_mode": auth_mode,
+        "reason": reason,
+        "prefer_ide_profile": prefer_ide,
+        "allow_api_fallback": allow_fallback,
+        "api_env_var": selected_env,
+        "ide_profile_available": bool(ide_probe["available"]),
+        "requested_profile_available": bool(ide_probe.get("profile_available", False)),
+        "ide_detected_profiles": ide_probe.get("detected_profiles", []),
+        "ide_evidence": ide_probe["evidence"],
+        "routing_file": str(_model_routing_path()),
+    }
+
+
+def _active_project_path() -> Path | None:
+    active = load_json(COPILOT_AGENT / "active-project.json", {})
+    if not isinstance(active, dict):
+        return None
+    raw = str(active.get("path", "")).strip()
+    if not raw:
+        return None
+    try:
+        return Path(raw).expanduser().resolve()
+    except Exception:
+        return None
+
+
+def _resolve_target_project(path_raw: str = "") -> Path:
+    raw = str(path_raw or "").strip()
+    if raw:
+        project = Path(raw).expanduser().resolve()
+    else:
+        project = _active_project_path() or ROOT
+    project.mkdir(parents=True, exist_ok=True)
+    return project
+
+
+def _render_command(parts: list[str]) -> str:
+    return " ".join(shlex.quote(str(p)) for p in parts)
+
+
+def _openclaw_build_ready(repo: Path) -> bool:
+    if not (repo / "node_modules").exists():
+        return False
+    entry = None
+    for name in ("entry.js", "entry.mjs"):
+        candidate = repo / "dist" / name
+        if candidate.exists():
+            entry = candidate
+            break
+    if entry is None:
+        return False
+    try:
+        text = entry.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return False
+    rel_imports = set(re.findall(r"""from\s+["'](\./[^"']+)["']""", text))
+    rel_imports.update(re.findall(r"""import\(\s*["'](\./[^"']+)["']\s*\)""", text))
+    for spec in rel_imports:
+        target = (entry.parent / spec).resolve()
+        if not target.exists():
+            return False
+    return True
+
+
+def _resolve_openclaw_command(openclaw_repo: str = "") -> list[str]:
+    override = str(os.environ.get("FREE_JT7_OPENCLAW_CMD", "")).strip()
+    if override:
+        parsed = shlex.split(override, posix=False)
+        if parsed:
+            return [str(item) for item in parsed]
+
+    repo_raw = str(openclaw_repo or "").strip()
+    repo = Path(repo_raw).expanduser().resolve() if repo_raw else OPENCLAW_REPO_DIR.resolve()
+    local_entry = repo / "openclaw.mjs"
+    if local_entry.exists():
+        build_ready = _openclaw_build_ready(repo)
+        if build_ready:
+            node = shutil.which("node")
+            if not node:
+                raise RuntimeError("No se encontrÃ³ Node.js en PATH para ejecutar OPEN CLAW local")
+            return [node, str(local_entry)]
+
+    cli = shutil.which("openclaw")
+    if cli:
+        return [cli]
+    if local_entry.exists():
+        raise RuntimeError(
+            f"OPEN CLAW local detectado en '{repo}' pero sin build listo. "
+            f"Ejecuta: pnpm --dir \"{repo}\" install && pnpm --dir \"{repo}\" build"
+        )
+    raise RuntimeError(
+        "No se encontrÃ³ comando openclaw ni repositorio local en 'OPEN CLAW'. "
+        "Define FREE_JT7_OPENCLAW_CMD o instala OpenClaw."
+    )
+
+
+def _resolve_openclaw_command_hint(openclaw_repo: str = "") -> list[str]:
+    override = str(os.environ.get("FREE_JT7_OPENCLAW_CMD", "")).strip()
+    if override:
+        parsed = shlex.split(override, posix=False)
+        if parsed:
+            return [str(item) for item in parsed]
+    repo_raw = str(openclaw_repo or "").strip()
+    repo = Path(repo_raw).expanduser().resolve() if repo_raw else OPENCLAW_REPO_DIR.resolve()
+    local_entry = repo / "openclaw.mjs"
+    node = shutil.which("node")
+    if local_entry.exists() and node:
+        return [node, str(local_entry)]
+    cli = shutil.which("openclaw")
+    if cli:
+        return [cli]
+    return ["openclaw"]
+
+
+def _gateway_paths(project: Path) -> tuple[Path, Path]:
+    base = project / ".openclaw"
+    config = base / "openclaw.json"
+    state_dir = base / "state"
+    return config, state_dir
+
+
+def _credentials_file(project: Path) -> Path:
+    return project / ".secrets" / "free-jt7.env"
+
+
+def _load_env_file(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if not path.exists():
+        return values
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip().lstrip("\ufeff")
+        if key:
+            values[key] = value.strip()
+    return values
+
+
+def _write_env_file(path: Path, values: dict[str, str]) -> Path:
+    lines = [
+        "# Free JT7 private credentials",
+        "# No subir este archivo al repo",
+        f"OWNER_PHONE={values.get('OWNER_PHONE', '')}",
+        f"TELEGRAM_BOT_TOKEN={values.get('TELEGRAM_BOT_TOKEN', '')}",
+        f"OPENAI_API_KEY={values.get('OPENAI_API_KEY', '')}",
+        f"ANTHROPIC_API_KEY={values.get('ANTHROPIC_API_KEY', '')}",
+        f"GEMINI_API_KEY={values.get('GEMINI_API_KEY', '')}",
+        "",
+    ]
+    _atomic_write_text(path, "\n".join(lines))
+    return path
+
+
+def _valid_phone(phone: str) -> bool:
+    value = str(phone or "").strip()
+    return bool(re.match(r"^\+[1-9][0-9]{6,15}$", value))
+
+
+def _secret_mask(value: str) -> str:
+    text = str(value or "")
+    if len(text) <= 8:
+        return "***"
+    return text[:4] + "***" + text[-4:]
+
+
+def _resolve_credentials(
+    project: Path,
+    *,
+    owner_phone: str = "",
+    telegram_bot_token: str = "",
+    openai_api_key: str = "",
+    anthropic_api_key: str = "",
+    gemini_api_key: str = "",
+    interactive: bool = False,
+) -> tuple[dict[str, str], Path]:
+    cred_path = _credentials_file(project)
+    existing = _load_env_file(cred_path)
+
+    owner = str(owner_phone or existing.get("OWNER_PHONE", "")).strip()
+    tg = str(telegram_bot_token or existing.get("TELEGRAM_BOT_TOKEN", "")).strip()
+    openai_key = str(openai_api_key or existing.get("OPENAI_API_KEY", "")).strip()
+    anthropic_key = str(anthropic_api_key or existing.get("ANTHROPIC_API_KEY", "")).strip()
+    gemini_key = str(gemini_api_key or existing.get("GEMINI_API_KEY", "")).strip()
+
+    if interactive:
+        owner_in = input(f"Telefono WhatsApp owner [+E164] [{owner}]: ").strip()
+        if owner_in:
+            owner = owner_in
+        tg_in = input(
+            f"Telegram bot token [actual={_secret_mask(tg) if tg else 'vacío'}] (Enter conserva): "
+        ).strip()
+        if tg_in:
+            tg = tg_in
+        openai_in = input(
+            f"OPENAI_API_KEY [actual={_secret_mask(openai_key) if openai_key else 'vacío'}] (Enter conserva): "
+        ).strip()
+        if openai_in:
+            openai_key = openai_in
+        anthropic_in = input(
+            f"ANTHROPIC_API_KEY [actual={_secret_mask(anthropic_key) if anthropic_key else 'vacío'}] (Enter conserva): "
+        ).strip()
+        if anthropic_in:
+            anthropic_key = anthropic_in
+        gemini_in = input(
+            f"GEMINI_API_KEY [actual={_secret_mask(gemini_key) if gemini_key else 'vacío'}] (Enter conserva): "
+        ).strip()
+        if gemini_in:
+            gemini_key = gemini_in
+
+    if not owner:
+        raise RuntimeError("OWNER_PHONE requerido")
+    if not _valid_phone(owner):
+        raise RuntimeError("OWNER_PHONE invalido. Usa formato +E164 (ej: +584243703569)")
+    if not tg:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN requerido")
+
+    values = {
+        "OWNER_PHONE": owner,
+        "TELEGRAM_BOT_TOKEN": tg,
+        "OPENAI_API_KEY": openai_key,
+        "ANTHROPIC_API_KEY": anthropic_key,
+        "GEMINI_API_KEY": gemini_key,
+    }
+    path = _write_env_file(cred_path, values)
+    return values, path
+
+
+def _credentials_env_overrides(project: Path) -> dict[str, str]:
+    values = _load_env_file(_credentials_file(project))
+    result: dict[str, str] = {}
+    for key in ("TELEGRAM_BOT_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"):
+        value = str(values.get(key, "")).strip()
+        if value:
+            result[key] = value
+    return result
+
+
+def _apply_credentials_to_gateway_config(project: Path, values: dict[str, str]) -> Path:
+    config_path, _ = _gateway_paths(project)
+    cfg = load_json(config_path, {})
+    if not isinstance(cfg, dict):
+        cfg = {}
+
+    gateway = cfg.setdefault("gateway", {})
+    if not isinstance(gateway, dict):
+        gateway = {}
+        cfg["gateway"] = gateway
+    gateway["mode"] = "local"
+
+    channels = cfg.setdefault("channels", {})
+    if not isinstance(channels, dict):
+        channels = {}
+        cfg["channels"] = channels
+
+    owner = str(values.get("OWNER_PHONE", "")).strip()
+    tg = str(values.get("TELEGRAM_BOT_TOKEN", "")).strip()
+
+    whatsapp = channels.setdefault("whatsapp", {})
+    if not isinstance(whatsapp, dict):
+        whatsapp = {}
+        channels["whatsapp"] = whatsapp
+    whatsapp["enabled"] = True
+    whatsapp["dmPolicy"] = str(whatsapp.get("dmPolicy", "pairing") or "pairing")
+    if owner:
+        whatsapp["allowFrom"] = [owner]
+        whatsapp["groupAllowFrom"] = [owner]
+    whatsapp["groupPolicy"] = str(whatsapp.get("groupPolicy", "allowlist") or "allowlist")
+
+    telegram = channels.setdefault("telegram", {})
+    if not isinstance(telegram, dict):
+        telegram = {}
+        channels["telegram"] = telegram
+    telegram["enabled"] = True
+    telegram["dmPolicy"] = str(telegram.get("dmPolicy", "pairing") or "pairing")
+    telegram["groupPolicy"] = str(telegram.get("groupPolicy", "allowlist") or "allowlist")
+    if tg:
+        telegram["botToken"] = tg
+
+    save_json(config_path, cfg)
+    return config_path
+
+
+def _path_to_project_string(project: Path, path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(project.resolve())).replace("\\", "/")
+    except Exception:
+        return str(path.resolve())
+
+
+def _resolve_project_path(project: Path, raw: str) -> Path:
+    candidate = Path(str(raw or "").strip()).expanduser()
+    if not candidate.is_absolute():
+        candidate = project / candidate
+    return candidate.resolve()
+
+
+def _load_gateway_config(project: Path) -> tuple[dict[str, Any], Path]:
+    config_path, _ = _gateway_paths(project)
+    data = load_json(config_path, {})
+    if not isinstance(data, dict) or not data:
+        data = _build_gateway_config(owner_phone="", telegram_bot_token="")
+    plugins = data.get("plugins")
+    if not isinstance(plugins, dict):
+        plugins = {}
+        data["plugins"] = plugins
+    if "enabled" not in plugins:
+        plugins["enabled"] = True
+    entries = plugins.get("entries")
+    if not isinstance(entries, dict):
+        plugins["entries"] = {}
+    load_cfg = plugins.get("load")
+    if not isinstance(load_cfg, dict):
+        plugins["load"] = {"paths": []}
+    else:
+        paths = load_cfg.get("paths")
+        if not isinstance(paths, list):
+            load_cfg["paths"] = []
+    return data, config_path
+
+
+def _save_gateway_config(project: Path, config: dict[str, Any]) -> Path:
+    config_path, _ = _gateway_paths(project)
+    save_json(config_path, config)
+    return config_path
+
+
+def _normalize_plugin_id(raw: str) -> str:
+    value = re.sub(r"[^a-z0-9._-]+", "-", str(raw or "").strip().lower()).strip("-.")
+    return value
+
+
+def _plugin_metadata_path(project: Path) -> Path:
+    return project / ".openclaw" / "free-jt7-plugins.json"
+
+
+def _load_plugin_metadata(project: Path) -> dict[str, Any]:
+    path = _plugin_metadata_path(project)
+    data = load_json(path, {})
+    if not isinstance(data, dict):
+        data = {}
+    plugins = data.get("plugins")
+    if not isinstance(plugins, dict):
+        data["plugins"] = {}
+    return data
+
+
+def _save_plugin_metadata(project: Path, data: dict[str, Any]) -> Path:
+    path = _plugin_metadata_path(project)
+    save_json(path, data)
+    return path
+
+
+def _detect_plugin_manifest(source_path: Path) -> Path | None:
+    if source_path.is_file():
+        if source_path.name.lower().endswith(".json"):
+            return source_path
+        candidate = source_path.parent / "openclaw.plugin.json"
+        return candidate if candidate.exists() else None
+    if source_path.is_dir():
+        for name in ("openclaw.plugin.json", "plugin.json", "manifest.json"):
+            candidate = source_path / name
+            if candidate.exists():
+                return candidate
+    return None
+
+
+def _validate_plugin_manifest(manifest_path: Path | None) -> tuple[dict[str, Any], list[str]]:
+    if manifest_path is None:
+        return {}, ["manifest no encontrado (esperado: openclaw.plugin.json)"]
+    if not manifest_path.exists():
+        return {}, [f"manifest no existe: {manifest_path}"]
+    manifest = load_json(manifest_path, {})
+    if not isinstance(manifest, dict):
+        return {}, [f"manifest invalido (JSON objeto requerido): {manifest_path}"]
+    name = str(manifest.get("name", "")).strip()
+    if not name:
+        return manifest, ["manifest sin campo 'name'"]
+    return manifest, []
+
+
+def _validate_plugin_entry(
+    project: Path,
+    plugin_id: str,
+    entry: dict[str, Any],
+    metadata_entry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    meta = metadata_entry if isinstance(metadata_entry, dict) else {}
+    source = str(meta.get("source", "local") or "local").strip().lower()
+    enabled = _coerce_bool(entry.get("enabled", True), True)
+    path_raw = str(meta.get("path", "") or "").strip()
+    manifest_raw = str(meta.get("manifest", "") or "").strip()
+    package = str(meta.get("package", "") or "").strip()
+    resolved_path = None
+    resolved_manifest = None
+    manifest_data: dict[str, Any] = {}
+
+    if source == "local":
+        if not path_raw:
+            errors.append("path requerido para source=local")
+        else:
+            resolved_path = _resolve_project_path(project, path_raw)
+            if not resolved_path.exists():
+                errors.append(f"path no existe: {resolved_path}")
+        if manifest_raw:
+            resolved_manifest = _resolve_project_path(project, manifest_raw)
+        elif resolved_path is not None and resolved_path.exists():
+            resolved_manifest = _detect_plugin_manifest(resolved_path)
+        data, manifest_errors = _validate_plugin_manifest(resolved_manifest)
+        manifest_data = data
+        errors.extend(manifest_errors)
+    elif source == "npm":
+        if not package:
+            errors.append("package requerido para source=npm")
+    else:
+        errors.append(f"source no soportado: {source}")
+
+    if enabled and not path_raw and source == "local":
+        warnings.append("plugin habilitado sin path configurado")
+
+    detected_name = str(manifest_data.get("name", "")).strip()
+    if detected_name:
+        expected = _normalize_plugin_id(detected_name)
+        if expected and expected != plugin_id:
+            warnings.append(
+                f"id '{plugin_id}' distinto a manifest.name '{detected_name}' (sugerido: {expected})"
+            )
+
+    return {
+        "id": plugin_id,
+        "enabled": enabled,
+        "source": source,
+        "path": str(resolved_path) if resolved_path is not None else path_raw,
+        "manifest": str(resolved_manifest) if resolved_manifest is not None else manifest_raw,
+        "package": package,
+        "manifest_name": detected_name,
+        "manifest_version": str(manifest_data.get("version", "")).strip(),
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def _collect_plugin_validation(
+    project: Path,
+    config: dict[str, Any],
+    plugin_id: str = "",
+) -> list[dict[str, Any]]:
+    metadata = _load_plugin_metadata(project).get("plugins", {})
+    plugins = config.get("plugins", {})
+    entries = plugins.get("entries", {}) if isinstance(plugins, dict) else {}
+    if not isinstance(entries, dict):
+        entries = {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    selected = sorted(set(entries.keys()) | set(metadata.keys()))
+    requested = _normalize_plugin_id(plugin_id)
+    if requested:
+        selected = [requested] if requested in set(selected) else []
+    results: list[dict[str, Any]] = []
+    for pid in selected:
+        raw = entries.get(pid, {})
+        entry = raw if isinstance(raw, dict) else {}
+        meta_entry = metadata.get(pid, {})
+        results.append(_validate_plugin_entry(project, pid, entry, metadata_entry=meta_entry))
+    return results
+
+
+def _build_gateway_config(
+    owner_phone: str,
+    telegram_bot_token: str,
+) -> dict[str, Any]:
+    allow_from = [owner_phone] if owner_phone else []
+    cfg: dict[str, Any] = {
+        "gateway": {
+            "bind": "loopback",
+            "port": 18789,
+            "reload": {"mode": "hybrid"},
+        },
+        "channels": {
+            "defaults": {"groupPolicy": "allowlist"},
+            "whatsapp": {
+                "dmPolicy": "pairing",
+                "allowFrom": allow_from,
+                "groupPolicy": "allowlist",
+                "groupAllowFrom": allow_from,
+            },
+            "telegram": {
+                "enabled": True,
+                "dmPolicy": "pairing",
+                "allowFrom": [],
+                "groupPolicy": "allowlist",
+                "groups": {"*": {"requireMention": True}},
+            },
+        },
+        "web": {"enabled": True},
+        "tools": {
+            "profile": "coding",
+            "exec": {"host": "sandbox", "security": "allowlist", "ask": "on-miss"},
+        },
+        "plugins": {"enabled": True, "entries": {}},
+    }
+    if telegram_bot_token:
+        cfg["channels"]["telegram"]["botToken"] = telegram_bot_token
+    return cfg
+
+
+def _write_gateway_env_example(
+    project: Path,
+    model_resolution: dict[str, Any],
+) -> Path:
+    env_file = project / ".env.free-jt7.example"
+    lines = [
+        "# Free JT7 gateway env template",
+        "# Completa solo si no quieres depender del perfil del IDE",
+        "",
+        "TELEGRAM_BOT_TOKEN=",
+        "OPENAI_API_KEY=",
+        "ANTHROPIC_API_KEY=",
+        "GEMINI_API_KEY=",
+        "",
+        f"# IDE/modelo resuelto por defecto: {model_resolution.get('ide')}/{model_resolution.get('model')}",
+    ]
+    _atomic_write_text(env_file, "\n".join(lines) + "\n")
+    return env_file
+
+
+def _openclaw_run(
+    cli_args: list[str],
+    project: Path,
+    openclaw_repo: str = "",
+    dry_run: bool = False,
+    timeout_ms: int = 120000,
+) -> tuple[int, str]:
+    config_path, state_dir = _gateway_paths(project)
+    if dry_run:
+        cmd = _resolve_openclaw_command_hint(openclaw_repo) + cli_args
+    else:
+        cmd = _resolve_openclaw_command(openclaw_repo) + cli_args
+    rendered = _render_command(cmd)
+    if dry_run:
+        return 0, f"[dry-run] {rendered}"
+    env = os.environ.copy()
+    env.update(_credentials_env_overrides(project))
+    env["OPENCLAW_CONFIG_PATH"] = str(config_path)
+    env["OPENCLAW_STATE_DIR"] = str(state_dir)
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=max(1, timeout_ms // 1000),
+            env=env,
+            cwd=str(project),
+        )
+    except subprocess.TimeoutExpired:
+        return 124, f"timeout ejecutando: {rendered}"
+    output = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    if not output:
+        output = rendered
+    return proc.returncode, output[:8000]
 
 
 def _runs_dir() -> Path:
@@ -868,6 +1873,38 @@ def _normalize_shell_command(command: str, strategy: str) -> str:
             target = parts[2]
             return f"Select-String -Path {target} -Pattern {pat}"
     return command
+
+
+def _extract_primary_bin(command: str) -> str:
+    text = str(command or "").strip()
+    if not text:
+        return ""
+    try:
+        tokens = shlex.split(text, posix=False)
+    except Exception:
+        tokens = []
+    if not tokens:
+        match = re.match(r"^\s*([^\s|;&]+)", text)
+        token = match.group(1) if match else ""
+    else:
+        token = tokens[0]
+    token = token.strip().strip("\"'")
+    if not token:
+        return ""
+    return Path(token).name.lower()
+
+
+def _command_allowed_by_policy(command: str, policy: dict[str, Any]) -> tuple[bool, str]:
+    allow_cfg = policy.get("execution", {}).get("allowlist", {})
+    enabled = _coerce_bool(allow_cfg.get("enabled", False), False) if isinstance(allow_cfg, dict) else False
+    primary = _extract_primary_bin(command)
+    if not enabled:
+        return True, primary
+    bins = allow_cfg.get("bins", []) if isinstance(allow_cfg, dict) else []
+    allowed_bins = {str(item).strip().lower() for item in bins if str(item).strip()}
+    if not primary:
+        return False, primary
+    return primary in allowed_bins, primary
 
 
 def _execute_powershell(command: str, timeout: int = 120000) -> tuple[int, str]:
@@ -1813,6 +2850,85 @@ python skills_manager.py sync-claude
     resume.write_text(content, encoding="utf-8")
 
 
+def _tasks_file_path() -> Path:
+    return COPILOT_AGENT / "tasks.yaml"
+
+
+def _yaml_quote(value: str) -> str:
+    return str(value or "").replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _yaml_folded(value: str, indent: int = 6) -> str:
+    lines = [line.rstrip() for line in str(value or "").replace("\r", "").split("\n")]
+    if not lines:
+        lines = [""]
+    prefix = " " * indent
+    return "\n".join(f"{prefix}{line}" if line else prefix for line in lines)
+
+
+def _render_task_yaml_entry(run: dict[str, Any]) -> str:
+    run_id = str(run.get("run_id", "")).strip()
+    started_at = str(run.get("started_at", "")).strip()
+    date_value = started_at[:10] if len(started_at) >= 10 else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    goal = str(run.get("user_goal", "")).strip()
+    title = goal[:80] if goal else f"run {run_id}"
+    status_map = {
+        "planned": "en_progreso",
+        "running": "en_progreso",
+        "succeeded": "completado",
+        "failed": "fallido",
+        "blocked": "bloqueado",
+    }
+    status = status_map.get(str(run.get("status", "planned")), str(run.get("status", "planned")))
+    skills_selected = run.get("skills_selected", [])
+    skills = []
+    if isinstance(skills_selected, list):
+        for item in skills_selected:
+            if isinstance(item, dict):
+                skill_id = str(item.get("id", "")).strip()
+                if skill_id:
+                    skills.append(skill_id)
+    skills_repr = "[" + ", ".join(f'"{_yaml_quote(skill)}"' for skill in skills) + "]"
+    summary = str(run.get("summary", "")).strip()
+    if not summary:
+        summary = f"status={run.get('status', 'planned')}"
+    return (
+        f'  - id: "{_yaml_quote(run_id)}"\n'
+        f'    fecha: "{_yaml_quote(date_value)}"\n'
+        f'    titulo: "{_yaml_quote(title)}"\n'
+        "    descripcion: >\n"
+        f"{_yaml_folded(goal)}\n"
+        f'    estado: "{_yaml_quote(status)}"\n'
+        f'    riesgo: "{_yaml_quote(str(run.get("risk_level", "low")))}"\n'
+        f"    skills_usados: {skills_repr}\n"
+        "    resultado: >\n"
+        f"{_yaml_folded(summary)}"
+    )
+
+
+def _upsert_task_registry(run: dict[str, Any]) -> None:
+    run_id = str(run.get("run_id", "")).strip()
+    if not run_id:
+        return
+    path = _tasks_file_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = path.read_text(encoding="utf-8") if path.exists() else (
+        "# copilot-agent - Registro de Tareas\n"
+        "# Formato: lista YAML de tareas ejecutadas por el agente\n"
+        "# Actualizado automaticamente por skills_manager.py\n\n"
+        "tareas:\n"
+    )
+    if "tareas:" not in content:
+        content = content.rstrip() + "\n\ntareas:\n"
+    entry = _render_task_yaml_entry(run)
+    pattern = re.compile(rf'(?ms)^  - id: "{re.escape(run_id)}"\n.*?(?=^  - id: |\Z)')
+    if pattern.search(content):
+        updated = pattern.sub(entry + "\n", content, count=1)
+    else:
+        updated = content.rstrip() + "\n" + entry + "\n"
+    _atomic_write_text(path, updated)
+
+
 def cmd_sync_claude(args: argparse.Namespace) -> int:
     try:
         _preflight(require_index=True)
@@ -1945,6 +3061,32 @@ def cmd_set_project(args: argparse.Namespace) -> int:
         "history": history,
     }
     ap.write_text(_json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+    workspace_file = ROOT / "free-jt7-multiroot.code-workspace"
+    try:
+        workspace = load_json(workspace_file, {})
+        if not isinstance(workspace, dict):
+            workspace = {}
+        folders = [{"path": ".", "name": "Free JT7 Agent"}]
+        root_resolved = ROOT.resolve()
+        if ruta.resolve() != root_resolved:
+            folders.append({"path": str(ruta)})
+        workspace["folders"] = folders
+        settings = workspace.get("settings")
+        if not isinstance(settings, dict):
+            settings = {}
+            workspace["settings"] = settings
+        settings["github.copilot.chat.codeGeneration.useInstructionFiles"] = True
+        agent_locations = settings.get("chat.agentFilesLocations")
+        if isinstance(agent_locations, list):
+            agent_locations = {str(item): True for item in agent_locations if isinstance(item, str) and item.strip()}
+        elif not isinstance(agent_locations, dict):
+            agent_locations = {}
+        root_agent_path = _to_posix((ROOT / ".github" / "agents").resolve())
+        agent_locations[root_agent_path] = True
+        settings["chat.agentFilesLocations"] = agent_locations
+        save_json(workspace_file, workspace)
+    except Exception as exc:
+        print(f"[set-project] WARN no se pudo actualizar workspace multiraiz: {exc}")
     print(f"[set-project] OK Proyecto activo: {ruta}")
     _log_audit("set-project", str(ruta))
     _update_resume("set-project", f"proyecto activo â†’ {ruta.name}")
@@ -1962,8 +3104,745 @@ def cmd_ide_detect(args: argparse.Namespace) -> int:
     for profile in profiles:
         state = "installed" if profile["installed"] else "missing"
         suffix = "settings-ok" if profile["settings_exists"] else "settings-missing"
-        print(f" - {profile['ide']:<11s} {state:<9s} {suffix:<16s} {profile['settings_path']}")
+        names = profile.get("profiles", [])
+        pretty_profiles = ",".join(names[:4]) if isinstance(names, list) and names else "default?"
+        print(
+            f" - {profile['ide']:<11s} {state:<9s} {suffix:<16s} "
+            f"{profile['settings_path']} profiles={pretty_profiles}"
+        )
     return 0
+
+
+def cmd_model_profiles_init(args: argparse.Namespace) -> int:
+    force = bool(getattr(args, "force", False))
+    path = _model_routing_path()
+    if path.exists() and not force:
+        print(f"[model-profiles-init] SKIP ya existe: {path}")
+        return 0
+    save_json(path, DEFAULT_MODEL_ROUTING)
+    _log_audit("model-profiles-init", str(path))
+    print(f"[model-profiles-init] OK -> {path}")
+    return 0
+
+
+def cmd_model_resolve(args: argparse.Namespace) -> int:
+    appdata_raw = str(getattr(args, "appdata_root", "")).strip()
+    appdata_root = Path(appdata_raw).expanduser().resolve() if appdata_raw else None
+    ide_raw = str(getattr(args, "ide", "auto") or "auto")
+    profile = str(getattr(args, "profile", "default") or "default")
+    ide = _normalize_ide_name(ide_raw)
+    if ide == "auto":
+        detected = [item["ide"] for item in _detect_ide_profiles(appdata_root) if item.get("installed")]
+        ide = detected[0] if detected else "vscode"
+    try:
+        resolved = _resolve_model_for_ide(ide=ide, profile=profile, appdata_root=appdata_root)
+    except RuntimeError as exc:
+        print(f"[model-resolve] ERROR: {exc}")
+        return 1
+    if getattr(args, "json", False):
+        print(json.dumps(resolved, indent=2, ensure_ascii=False))
+    else:
+        print(f"[model-resolve] ide={resolved['ide']} profile={resolved['profile']}")
+        print(f" provider={resolved['provider']} model={resolved['model']}")
+        print(f" auth_mode={resolved['auth_mode']} reason={resolved['reason']}")
+        if resolved.get("api_env_var"):
+            print(f" api_env={resolved['api_env_var']}")
+        evidence = resolved.get("ide_evidence", [])
+        if evidence:
+            print(" ide_evidence:")
+            for item in evidence:
+                print(f"  - {item}")
+    _log_audit("model-resolve", f"{resolved['ide']}:{resolved['profile']}:{resolved['auth_mode']}")
+    return 0 if resolved.get("auth_mode") != "unavailable" else 1
+
+
+def cmd_exec_allowlist(args: argparse.Namespace) -> int:
+    action = str(getattr(args, "action", "") or "").strip().lower()
+    bins = [str(item).strip().lower() for item in getattr(args, "bins", []) if str(item).strip()]
+    policy = _load_policy()
+    allow_cfg = policy.setdefault("execution", {}).setdefault("allowlist", {"enabled": False, "bins": []})
+    if not isinstance(allow_cfg, dict):
+        allow_cfg = {"enabled": False, "bins": []}
+        policy.setdefault("execution", {})["allowlist"] = allow_cfg
+    current = [str(item).strip().lower() for item in allow_cfg.get("bins", []) if str(item).strip()]
+    current_set = set(current)
+
+    if action == "list":
+        print(f"[exec-allowlist] enabled={_coerce_bool(allow_cfg.get('enabled', False), False)}")
+        for item in sorted(current_set):
+            print(f" - {item}")
+        return 0
+    if action == "enable":
+        allow_cfg["enabled"] = True
+    elif action == "disable":
+        allow_cfg["enabled"] = False
+    elif action == "add":
+        if not bins:
+            print("[exec-allowlist] ERROR: indica al menos un bin para add")
+            return 1
+        current_set.update(bins)
+        allow_cfg["bins"] = sorted(current_set)
+    elif action == "remove":
+        if not bins:
+            print("[exec-allowlist] ERROR: indica al menos un bin para remove")
+            return 1
+        for item in bins:
+            current_set.discard(item)
+        allow_cfg["bins"] = sorted(current_set)
+    else:
+        print("[exec-allowlist] ERROR: accion invalida (list|add|remove|enable|disable)")
+        return 1
+
+    if "bins" not in allow_cfg:
+        allow_cfg["bins"] = sorted(current_set)
+    _write_policy(policy)
+    print(f"[exec-allowlist] OK action={action} enabled={_coerce_bool(allow_cfg.get('enabled', False), False)} bins={len(allow_cfg.get('bins', []))}")
+    return 0
+
+
+def cmd_gateway_bootstrap(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    force = bool(getattr(args, "force", False))
+    ide = _normalize_ide_name(str(getattr(args, "ide", "auto") or "auto"))
+    profile = str(getattr(args, "profile", "default") or "default")
+    appdata_raw = str(getattr(args, "appdata_root", "")).strip()
+    appdata_root = Path(appdata_raw).expanduser().resolve() if appdata_raw else None
+    if ide == "auto":
+        detected = [item["ide"] for item in _detect_ide_profiles(appdata_root) if item.get("installed")]
+        ide = detected[0] if detected else "vscode"
+    model_resolution = _resolve_model_for_ide(ide=ide, profile=profile, appdata_root=appdata_root)
+    owner_phone = str(getattr(args, "owner_phone", "") or "").strip()
+    telegram_bot_token = str(getattr(args, "telegram_bot_token", "") or "").strip()
+    config_path, state_dir = _gateway_paths(project)
+    if config_path.exists() and not force:
+        print(f"[gateway-bootstrap] SKIP config ya existe: {config_path} (usa --force)")
+    else:
+        cfg = _build_gateway_config(owner_phone=owner_phone, telegram_bot_token=telegram_bot_token)
+        save_json(config_path, cfg)
+        print(f"[gateway-bootstrap] OK config -> {config_path}")
+    state_dir.mkdir(parents=True, exist_ok=True)
+    env_file = _write_gateway_env_example(project, model_resolution)
+    runtime_file = project / ".openclaw" / "free-jt7-model-resolution.json"
+    save_json(runtime_file, model_resolution)
+    runbook = project / "FREEJT7_GATEWAY.md"
+    runbook_lines = [
+        "# Free JT7 Gateway Runbook",
+        "",
+        f"- Proyecto: `{project}`",
+        f"- Config: `{config_path}`",
+        f"- Estado: `{state_dir}`",
+        f"- IDE/modelo por defecto: `{model_resolution.get('ide')}` / `{model_resolution.get('provider')}` / `{model_resolution.get('model')}`",
+        "- Retención objetivo: `30 dias`",
+        "",
+        "## Comandos rapidos",
+        "```powershell",
+        "python skills_manager.py easy-onboard --project \"D:\\ruta\\proyecto\" --interactive",
+        "python skills_manager.py credentials-wizard --project \"D:\\ruta\\proyecto\" --interactive",
+        "python skills_manager.py credentials-apply --project \"D:\\ruta\\proyecto\"",
+        "python skills_manager.py gateway-status",
+        "python skills_manager.py gateway-start --dry-run",
+        "python skills_manager.py channel-login --channel whatsapp",
+        "python skills_manager.py channel-login --channel telegram",
+        "python skills_manager.py pairing-list --channel telegram",
+        "python skills_manager.py pairing-approve --channel telegram --code <CODE>",
+        "python skills_manager.py plugin-list",
+        "python skills_manager.py plugin-validate",
+        "python skills_manager.py phase7-smoke",
+        "python skills_manager.py gateway-resilience",
+        "```",
+    ]
+    _atomic_write_text(runbook, "\n".join(runbook_lines) + "\n")
+    _log_audit("gateway-bootstrap", f"{project} ide={ide} profile={profile}")
+    print(f"[gateway-bootstrap] OK env template -> {env_file}")
+    print(f"[gateway-bootstrap] OK model resolution -> {runtime_file}")
+    print(f"[gateway-bootstrap] OK runbook -> {runbook}")
+    return 0
+
+
+def cmd_credentials_wizard(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    owner_phone = str(getattr(args, "owner_phone", "") or "").strip()
+    telegram_bot_token = str(getattr(args, "telegram_bot_token", "") or "").strip()
+    openai_api_key = str(getattr(args, "openai_api_key", "") or "").strip()
+    anthropic_api_key = str(getattr(args, "anthropic_api_key", "") or "").strip()
+    gemini_api_key = str(getattr(args, "gemini_api_key", "") or "").strip()
+    interactive = bool(getattr(args, "interactive", False))
+    if not interactive and (not owner_phone or not telegram_bot_token):
+        interactive = True
+    try:
+        values, path = _resolve_credentials(
+            project,
+            owner_phone=owner_phone,
+            telegram_bot_token=telegram_bot_token,
+            openai_api_key=openai_api_key,
+            anthropic_api_key=anthropic_api_key,
+            gemini_api_key=gemini_api_key,
+            interactive=interactive,
+        )
+    except RuntimeError as exc:
+        print(f"[credentials-wizard] ERROR: {exc}")
+        return 1
+    shown_path = _path_to_project_string(project, path)
+    print(f"[credentials-wizard] OK saved -> {shown_path}")
+    print(f"[credentials-wizard] owner={values['OWNER_PHONE']} telegram={_secret_mask(values['TELEGRAM_BOT_TOKEN'])}")
+    optional_present = [key for key in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY") if values.get(key)]
+    print(f"[credentials-wizard] optional-model-keys={','.join(optional_present) if optional_present else 'none'}")
+    return 0
+
+
+def cmd_credentials_apply(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    owner_phone = str(getattr(args, "owner_phone", "") or "").strip()
+    telegram_bot_token = str(getattr(args, "telegram_bot_token", "") or "").strip()
+    openai_api_key = str(getattr(args, "openai_api_key", "") or "").strip()
+    anthropic_api_key = str(getattr(args, "anthropic_api_key", "") or "").strip()
+    gemini_api_key = str(getattr(args, "gemini_api_key", "") or "").strip()
+    interactive = bool(getattr(args, "interactive", False))
+    if not interactive and (not owner_phone or not telegram_bot_token):
+        cred_path = _credentials_file(project)
+        existing = _load_env_file(cred_path)
+        if not existing.get("OWNER_PHONE") or not existing.get("TELEGRAM_BOT_TOKEN"):
+            interactive = True
+    try:
+        values, cred_path = _resolve_credentials(
+            project,
+            owner_phone=owner_phone,
+            telegram_bot_token=telegram_bot_token,
+            openai_api_key=openai_api_key,
+            anthropic_api_key=anthropic_api_key,
+            gemini_api_key=gemini_api_key,
+            interactive=interactive,
+        )
+    except RuntimeError as exc:
+        print(f"[credentials-apply] ERROR: {exc}")
+        return 1
+
+    ide = str(getattr(args, "ide", "auto") or "auto")
+    profile = str(getattr(args, "profile", "default") or "default")
+    appdata_root = str(getattr(args, "appdata_root", "") or "")
+    force = bool(getattr(args, "force", False))
+    bootstrap_rc = cmd_gateway_bootstrap(
+        argparse.Namespace(
+            project=str(project),
+            ide=ide,
+            profile=profile,
+            owner_phone=values["OWNER_PHONE"],
+            telegram_bot_token=values["TELEGRAM_BOT_TOKEN"],
+            appdata_root=appdata_root,
+            force=force,
+        )
+    )
+    if bootstrap_rc != 0:
+        return bootstrap_rc
+
+    config_path = _apply_credentials_to_gateway_config(project, values)
+    shown_config = _path_to_project_string(project, config_path)
+    shown_cred = _path_to_project_string(project, cred_path)
+    print(f"[credentials-apply] OK credentials -> {shown_cred}")
+    print(f"[credentials-apply] OK gateway config actualizado -> {shown_config} (gateway.mode=local)")
+    _log_audit("credentials-apply", f"{project}")
+    return 0
+
+
+def cmd_easy_onboard(args: argparse.Namespace) -> int:
+    apply_rc = cmd_credentials_apply(args)
+    if apply_rc != 0:
+        return apply_rc
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    strict = bool(getattr(args, "strict", False))
+    dry_run = bool(getattr(args, "dry_run", False))
+    timeout_ms = int(getattr(args, "timeout_ms", 120000))
+    openclaw_repo = str(getattr(args, "openclaw_repo", "") or "")
+    port = int(getattr(args, "port", 18789))
+    verbose = bool(getattr(args, "verbose", False))
+    skip_start = bool(getattr(args, "skip_start", False))
+    skip_whatsapp_login = bool(getattr(args, "skip_whatsapp_login", False))
+
+    failures: list[str] = []
+
+    if not skip_start:
+        start_rc = cmd_gateway_start(
+            argparse.Namespace(
+                project=str(project),
+                openclaw_repo=openclaw_repo,
+                dry_run=dry_run,
+                timeout_ms=timeout_ms,
+                port=port,
+                verbose=verbose,
+            )
+        )
+        if start_rc != 0:
+            failures.append("gateway-start")
+
+    if not skip_whatsapp_login:
+        wa_rc = cmd_channel_login(
+            argparse.Namespace(
+                project=str(project),
+                openclaw_repo=openclaw_repo,
+                dry_run=dry_run,
+                timeout_ms=timeout_ms,
+                channel="whatsapp",
+                account="",
+            )
+        )
+        if wa_rc != 0:
+            failures.append("channel-login:whatsapp")
+
+    status_rc = cmd_channel_status(
+        argparse.Namespace(
+            project=str(project),
+            openclaw_repo=openclaw_repo,
+            dry_run=dry_run,
+            timeout_ms=timeout_ms,
+        )
+    )
+    if status_rc != 0:
+        failures.append("channel-status")
+
+    if failures:
+        print(f"[easy-onboard] WARN: pasos con error -> {', '.join(failures)}")
+        if strict:
+            return 1
+    print("[easy-onboard] OK flujo completado")
+    return 0
+
+
+def cmd_gateway_exec(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    raw = list(getattr(args, "openclaw_args", []) or [])
+    openclaw_args = [str(item) for item in raw if str(item).strip()]
+    if openclaw_args and openclaw_args[0] == "--":
+        openclaw_args = openclaw_args[1:]
+    if not openclaw_args:
+        print("[gateway-exec] ERROR: indica argumentos para OpenClaw")
+        return 1
+    dry_run = bool(getattr(args, "dry_run", False))
+    timeout_ms = int(getattr(args, "timeout_ms", 120000))
+    openclaw_repo = str(getattr(args, "openclaw_repo", "") or "")
+    try:
+        code, out = _openclaw_run(
+            cli_args=openclaw_args,
+            project=project,
+            openclaw_repo=openclaw_repo,
+            dry_run=dry_run,
+            timeout_ms=timeout_ms,
+        )
+    except RuntimeError as exc:
+        print(f"[gateway-exec] ERROR: {exc}")
+        return 1
+    print(out)
+    return 0 if code == 0 else code
+
+
+def cmd_gateway_start(args: argparse.Namespace) -> int:
+    port = int(getattr(args, "port", 18789))
+    verbose = bool(getattr(args, "verbose", False))
+    cli_args = ["gateway", "--port", str(port)]
+    if verbose:
+        cli_args.append("--verbose")
+    setattr(args, "openclaw_args", cli_args)
+    return cmd_gateway_exec(args)
+
+
+def cmd_gateway_status(args: argparse.Namespace) -> int:
+    deep = bool(getattr(args, "deep", False))
+    cli_args = ["gateway", "status"]
+    if deep:
+        cli_args.append("--deep")
+    setattr(args, "openclaw_args", cli_args)
+    return cmd_gateway_exec(args)
+
+
+def cmd_channel_status(args: argparse.Namespace) -> int:
+    cli_args = ["channels", "status", "--probe"]
+    setattr(args, "openclaw_args", cli_args)
+    return cmd_gateway_exec(args)
+
+
+def cmd_channel_login(args: argparse.Namespace) -> int:
+    channel = str(getattr(args, "channel", "")).strip()
+    if channel not in {"whatsapp", "telegram"}:
+        print("[channel-login] ERROR: channel debe ser whatsapp|telegram")
+        return 1
+    cli_args = ["channels", "login", "--channel", channel]
+    account = str(getattr(args, "account", "") or "").strip()
+    if account:
+        cli_args.extend(["--account", account])
+    setattr(args, "openclaw_args", cli_args)
+    return cmd_gateway_exec(args)
+
+
+def cmd_pairing_list(args: argparse.Namespace) -> int:
+    channel = str(getattr(args, "channel", "")).strip()
+    if channel not in {"whatsapp", "telegram"}:
+        print("[pairing-list] ERROR: channel debe ser whatsapp|telegram")
+        return 1
+    cli_args = ["pairing", "list", channel]
+    setattr(args, "openclaw_args", cli_args)
+    return cmd_gateway_exec(args)
+
+
+def cmd_pairing_approve(args: argparse.Namespace) -> int:
+    channel = str(getattr(args, "channel", "")).strip()
+    if channel not in {"whatsapp", "telegram"}:
+        print("[pairing-approve] ERROR: channel debe ser whatsapp|telegram")
+        return 1
+    code = str(getattr(args, "code", "")).strip()
+    if not code:
+        print("[pairing-approve] ERROR: falta --code")
+        return 1
+    cli_args = ["pairing", "approve", channel, code]
+    setattr(args, "openclaw_args", cli_args)
+    return cmd_gateway_exec(args)
+
+
+def _phase7_report_path(kind: str) -> Path:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out = COPILOT_AGENT / "phase7" / f"{kind}-{stamp}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    return out
+
+
+def _run_gateway_step(
+    *,
+    name: str,
+    cli_args: list[str],
+    project: Path,
+    openclaw_repo: str,
+    dry_run: bool,
+    timeout_ms: int,
+) -> dict[str, Any]:
+    started = time.time()
+    try:
+        code, output = _openclaw_run(
+            cli_args=cli_args,
+            project=project,
+            openclaw_repo=openclaw_repo,
+            dry_run=dry_run,
+            timeout_ms=timeout_ms,
+        )
+    except RuntimeError as exc:
+        code, output = 1, str(exc)
+    elapsed_ms = int((time.time() - started) * 1000)
+    return {
+        "name": name,
+        "command": " ".join(cli_args),
+        "exit_code": int(code),
+        "ok": int(code) == 0,
+        "duration_ms": elapsed_ms,
+        "output": _redact_sensitive(str(output or ""))[:2000],
+    }
+
+
+def cmd_plugin_list(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    cfg, _ = _load_gateway_config(project)
+    plugins = cfg.get("plugins", {}) if isinstance(cfg.get("plugins", {}), dict) else {}
+    results = _collect_plugin_validation(project, cfg)
+    total = len(results)
+
+    if getattr(args, "json", False):
+        payload = {
+            "enabled": _coerce_bool(plugins.get("enabled", True), True),
+            "count": total,
+            "plugins": results,
+        }
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    print(f"[plugin-list] enabled={_coerce_bool(plugins.get('enabled', True), True)} total={total}")
+    if not results:
+        print(" - sin plugins configurados")
+        return 0
+    for item in results:
+        status = "ok" if item["valid"] else "invalid"
+        enabled = "enabled" if item["enabled"] else "disabled"
+        print(f" - {item['id']}: {enabled} source={item['source']} status={status}")
+        if item["errors"]:
+            for err in item["errors"]:
+                print(f"   error: {err}")
+    return 0
+
+
+def cmd_plugin_enable(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    plugin_id = _normalize_plugin_id(str(getattr(args, "plugin_id", "") or ""))
+    if not plugin_id:
+        print("[plugin-enable] ERROR: --id es obligatorio")
+        return 1
+    cfg, _ = _load_gateway_config(project)
+    plugins = cfg.setdefault("plugins", {})
+    if not isinstance(plugins, dict):
+        plugins = {}
+        cfg["plugins"] = plugins
+    entries = plugins.setdefault("entries", {})
+    if not isinstance(entries, dict):
+        entries = {}
+        plugins["entries"] = entries
+    load_cfg = plugins.setdefault("load", {})
+    if not isinstance(load_cfg, dict):
+        load_cfg = {}
+        plugins["load"] = load_cfg
+    load_paths = load_cfg.setdefault("paths", [])
+    if not isinstance(load_paths, list):
+        load_paths = []
+        load_cfg["paths"] = load_paths
+    metadata = _load_plugin_metadata(project)
+    plugin_meta = metadata.setdefault("plugins", {})
+    if not isinstance(plugin_meta, dict):
+        plugin_meta = {}
+        metadata["plugins"] = plugin_meta
+
+    previous_meta = plugin_meta.get(plugin_id, {})
+    if not isinstance(previous_meta, dict):
+        previous_meta = {}
+    source = str(getattr(args, "source", previous_meta.get("source", "local")) or "local").strip().lower()
+    if source not in {"local", "npm"}:
+        print("[plugin-enable] ERROR: --source debe ser local|npm")
+        return 1
+
+    meta_entry = dict(previous_meta)
+    meta_entry["source"] = source
+    path_raw = str(getattr(args, "path", "") or "").strip()
+    manifest_raw = str(getattr(args, "manifest", "") or "").strip()
+    package_raw = str(getattr(args, "package", "") or "").strip()
+
+    if source == "local":
+        selected_path = path_raw or str(meta_entry.get("path", "") or "")
+        if not selected_path:
+            print("[plugin-enable] ERROR: para source=local debes indicar --path")
+            return 1
+        resolved_path = _resolve_project_path(project, selected_path)
+        path_store = _path_to_project_string(project, resolved_path)
+        meta_entry["path"] = path_store
+
+        selected_manifest = manifest_raw or str(meta_entry.get("manifest", "") or "")
+        if selected_manifest:
+            resolved_manifest = _resolve_project_path(project, selected_manifest)
+        else:
+            resolved_manifest = _detect_plugin_manifest(resolved_path)
+        if resolved_manifest is not None:
+            meta_entry["manifest"] = _path_to_project_string(project, resolved_manifest)
+        elif "manifest" in meta_entry:
+            meta_entry.pop("manifest", None)
+        meta_entry.pop("package", None)
+        if path_store not in [str(item) for item in load_paths]:
+            load_paths.append(path_store)
+    else:
+        selected_pkg = package_raw or str(meta_entry.get("package", "") or "")
+        if not selected_pkg:
+            print("[plugin-enable] ERROR: para source=npm debes indicar --package")
+            return 1
+        meta_entry["package"] = selected_pkg
+        meta_entry.pop("path", None)
+        meta_entry.pop("manifest", None)
+
+    validation = _validate_plugin_entry(
+        project,
+        plugin_id,
+        {"enabled": True, "config": {}},
+        metadata_entry=meta_entry,
+    )
+    if not validation["valid"]:
+        print(f"[plugin-enable] ERROR plugin invalido: {plugin_id}")
+        for err in validation["errors"]:
+            print(f" - {err}")
+        return 1
+
+    plugin_entry = {"enabled": True}
+    existing_entry = entries.get(plugin_id, {})
+    if isinstance(existing_entry, dict) and isinstance(existing_entry.get("config"), dict):
+        plugin_entry["config"] = existing_entry["config"]
+    entries[plugin_id] = plugin_entry
+    meta_entry["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if validation.get("manifest_name"):
+        meta_entry["name"] = validation["manifest_name"]
+    if validation.get("manifest_version"):
+        meta_entry["version"] = validation["manifest_version"]
+    plugin_meta[plugin_id] = meta_entry
+    plugins["enabled"] = True
+    config_path = _save_gateway_config(project, cfg)
+    meta_path = _save_plugin_metadata(project, metadata)
+    _log_audit("plugin-enable", f"{plugin_id} project={project}")
+    print(f"[plugin-enable] OK {plugin_id} -> {config_path}")
+    print(f"[plugin-enable] metadata -> {meta_path}")
+    return 0
+
+
+def cmd_plugin_disable(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    plugin_id = _normalize_plugin_id(str(getattr(args, "plugin_id", "") or ""))
+    if not plugin_id:
+        print("[plugin-disable] ERROR: --id es obligatorio")
+        return 1
+    cfg, _ = _load_gateway_config(project)
+    plugins = cfg.get("plugins", {}) if isinstance(cfg.get("plugins", {}), dict) else {}
+    entries = plugins.get("entries", {}) if isinstance(plugins.get("entries", {}), dict) else {}
+    metadata = _load_plugin_metadata(project).get("plugins", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    if plugin_id not in entries and plugin_id not in metadata:
+        print(f"[plugin-disable] ERROR: plugin no encontrado: {plugin_id}")
+        return 1
+    existing = entries.get(plugin_id, {})
+    if isinstance(existing, dict):
+        config = existing.get("config", {}) if isinstance(existing.get("config"), dict) else {}
+        entries[plugin_id] = {"enabled": False, "config": config} if config else {"enabled": False}
+    else:
+        entries[plugin_id] = {"enabled": False}
+    config_path = _save_gateway_config(project, cfg)
+    _log_audit("plugin-disable", f"{plugin_id} project={project}")
+    print(f"[plugin-disable] OK {plugin_id} -> {config_path}")
+    return 0
+
+
+def cmd_plugin_validate(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    plugin_id = _normalize_plugin_id(str(getattr(args, "plugin_id", "") or ""))
+    cfg, _ = _load_gateway_config(project)
+    results = _collect_plugin_validation(project, cfg, plugin_id=plugin_id)
+    if plugin_id and not results:
+        print(f"[plugin-validate] ERROR: plugin no encontrado: {plugin_id}")
+        return 1
+    if getattr(args, "json", False):
+        print(json.dumps(results, indent=2, ensure_ascii=False))
+    else:
+        print(f"[plugin-validate] plugins={len(results)}")
+        for item in results:
+            status = "OK" if item["valid"] else "INVALID"
+            print(f" - {item['id']}: {status} source={item['source']} enabled={item['enabled']}")
+            for warn in item["warnings"]:
+                print(f"   warn: {warn}")
+            for err in item["errors"]:
+                print(f"   error: {err}")
+    all_valid = all(item["valid"] for item in results)
+    return 0 if all_valid else 1
+
+
+def cmd_phase7_smoke(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    live = bool(getattr(args, "live", False))
+    dry_run = not live
+    openclaw_repo = str(getattr(args, "openclaw_repo", "") or "")
+    timeout_ms = int(getattr(args, "timeout_ms", 120000))
+    approve_code = str(getattr(args, "approve_code", "DEMO-CODE") or "DEMO-CODE")
+    ide_raw = str(getattr(args, "ide", "auto") or "auto")
+    profile = str(getattr(args, "profile", "default") or "default")
+    appdata_raw = str(getattr(args, "appdata_root", "")).strip()
+    appdata_root = Path(appdata_raw).expanduser().resolve() if appdata_raw else None
+
+    ide = _normalize_ide_name(ide_raw)
+    if ide == "auto":
+        detected = [item["ide"] for item in _detect_ide_profiles(appdata_root) if item.get("installed")]
+        ide = detected[0] if detected else "vscode"
+    model_resolution = _resolve_model_for_ide(ide=ide, profile=profile, appdata_root=appdata_root)
+
+    policy_errors = _validate_policy(_load_policy())
+    gateway_cfg, _ = _load_gateway_config(project)
+    plugin_checks = _collect_plugin_validation(project, gateway_cfg)
+    plugin_failures = [item for item in plugin_checks if item["enabled"] and not item["valid"]]
+
+    step_specs = [
+        ("gateway-status", ["gateway", "status"]),
+        ("channel-status", ["channels", "status", "--probe"]),
+        ("login-whatsapp", ["channels", "login", "--channel", "whatsapp"]),
+        ("login-telegram", ["channels", "login", "--channel", "telegram"]),
+        ("pairing-list-telegram", ["pairing", "list", "telegram"]),
+        ("pairing-approve-telegram", ["pairing", "approve", "telegram", approve_code]),
+    ]
+    steps: list[dict[str, Any]] = []
+    for name, cmd in step_specs:
+        steps.append(
+            _run_gateway_step(
+                name=name,
+                cli_args=cmd,
+                project=project,
+                openclaw_repo=openclaw_repo,
+                dry_run=dry_run,
+                timeout_ms=timeout_ms,
+            )
+        )
+
+    steps_ok = all(item["ok"] for item in steps)
+    model_ok = model_resolution.get("auth_mode") != "unavailable"
+    success = steps_ok and model_ok and not policy_errors and not plugin_failures
+
+    report = {
+        "kind": "phase7-smoke",
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "project": str(project),
+        "dry_run": dry_run,
+        "openclaw_repo": openclaw_repo,
+        "model_resolution": model_resolution,
+        "policy_errors": policy_errors,
+        "plugins": plugin_checks,
+        "steps": steps,
+        "summary": {
+            "steps_total": len(steps),
+            "steps_ok": sum(1 for item in steps if item["ok"]),
+            "model_ok": model_ok,
+            "policy_ok": len(policy_errors) == 0,
+            "plugins_ok": len(plugin_failures) == 0,
+            "success": success,
+        },
+    }
+    report_path = _phase7_report_path("smoke")
+    save_json(report_path, report)
+    print(
+        f"[phase7-smoke] success={success} steps={report['summary']['steps_ok']}/{report['summary']['steps_total']} "
+        f"model_ok={model_ok} policy_errors={len(policy_errors)} plugin_failures={len(plugin_failures)}"
+    )
+    print(f"[phase7-smoke] report -> {report_path}")
+    return 0 if success else 1
+
+
+def cmd_gateway_resilience(args: argparse.Namespace) -> int:
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    attempts = max(1, int(getattr(args, "attempts", 5)))
+    interval_ms = max(0, int(getattr(args, "interval_ms", 1000)))
+    timeout_ms = int(getattr(args, "timeout_ms", 120000))
+    min_success_ratio = max(0.0, min(1.0, float(getattr(args, "min_success_ratio", 0.8))))
+    live = bool(getattr(args, "live", False))
+    dry_run = not live
+    openclaw_repo = str(getattr(args, "openclaw_repo", "") or "")
+
+    probes: list[dict[str, Any]] = []
+    for i in range(attempts):
+        probes.append(
+            _run_gateway_step(
+                name=f"probe-{i + 1}",
+                cli_args=["gateway", "status"],
+                project=project,
+                openclaw_repo=openclaw_repo,
+                dry_run=dry_run,
+                timeout_ms=timeout_ms,
+            )
+        )
+        if i < attempts - 1 and interval_ms > 0:
+            time.sleep(interval_ms / 1000.0)
+
+    ok_count = sum(1 for item in probes if item["ok"])
+    ratio = ok_count / attempts
+    success = ratio >= min_success_ratio
+    report = {
+        "kind": "gateway-resilience",
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "project": str(project),
+        "dry_run": dry_run,
+        "attempts": attempts,
+        "min_success_ratio": min_success_ratio,
+        "success_ratio": ratio,
+        "success": success,
+        "probes": probes,
+    }
+    report_path = _phase7_report_path("resilience")
+    save_json(report_path, report)
+    print(
+        f"[gateway-resilience] success={success} probes_ok={ok_count}/{attempts} "
+        f"ratio={ratio:.2f} min={min_success_ratio:.2f}"
+    )
+    print(f"[gateway-resilience] report -> {report_path}")
+    return 0 if success else 1
 
 
 def cmd_install(args: argparse.Namespace) -> int:
@@ -2045,6 +3924,9 @@ def cmd_install(args: argparse.Namespace) -> int:
                 shutil.copytree(instr_src, instr_target)
                 print(f"[install] COPY .github/instructions/ -> copiado")
 
+    model_routing_target = _ensure_target_model_routing(target, force=getattr(args, "force", False))
+    print(f"[install] OK model routing -> {model_routing_target}")
+
     for ide in ide_targets:
         notes = _install_workspace_ide_adapter(target, ide, force=getattr(args, "force", False))
         if notes:
@@ -2096,6 +3978,89 @@ def cmd_rollout_mode(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_host_mode(args: argparse.Namespace) -> int:
+    mode = str(getattr(args, "mode", "status") or "status").strip().lower()
+    project = _resolve_target_project(str(getattr(args, "project", "") or ""))
+    policy = _load_policy()
+    gateway_cfg, _ = _load_gateway_config(project)
+
+    tools_cfg = gateway_cfg.get("tools", {}) if isinstance(gateway_cfg.get("tools", {}), dict) else {}
+    exec_cfg = tools_cfg.get("exec", {}) if isinstance(tools_cfg.get("exec", {}), dict) else {}
+    risk_cfg = policy.get("risk", {}) if isinstance(policy.get("risk", {}), dict) else {}
+    allow_cfg = policy.get("execution", {}).get("allowlist", {}) if isinstance(policy.get("execution", {}), dict) else {}
+
+    if mode in {"status", "show"}:
+        payload = {
+            "mode": "full" if _coerce_bool(risk_cfg.get("allow_high_risk_without_approval"), False) and _coerce_bool(risk_cfg.get("allow_destructive"), False) else "safe",
+            "policy": {
+                "autonomy_mode": str(policy.get("autonomy", {}).get("mode", "autonomous")),
+                "allow_high_risk_without_approval": _coerce_bool(risk_cfg.get("allow_high_risk_without_approval"), False),
+                "allow_destructive": _coerce_bool(risk_cfg.get("allow_destructive"), False),
+                "allowlist_enabled": _coerce_bool(allow_cfg.get("enabled"), False),
+            },
+            "gateway_exec": {
+                "host": str(exec_cfg.get("host", "sandbox")),
+                "security": str(exec_cfg.get("security", "allowlist")),
+                "ask": str(exec_cfg.get("ask", "on-miss")),
+            },
+            "project": str(project),
+        }
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    if mode not in {"safe", "full"}:
+        print("[host-mode] ERROR: modo invalido (status|safe|full)")
+        return 1
+
+    risk = policy.setdefault("risk", {})
+    if not isinstance(risk, dict):
+        risk = {}
+        policy["risk"] = risk
+    execution = policy.setdefault("execution", {})
+    if not isinstance(execution, dict):
+        execution = {}
+        policy["execution"] = execution
+    allowlist = execution.setdefault("allowlist", {})
+    if not isinstance(allowlist, dict):
+        allowlist = {}
+        execution["allowlist"] = allowlist
+
+    tools = gateway_cfg.setdefault("tools", {})
+    if not isinstance(tools, dict):
+        tools = {}
+        gateway_cfg["tools"] = tools
+    gw_exec = tools.setdefault("exec", {})
+    if not isinstance(gw_exec, dict):
+        gw_exec = {}
+        tools["exec"] = gw_exec
+
+    if mode == "full":
+        policy.setdefault("autonomy", {})["mode"] = "autonomous"
+        risk["allow_high_risk_without_approval"] = True
+        risk["allow_destructive"] = True
+        allowlist["enabled"] = False
+        gw_exec["host"] = "gateway"
+        gw_exec["security"] = "full"
+        gw_exec["ask"] = "off"
+    else:
+        policy.setdefault("autonomy", {})["mode"] = "autonomous"
+        risk["allow_high_risk_without_approval"] = False
+        risk["allow_destructive"] = False
+        allowlist["enabled"] = True
+        if not isinstance(allowlist.get("bins"), list) or not allowlist.get("bins"):
+            allowlist["bins"] = list(DEFAULT_POLICY["execution"]["allowlist"]["bins"])
+        gw_exec["host"] = "gateway"
+        gw_exec["security"] = "allowlist"
+        gw_exec["ask"] = "on-miss"
+
+    _write_policy(policy)
+    _save_gateway_config(project, gateway_cfg)
+    _log_audit("host-mode", f"{mode} project={project}")
+    print(f"[host-mode] OK mode={mode}")
+    print("[host-mode] Reinicia gateway para aplicar tools.exec: python skills_manager.py gateway-start --project \"<ruta>\"")
+    return 0
+
+
 def _create_run_record(run_id: str, payload: dict[str, Any]) -> None:
     run_file, _ = _run_paths(run_id)
     save_json(run_file, payload)
@@ -2128,6 +4093,14 @@ def cmd_task_start(args: argparse.Namespace) -> int:
         return 1
     run_id = getattr(args, "run_id", None) or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     scope = str(getattr(args, "scope", "workspace"))
+    ide = _normalize_ide_name(str(getattr(args, "ide", "auto") or "auto"))
+    profile = str(getattr(args, "profile", "default") or "default")
+    appdata_raw = str(getattr(args, "appdata_root", "")).strip()
+    appdata_root = Path(appdata_raw).expanduser().resolve() if appdata_raw else None
+    if ide == "auto":
+        detected = [item["ide"] for item in _detect_ide_profiles(appdata_root) if item.get("installed")]
+        ide = detected[0] if detected else "vscode"
+    model_resolution = _resolve_model_for_ide(ide=ide, profile=profile, appdata_root=appdata_root)
     risk_level = _classify_risk(goal, policy)
     skills_selected = _resolve_skills_for_query(goal, int(policy.get("skills", {}).get("max_composed", 3)))
 
@@ -2144,8 +4117,10 @@ def cmd_task_start(args: argparse.Namespace) -> int:
         "steps": [],
         "summary": "",
         "rollout_mode": _load_rollout_mode(policy),
+        "model_resolution": model_resolution,
     }
     _create_run_record(run_id, run)
+    _upsert_task_registry(run)
     _append_run_event(run_id, {
         "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "step_id": "intake",
@@ -2156,7 +4131,10 @@ def cmd_task_start(args: argparse.Namespace) -> int:
         "retry_index": 0,
         "evidence_ref": "",
     })
-    print(f"[task-start] OK run_id={run_id} risk={risk_level} mode={run['rollout_mode']}")
+    print(
+        f"[task-start] OK run_id={run_id} risk={risk_level} mode={run['rollout_mode']} "
+        f"model={model_resolution['provider']}/{model_resolution['model']} auth={model_resolution['auth_mode']}"
+    )
     return 0
 
 
@@ -2201,8 +4179,11 @@ def cmd_task_step(args: argparse.Namespace) -> int:
     normalized = _normalize_shell_command(command, strategy)
     risk_level = _classify_risk(command, policy)
     destructive = _is_destructive(command, policy)
+    risk_cfg = policy.get("risk", {}) if isinstance(policy.get("risk", {}), dict) else {}
+    policy_allow_destructive = _coerce_bool(risk_cfg.get("allow_destructive"), False)
+    policy_auto_high_risk = _coerce_bool(risk_cfg.get("allow_high_risk_without_approval"), False)
 
-    if destructive and not getattr(args, "allow_destructive", False):
+    if destructive and not (getattr(args, "allow_destructive", False) or policy_allow_destructive):
         step_result = {
             "step_id": f"step-{len(run.get('steps', [])) + 1}",
             "action": "blocked-destructive",
@@ -2217,6 +4198,7 @@ def cmd_task_step(args: argparse.Namespace) -> int:
         run.setdefault("steps", []).append(step_result)
         run["status"] = "blocked"
         _create_run_record(run_id, run)
+        _upsert_task_registry(run)
         _append_run_event(run_id, {
             "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "step_id": step_result["step_id"],
@@ -2230,8 +4212,38 @@ def cmd_task_step(args: argparse.Namespace) -> int:
         print("[task-step] BLOCKED destructive command")
         return 1
 
-    if risk_level == "high" and not getattr(args, "approve_high_risk", False):
+    if risk_level == "high" and not (getattr(args, "approve_high_risk", False) or policy_auto_high_risk):
         print("[task-step] BLOCKED high-risk requires --approve-high-risk")
+        return 1
+
+    allowed, primary_bin = _command_allowed_by_policy(normalized, policy)
+    if not allowed:
+        step_result = {
+            "step_id": f"step-{len(run.get('steps', [])) + 1}",
+            "action": "blocked-allowlist",
+            "command": command,
+            "normalized_command": normalized,
+            "result": f"Binario no permitido por allowlist: {primary_bin or '<unknown>'}",
+            "exit_code": 2,
+            "retry_index": 0,
+            "risk_level": risk_level,
+            "mode": mode,
+        }
+        run.setdefault("steps", []).append(step_result)
+        run["status"] = "blocked"
+        _create_run_record(run_id, run)
+        _upsert_task_registry(run)
+        _append_run_event(run_id, {
+            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "step_id": step_result["step_id"],
+            "action": step_result["action"],
+            "command": command,
+            "result": step_result["result"],
+            "exit_code": 2,
+            "retry_index": 0,
+            "evidence_ref": "",
+        })
+        print(f"[task-step] BLOCKED allowlist bin={primary_bin or 'unknown'}")
         return 1
 
     max_attempts = int(policy.get("execution", {}).get("retry", {}).get("max_attempts", 3))
@@ -2279,6 +4291,7 @@ def cmd_task_step(args: argparse.Namespace) -> int:
     if exit_code != 0:
         run["status"] = "failed"
     _create_run_record(run_id, run)
+    _upsert_task_registry(run)
     print(f"[task-step] run_id={run_id} exit={exit_code} retries={used_attempt}")
     return 0 if exit_code == 0 else 1
 
@@ -2300,6 +4313,8 @@ def cmd_task_close(args: argparse.Namespace) -> int:
         run["quality_gate"]["passed"] = False
         run["summary"] = "Bloqueado por quality gate: existen steps fallidos o sin evidencia."
         _create_run_record(run_id, run)
+        _upsert_task_registry(run)
+        _update_resume("task-close", f"{run_id}:blocked")
         print("[task-close] BLOCKED quality gate")
         return 1
     run["quality_gate"]["passed"] = passed
@@ -2307,6 +4322,7 @@ def cmd_task_close(args: argparse.Namespace) -> int:
     run["ended_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     run["summary"] = str(getattr(args, "summary", "")).strip() or f"Run finalizado con {len(steps)} steps"
     _create_run_record(run_id, run)
+    _upsert_task_registry(run)
     _append_run_event(run_id, {
         "ts": run["ended_at"],
         "step_id": "close",
@@ -2318,6 +4334,7 @@ def cmd_task_close(args: argparse.Namespace) -> int:
         "evidence_ref": "",
     })
     _log_audit("task-close", f"{run_id}:{run['status']}")
+    _update_resume("task-close", f"{run_id}:{run['status']}")
     print(f"[task-close] OK run_id={run_id} status={run['status']}")
     return 0 if run["status"] == "succeeded" else 1
 
@@ -2332,6 +4349,9 @@ def cmd_task_run(args: argparse.Namespace) -> int:
         goal=goal,
         scope=getattr(args, "scope", "workspace"),
         run_id=getattr(args, "run_id", None),
+        ide=getattr(args, "ide", "auto"),
+        profile=getattr(args, "profile", "default"),
+        appdata_root=getattr(args, "appdata_root", ""),
     ))
     if start_rc != 0:
         return start_rc
@@ -2359,6 +4379,83 @@ def cmd_task_run(args: argparse.Namespace) -> int:
 
     close_rc = cmd_task_close(argparse.Namespace(run_id=run_id, summary=getattr(args, "summary", "")))
     return close_rc if rc == 0 else rc
+
+
+def cmd_task_list(args: argparse.Namespace) -> int:
+    status_filter = str(getattr(args, "status", "") or "").strip().lower()
+    limit = max(1, int(getattr(args, "limit", 20)))
+    payload: list[dict[str, Any]] = []
+    for path in sorted(_runs_dir().glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        run = load_json(path, {})
+        if not isinstance(run, dict):
+            continue
+        status = str(run.get("status", "unknown")).lower()
+        if status_filter and status != status_filter:
+            continue
+        payload.append({
+            "run_id": str(run.get("run_id", path.stem)),
+            "status": status,
+            "risk_level": str(run.get("risk_level", "low")),
+            "goal": str(run.get("user_goal", "")),
+            "started_at": str(run.get("started_at", "")),
+            "ended_at": str(run.get("ended_at", "")),
+            "steps": len(run.get("steps", []) if isinstance(run.get("steps", []), list) else []),
+            "quality_gate_passed": bool(run.get("quality_gate", {}).get("passed", False)),
+        })
+        if len(payload) >= limit:
+            break
+    if getattr(args, "json", False):
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+    print(f"[task-list] total={len(payload)}")
+    for item in payload:
+        print(
+            f" - {item['run_id']} status={item['status']} risk={item['risk_level']} "
+            f"steps={item['steps']} qg={item['quality_gate_passed']} goal={item['goal'][:80]}"
+        )
+    return 0
+
+
+def cmd_task_checklist(args: argparse.Namespace) -> int:
+    run_id = str(getattr(args, "run_id", "")).strip()
+    if not run_id:
+        print("[task-checklist] ERROR: especifica --run-id")
+        return 1
+    run = _load_run_record(run_id)
+    if not run:
+        print(f"[task-checklist] ERROR: run no encontrado: {run_id}")
+        return 1
+    steps = run.get("steps", []) if isinstance(run.get("steps", []), list) else []
+    items: list[dict[str, Any]] = []
+    for step in steps:
+        code = int(step.get("exit_code", 1))
+        items.append({
+            "step_id": str(step.get("step_id", "")),
+            "ok": code == 0,
+            "exit_code": code,
+            "action": str(step.get("action", "")),
+            "command": str(step.get("command", "")),
+        })
+    payload = {
+        "run_id": run_id,
+        "status": str(run.get("status", "unknown")),
+        "quality_gate_required": bool(run.get("quality_gate", {}).get("required", True)),
+        "quality_gate_passed": bool(run.get("quality_gate", {}).get("passed", False)),
+        "steps_total": len(items),
+        "steps_ok": sum(1 for item in items if item["ok"]),
+        "items": items,
+    }
+    if getattr(args, "json", False):
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+    print(
+        f"[task-checklist] run_id={run_id} status={payload['status']} "
+        f"quality_gate={payload['quality_gate_passed']} steps={payload['steps_ok']}/{payload['steps_total']}"
+    )
+    for item in items:
+        mark = "x" if item["ok"] else " "
+        print(f" [{mark}] {item['step_id']} exit={item['exit_code']} action={item['action']} cmd={item['command'][:80]}")
+    return 0
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
@@ -2394,8 +4491,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
     if not COPILOT_INSTR.exists():
         errors.append("falta .github/copilot-instructions.md")
-    if not AGENT_FILE.exists():
-        errors.append("falta .github/agents/freejt7.agent.md")
+    if not _agent_file_path().exists():
+        errors.append("falta .github/agents/free-jt7.agent.md")
     if not GH_INSTR_DIR.exists():
         errors.append("falta .github/instructions/")
 
@@ -2596,6 +4693,9 @@ def main() -> int:
     sub.add_parser("policy-validate", help="Validar polÃ­tica operativa Free JT7")
     p_rm = sub.add_parser("rollout-mode", help="Ver o establecer modo rollout")
     p_rm.add_argument("mode", nargs="?", choices=["shadow", "assist", "autonomous"], help="Nuevo modo")
+    p_hm = sub.add_parser("host-mode", help="Ver o establecer modo host de ejecucion")
+    p_hm.add_argument("mode", nargs="?", choices=["status", "safe", "full"], default="status", help="Modo host")
+    p_hm.add_argument("--project", default="", help="Ruta del proyecto objetivo")
 
     p_sr = sub.add_parser("skill-resolve", help="Resolver skills efÃ­meras para una tarea")
     p_sr.add_argument("--query", required=True, help="Consulta de tarea")
@@ -2606,6 +4706,9 @@ def main() -> int:
     p_ts.add_argument("--goal", required=True, help="Objetivo de la tarea")
     p_ts.add_argument("--scope", default="workspace", help="Ãmbito de ejecuciÃ³n")
     p_ts.add_argument("--run-id", default="", help="ID opcional de run")
+    p_ts.add_argument("--ide", default="auto", help="IDE origen para resolver modelo")
+    p_ts.add_argument("--profile", default="default", help="Perfil de usuario del IDE")
+    p_ts.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
 
     p_tstep = sub.add_parser("task-step", help="Ejecutar un step sobre un run")
     p_tstep.add_argument("--run-id", required=True, help="ID de run")
@@ -2617,6 +4720,15 @@ def main() -> int:
     p_tc.add_argument("--run-id", required=True, help="ID de run")
     p_tc.add_argument("--summary", default="", help="Resumen final")
 
+    p_tlist = sub.add_parser("task-list", help="Listar runs/tareas recientes")
+    p_tlist.add_argument("--status", default="", choices=["", "planned", "running", "succeeded", "failed", "blocked"], help="Filtrar por estado")
+    p_tlist.add_argument("--limit", type=int, default=20, help="Maximo de runs")
+    p_tlist.add_argument("--json", action="store_true", help="Salida JSON")
+
+    p_tcheck = sub.add_parser("task-checklist", help="Ver checklist de ejecucion por run")
+    p_tcheck.add_argument("--run-id", required=True, help="ID de run")
+    p_tcheck.add_argument("--json", action="store_true", help="Salida JSON")
+
     p_tr = sub.add_parser("task-run", help="Orquestar tarea completa end-to-end")
     p_tr.add_argument("--goal", required=True, help="Objetivo de la tarea")
     p_tr.add_argument("--scope", default="workspace", help="Ãmbito de ejecuciÃ³n")
@@ -2625,6 +4737,9 @@ def main() -> int:
     p_tr.add_argument("--approve-high-risk", action="store_true", help="Aprobar high-risk")
     p_tr.add_argument("--allow-destructive", action="store_true", help="Permitir comandos destructivos")
     p_tr.add_argument("--summary", default="", help="Resumen final")
+    p_tr.add_argument("--ide", default="auto", help="IDE origen para resolver modelo")
+    p_tr.add_argument("--profile", default="default", help="Perfil de usuario del IDE")
+    p_tr.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
 
     # set-project
     p_sp = sub.add_parser("set-project", help="Establecer el proyecto activo (donde se aplican los cambios)")
@@ -2635,6 +4750,166 @@ def main() -> int:
     p_ide = sub.add_parser("ide-detect", help="Detectar perfiles de IDE compatibles")
     p_ide.add_argument("--json", action="store_true", help="Salida JSON")
     p_ide.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+
+    # model routing
+    p_minit = sub.add_parser("model-profiles-init", help="Inicializar ruteo de modelos por IDE/perfil")
+    p_minit.add_argument("--force", "-f", action="store_true", help="Sobrescribir si ya existe")
+    p_mresolve = sub.add_parser("model-resolve", help="Resolver proveedor/modelo por IDE y perfil")
+    p_mresolve.add_argument("--ide", default="auto", help="IDE objetivo o auto")
+    p_mresolve.add_argument("--profile", default="default", help="Perfil de usuario del IDE")
+    p_mresolve.add_argument("--json", action="store_true", help="Salida JSON")
+    p_mresolve.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+
+    # exec allowlist
+    p_allow = sub.add_parser("exec-allowlist", help="Gestionar allowlist de binarios para task-step")
+    p_allow.add_argument("action", choices=["list", "add", "remove", "enable", "disable"], help="Accion")
+    p_allow.add_argument("bins", nargs="*", help="Binarios para add/remove")
+
+    # gateway/bootstrap runtime
+    p_gw_boot = sub.add_parser("gateway-bootstrap", help="Preparar runtime OpenClaw para Free JT7")
+    p_gw_boot.add_argument("--project", default="", help="Ruta del proyecto objetivo (usa active-project si se omite)")
+    p_gw_boot.add_argument("--ide", default="auto", help="IDE para resolver modelo")
+    p_gw_boot.add_argument("--profile", default="default", help="Perfil de usuario del IDE")
+    p_gw_boot.add_argument("--owner-phone", default="", help="Telefono E.164 permitido por defecto (WhatsApp)")
+    p_gw_boot.add_argument("--telegram-bot-token", default="", help="Token Telegram opcional")
+    p_gw_boot.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+    p_gw_boot.add_argument("--force", "-f", action="store_true", help="Sobrescribir config existente")
+
+    p_cred_wizard = sub.add_parser("credentials-wizard", help="Asistente simple para guardar credenciales")
+    p_cred_wizard.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_cred_wizard.add_argument("--owner-phone", default="", help="Telefono owner WhatsApp en formato +E164")
+    p_cred_wizard.add_argument("--telegram-bot-token", default="", help="Token bot Telegram")
+    p_cred_wizard.add_argument("--openai-api-key", default="", help="API key opcional OpenAI")
+    p_cred_wizard.add_argument("--anthropic-api-key", default="", help="API key opcional Anthropic")
+    p_cred_wizard.add_argument("--gemini-api-key", default="", help="API key opcional Gemini")
+    p_cred_wizard.add_argument("--interactive", action="store_true", help="Solicitar datos por consola")
+
+    p_cred_apply = sub.add_parser("credentials-apply", help="Aplicar credenciales al runtime del gateway")
+    p_cred_apply.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_cred_apply.add_argument("--owner-phone", default="", help="Telefono owner WhatsApp en formato +E164")
+    p_cred_apply.add_argument("--telegram-bot-token", default="", help="Token bot Telegram")
+    p_cred_apply.add_argument("--openai-api-key", default="", help="API key opcional OpenAI")
+    p_cred_apply.add_argument("--anthropic-api-key", default="", help="API key opcional Anthropic")
+    p_cred_apply.add_argument("--gemini-api-key", default="", help="API key opcional Gemini")
+    p_cred_apply.add_argument("--interactive", action="store_true", help="Solicitar datos por consola")
+    p_cred_apply.add_argument("--ide", default="auto", help="IDE para resolver modelo")
+    p_cred_apply.add_argument("--profile", default="default", help="Perfil de usuario del IDE")
+    p_cred_apply.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+    p_cred_apply.add_argument("--force", "-f", action="store_true", help="Sobrescribir config existente")
+
+    p_easy = sub.add_parser("easy-onboard", help="Flujo 1-comando: credenciales + activacion gateway + estado")
+    p_easy.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_easy.add_argument("--owner-phone", default="", help="Telefono owner WhatsApp en formato +E164")
+    p_easy.add_argument("--telegram-bot-token", default="", help="Token bot Telegram")
+    p_easy.add_argument("--openai-api-key", default="", help="API key opcional OpenAI")
+    p_easy.add_argument("--anthropic-api-key", default="", help="API key opcional Anthropic")
+    p_easy.add_argument("--gemini-api-key", default="", help="API key opcional Gemini")
+    p_easy.add_argument("--interactive", action="store_true", help="Solicitar datos por consola")
+    p_easy.add_argument("--ide", default="auto", help="IDE para resolver modelo")
+    p_easy.add_argument("--profile", default="default", help="Perfil de usuario del IDE")
+    p_easy.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+    p_easy.add_argument("--force", "-f", action="store_true", help="Sobrescribir config existente")
+    p_easy.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_easy.add_argument("--dry-run", action="store_true", help="Solo imprime comandos OpenClaw")
+    p_easy.add_argument("--timeout-ms", type=int, default=120000, help="Timeout pasos OpenClaw")
+    p_easy.add_argument("--port", type=int, default=18789, help="Puerto gateway")
+    p_easy.add_argument("--verbose", action="store_true", help="Iniciar gateway en modo verbose")
+    p_easy.add_argument("--skip-start", action="store_true", help="No iniciar gateway")
+    p_easy.add_argument("--skip-whatsapp-login", action="store_true", help="No ejecutar login WhatsApp")
+    p_easy.add_argument("--strict", action="store_true", help="Fallar si algun paso operativo falla")
+
+    p_gw_exec = sub.add_parser("gateway-exec", help="Ejecutar comando OpenClaw usando config del proyecto")
+    p_gw_exec.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_gw_exec.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw (si no usa OPEN CLAW local)")
+    p_gw_exec.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_gw_exec.add_argument("--timeout-ms", type=int, default=120000, help="Timeout ejecucion")
+    p_gw_exec.add_argument("openclaw_args", nargs=argparse.REMAINDER, help="Argumentos OpenClaw")
+
+    p_gw_start = sub.add_parser("gateway-start", help="Iniciar OpenClaw gateway")
+    p_gw_start.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_gw_start.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_gw_start.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_gw_start.add_argument("--timeout-ms", type=int, default=20000, help="Timeout ejecucion")
+    p_gw_start.add_argument("--port", type=int, default=18789, help="Puerto gateway")
+    p_gw_start.add_argument("--verbose", action="store_true", help="Modo verbose")
+
+    p_gw_status = sub.add_parser("gateway-status", help="Estado del gateway")
+    p_gw_status.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_gw_status.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_gw_status.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_gw_status.add_argument("--timeout-ms", type=int, default=120000, help="Timeout ejecucion")
+    p_gw_status.add_argument("--deep", action="store_true", help="Estado detallado")
+
+    p_ch_status = sub.add_parser("channel-status", help="Estado de canales WhatsApp/Telegram")
+    p_ch_status.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_ch_status.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_ch_status.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_ch_status.add_argument("--timeout-ms", type=int, default=120000, help="Timeout ejecucion")
+
+    p_ch_login = sub.add_parser("channel-login", help="Login de canal (WhatsApp/Telegram)")
+    p_ch_login.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_ch_login.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_ch_login.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_ch_login.add_argument("--timeout-ms", type=int, default=120000, help="Timeout ejecucion")
+    p_ch_login.add_argument("--channel", required=True, choices=["whatsapp", "telegram"], help="Canal")
+    p_ch_login.add_argument("--account", default="", help="Cuenta opcional")
+
+    p_pair_list = sub.add_parser("pairing-list", help="Listar solicitudes de pairing")
+    p_pair_list.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_pair_list.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_pair_list.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_pair_list.add_argument("--timeout-ms", type=int, default=120000, help="Timeout ejecucion")
+    p_pair_list.add_argument("--channel", required=True, choices=["whatsapp", "telegram"], help="Canal")
+
+    p_pair_approve = sub.add_parser("pairing-approve", help="Aprobar pairing de canal")
+    p_pair_approve.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_pair_approve.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_pair_approve.add_argument("--dry-run", action="store_true", help="Solo imprime comando")
+    p_pair_approve.add_argument("--timeout-ms", type=int, default=120000, help="Timeout ejecucion")
+    p_pair_approve.add_argument("--channel", required=True, choices=["whatsapp", "telegram"], help="Canal")
+    p_pair_approve.add_argument("--code", required=True, help="Codigo pairing")
+
+    # plugins (fase 6)
+    p_plist = sub.add_parser("plugin-list", help="Listar plugins configurados")
+    p_plist.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_plist.add_argument("--json", action="store_true", help="Salida JSON")
+
+    p_penable = sub.add_parser("plugin-enable", help="Habilitar plugin en runtime")
+    p_penable.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_penable.add_argument("--id", dest="plugin_id", required=True, help="ID del plugin")
+    p_penable.add_argument("--source", default="local", choices=["local", "npm"], help="Origen del plugin")
+    p_penable.add_argument("--path", default="", help="Ruta plugin (dir/file) para source=local")
+    p_penable.add_argument("--manifest", default="", help="Ruta manifiesto plugin JSON")
+    p_penable.add_argument("--package", default="", help="Paquete npm para source=npm")
+
+    p_pdisable = sub.add_parser("plugin-disable", help="Deshabilitar plugin en runtime")
+    p_pdisable.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_pdisable.add_argument("--id", dest="plugin_id", required=True, help="ID del plugin")
+
+    p_pvalidate = sub.add_parser("plugin-validate", help="Validar plugins del runtime")
+    p_pvalidate.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_pvalidate.add_argument("--id", dest="plugin_id", default="", help="ID plugin opcional")
+    p_pvalidate.add_argument("--json", action="store_true", help="Salida JSON")
+
+    # fase 7: smoke e2e + resiliencia
+    p_smoke = sub.add_parser("phase7-smoke", help="Smoke E2E de gateway/canales/pairing")
+    p_smoke.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_smoke.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_smoke.add_argument("--timeout-ms", type=int, default=120000, help="Timeout por paso")
+    p_smoke.add_argument("--approve-code", default="DEMO-CODE", help="Codigo pairing demo")
+    p_smoke.add_argument("--ide", default="auto", help="IDE para resolucion de modelo")
+    p_smoke.add_argument("--profile", default="default", help="Perfil de usuario IDE")
+    p_smoke.add_argument("--appdata-root", default="", help=argparse.SUPPRESS)
+    p_smoke.add_argument("--live", action="store_true", help="Ejecutar real (por defecto dry-run)")
+
+    p_res = sub.add_parser("gateway-resilience", help="Probar resiliencia del gateway")
+    p_res.add_argument("--project", default="", help="Ruta del proyecto objetivo")
+    p_res.add_argument("--openclaw-repo", default="", help="Ruta repo OpenClaw")
+    p_res.add_argument("--attempts", type=int, default=5, help="Cantidad de probes")
+    p_res.add_argument("--interval-ms", type=int, default=1000, help="Espera entre probes")
+    p_res.add_argument("--timeout-ms", type=int, default=120000, help="Timeout por probe")
+    p_res.add_argument("--min-success-ratio", type=float, default=0.8, help="Umbral exito [0..1]")
+    p_res.add_argument("--live", action="store_true", help="Ejecutar real (por defecto dry-run)")
 
     # install
     p_inst = sub.add_parser("install", help="Instalar skills (symlinks) en otro proyecto")
@@ -2681,13 +4956,36 @@ def main() -> int:
         "release-sync":  cmd_release_sync,
         "policy-validate": cmd_policy_validate,
         "rollout-mode":  cmd_rollout_mode,
+        "host-mode":     cmd_host_mode,
         "skill-resolve": cmd_skill_resolve,
         "task-start":    cmd_task_start,
         "task-step":     cmd_task_step,
         "task-close":    cmd_task_close,
+        "task-list":     cmd_task_list,
+        "task-checklist": cmd_task_checklist,
         "task-run":      cmd_task_run,
         "set-project":   cmd_set_project,
         "ide-detect":    cmd_ide_detect,
+        "model-profiles-init": cmd_model_profiles_init,
+        "model-resolve": cmd_model_resolve,
+        "exec-allowlist": cmd_exec_allowlist,
+        "gateway-bootstrap": cmd_gateway_bootstrap,
+        "credentials-wizard": cmd_credentials_wizard,
+        "credentials-apply": cmd_credentials_apply,
+        "easy-onboard": cmd_easy_onboard,
+        "gateway-exec": cmd_gateway_exec,
+        "gateway-start": cmd_gateway_start,
+        "gateway-status": cmd_gateway_status,
+        "channel-status": cmd_channel_status,
+        "channel-login": cmd_channel_login,
+        "pairing-list": cmd_pairing_list,
+        "pairing-approve": cmd_pairing_approve,
+        "plugin-list": cmd_plugin_list,
+        "plugin-enable": cmd_plugin_enable,
+        "plugin-disable": cmd_plugin_disable,
+        "plugin-validate": cmd_plugin_validate,
+        "phase7-smoke": cmd_phase7_smoke,
+        "gateway-resilience": cmd_gateway_resilience,
         "install":       cmd_install,
         "add-agent":    cmd_add_agent,
     }

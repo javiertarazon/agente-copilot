@@ -190,7 +190,7 @@
   {
     "id": "agent-orchestration",
     "name": "agent-orchestration",
-    "description": "Multi-agent orchestration patterns using Gem/RUG Orchestrator style: decompose goals, delegate to sub-agents, validate a",
+    "description": "",
     "category": "data-ai",
     "path": ".github/skills/agent-orchestration/SKILL.md",
     "gh_path": ".github/skills/agent-orchestration/SKILL.md",
@@ -240,7 +240,7 @@
   {
     "id": "agent-safety-governance",
     "name": "agent-safety-governance",
-    "description": "Safety and governance framework for autonomous AI agents. Validates agent actions before execution, enforces permission ",
+    "description": "",
     "category": "data-ai",
     "path": ".github/skills/agent-safety-governance/SKILL.md",
     "gh_path": ".github/skills/agent-safety-governance/SKILL.md",
@@ -4820,8 +4820,8 @@
   {
     "id": "context-multi-file",
     "name": "context-multi-file",
-    "description": "Context Architect pattern for autonomous multi-file changes. Plans and executes coordinated changes across multiple file",
-    "category": "architecture",
+    "description": "",
+    "category": "general",
     "path": ".github/skills/context-multi-file/SKILL.md",
     "gh_path": ".github/skills/context-multi-file/SKILL.md",
     "tags": [
@@ -6929,6 +6929,24 @@
     "risk": "unknown",
     "source": "local",
     "active": false
+  },
+  {
+    "id": "free-jt7-global-runtime-audit",
+    "name": "free-jt7-global-runtime-audit",
+    "description": "Audit and enforce Free JT7 global runtime behavior across IDEs (Copilot, Codex, Claude, Gemini), including filesystem/pr",
+    "category": "general",
+    "path": ".github/skills/free-jt7-global-runtime-audit/SKILL.md",
+    "gh_path": ".github/skills/free-jt7-global-runtime-audit/SKILL.md",
+    "tags": [
+      "free",
+      "jt7",
+      "global",
+      "runtime",
+      "audit"
+    ],
+    "risk": "unknown",
+    "source": "local",
+    "active": true
   },
   {
     "id": "free-tool-strategy",
@@ -9751,6 +9769,22 @@
     "active": false
   },
   {
+    "id": "n8n-flow-expert",
+    "name": "n8n-flow-expert",
+    "description": "",
+    "category": "general",
+    "path": ".github/skills/n8n-flow-expert/SKILL.md",
+    "gh_path": ".github/skills/n8n-flow-expert/SKILL.md",
+    "tags": [
+      "n8n",
+      "flow",
+      "expert"
+    ],
+    "risk": "unknown",
+    "source": "local",
+    "active": false
+  },
+  {
     "id": "n8n-mcp-tools-expert",
     "name": "n8n-mcp-tools-expert",
     "description": "Expert guide for using n8n-mcp MCP tools effectively. Use when searching for nodes, validating configurations, accessing",
@@ -10270,7 +10304,7 @@
   {
     "id": "oss-hunter",
     "name": "oss-hunter",
-    "description": "Automatically hunt for high-impact OSS contribution opportunities in trending repositories.",
+    "description": "",
     "category": "general",
     "path": ".github/skills/oss-hunter/SKILL.md",
     "gh_path": ".github/skills/oss-hunter/SKILL.md",
@@ -13220,7 +13254,7 @@
   {
     "id": "tdd-full-cycle",
     "name": "tdd-full-cycle",
-    "description": "Complete TDD Red→Green→Refactor cycle with autonomous agents for each phase. Use when implementing any new feature or bu",
+    "description": "",
     "category": "testing",
     "path": ".github/skills/tdd-full-cycle/SKILL.md",
     "gh_path": ".github/skills/tdd-full-cycle/SKILL.md",

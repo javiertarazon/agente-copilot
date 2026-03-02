@@ -32,9 +32,14 @@ def isolated_workspace():
             "VERSION_FILE": root / "VERSION",
             "README_MD": root / "README.md",
             "CHANGELOG_MD": root / "CHANGELOG.md",
-            "AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
-            "POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
+            "AGENT_FILE": root / ".github" / "agents" / "free-jt7.agent.md",
+            "LEGACY_AGENT_FILE": root / ".github" / "agents" / "freejt7.agent.md",
+            "POLICY_FILE": root / ".github" / "free-jt7-policy.yaml",
+            "LEGACY_POLICY_FILE": root / ".github" / "freejt7-policy.yaml",
+            "MODEL_ROUTING_FILE": root / ".github" / "free-jt7-model-routing.json",
+            "MODEL_ROUTING_LEGACY_FILE": root / ".github" / "freejt7-model-routing.json",
             "ROLLOUT_FILE": root / "copilot-agent" / "rollout-mode.json",
+            "OPENCLAW_REPO_DIR": root / "OPEN CLAW",
         }
         for key, value in mappings.items():
             originals[key] = getattr(sm, key)
@@ -92,7 +97,7 @@ class SkillsManagerUnitTests(unittest.TestCase):
     def test_add_persists_index(self):
         with isolated_workspace() as root:
             (root / ".github" / "copilot-instructions.md").write_text("ok", encoding="utf-8")
-            (root / ".github" / "agents" / "freejt7.agent.md").write_text("ok", encoding="utf-8")
+            (root / ".github" / "agents" / "free-jt7.agent.md").write_text("ok", encoding="utf-8")
             args = Namespace(
                 name="new-skill",
                 description="desc",
@@ -160,6 +165,117 @@ class SkillsManagerUnitTests(unittest.TestCase):
             gemini = sm._ide_settings_path("gemini-cli", appdata)
             self.assertTrue(str(claude).endswith("ClaudeCode\\config.json") or str(claude).endswith("ClaudeCode/config.json"))
             self.assertTrue(str(gemini).endswith("GeminiCLI\\settings.json") or str(gemini).endswith("GeminiCLI/settings.json"))
+
+    def test_model_resolve_prefers_ide_profile(self):
+        with isolated_workspace() as root:
+            appdata = root / "appdata"
+            appdata.mkdir(parents=True, exist_ok=True)
+            codex_home = root / ".codex"
+            codex_home.mkdir(parents=True, exist_ok=True)
+            (codex_home / "config.toml").write_text("profile='default'\n", encoding="utf-8")
+            original_codex = os.environ.get("FREE_JT7_CODEX_HOME")
+            try:
+                os.environ["FREE_JT7_CODEX_HOME"] = str(codex_home)
+                resolved = sm._resolve_model_for_ide("codex", profile="default", appdata_root=appdata)
+            finally:
+                if original_codex is None:
+                    os.environ.pop("FREE_JT7_CODEX_HOME", None)
+                else:
+                    os.environ["FREE_JT7_CODEX_HOME"] = original_codex
+            self.assertEqual(resolved["auth_mode"], "ide-profile")
+            self.assertEqual(resolved["ide"], "codex")
+
+    def test_model_resolve_uses_api_fallback_when_ide_missing(self):
+        with isolated_workspace() as root:
+            appdata = root / "appdata"
+            appdata.mkdir(parents=True, exist_ok=True)
+            original_key = os.environ.get("OPENAI_API_KEY")
+            original_codex = os.environ.get("FREE_JT7_CODEX_HOME")
+            try:
+                os.environ["OPENAI_API_KEY"] = "test-key"
+                os.environ["FREE_JT7_CODEX_HOME"] = str(root / ".missing-codex")
+                resolved = sm._resolve_model_for_ide("codex", profile="default", appdata_root=appdata)
+            finally:
+                if original_key is None:
+                    os.environ.pop("OPENAI_API_KEY", None)
+                else:
+                    os.environ["OPENAI_API_KEY"] = original_key
+                if original_codex is None:
+                    os.environ.pop("FREE_JT7_CODEX_HOME", None)
+                else:
+                    os.environ["FREE_JT7_CODEX_HOME"] = original_codex
+            self.assertEqual(resolved["auth_mode"], "api-key-env")
+            self.assertEqual(resolved["provider"], "openai")
+            self.assertEqual(resolved["api_env_var"], "OPENAI_API_KEY")
+
+    def test_model_resolve_honors_named_profile_when_present(self):
+        with isolated_workspace() as root:
+            appdata = root / "appdata"
+            appdata.mkdir(parents=True, exist_ok=True)
+            codex_home = root / ".codex"
+            codex_home.mkdir(parents=True, exist_ok=True)
+            (codex_home / "config.toml").write_text(
+                "[profiles.work]\nmodel = 'codex-default'\n",
+                encoding="utf-8",
+            )
+            original_codex = os.environ.get("FREE_JT7_CODEX_HOME")
+            try:
+                os.environ["FREE_JT7_CODEX_HOME"] = str(codex_home)
+                resolved = sm._resolve_model_for_ide("codex", profile="work", appdata_root=appdata)
+            finally:
+                if original_codex is None:
+                    os.environ.pop("FREE_JT7_CODEX_HOME", None)
+                else:
+                    os.environ["FREE_JT7_CODEX_HOME"] = original_codex
+            self.assertEqual(resolved["auth_mode"], "ide-profile")
+            self.assertTrue(resolved["requested_profile_available"])
+            self.assertIn("work", [item.lower() for item in resolved["ide_detected_profiles"]])
+
+    def test_model_resolve_uses_api_fallback_when_profile_missing(self):
+        with isolated_workspace() as root:
+            appdata = root / "appdata"
+            appdata.mkdir(parents=True, exist_ok=True)
+            codex_home = root / ".codex"
+            codex_home.mkdir(parents=True, exist_ok=True)
+            (codex_home / "config.toml").write_text("profile='default'\n", encoding="utf-8")
+            original_codex = os.environ.get("FREE_JT7_CODEX_HOME")
+            original_key = os.environ.get("OPENAI_API_KEY")
+            try:
+                os.environ["FREE_JT7_CODEX_HOME"] = str(codex_home)
+                os.environ["OPENAI_API_KEY"] = "demo-key"
+                resolved = sm._resolve_model_for_ide("codex", profile="work", appdata_root=appdata)
+            finally:
+                if original_codex is None:
+                    os.environ.pop("FREE_JT7_CODEX_HOME", None)
+                else:
+                    os.environ["FREE_JT7_CODEX_HOME"] = original_codex
+                if original_key is None:
+                    os.environ.pop("OPENAI_API_KEY", None)
+                else:
+                    os.environ["OPENAI_API_KEY"] = original_key
+            self.assertEqual(resolved["auth_mode"], "api-key-env")
+            self.assertFalse(resolved["requested_profile_available"])
+
+    def test_gateway_exec_dry_run_uses_openclaw_args(self):
+        with isolated_workspace() as root:
+            original_cmd = os.environ.get("FREE_JT7_OPENCLAW_CMD")
+            try:
+                os.environ["FREE_JT7_OPENCLAW_CMD"] = "openclaw"
+                rc = sm.cmd_gateway_exec(
+                    Namespace(
+                        project=str(root),
+                        openclaw_repo="",
+                        dry_run=True,
+                        timeout_ms=1000,
+                        openclaw_args=["gateway", "status"],
+                    )
+                )
+            finally:
+                if original_cmd is None:
+                    os.environ.pop("FREE_JT7_OPENCLAW_CMD", None)
+                else:
+                    os.environ["FREE_JT7_OPENCLAW_CMD"] = original_cmd
+            self.assertEqual(rc, 0)
 
 
 if __name__ == "__main__":

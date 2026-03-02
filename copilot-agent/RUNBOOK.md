@@ -12,7 +12,10 @@
    - `python skills_manager.py skill-resolve --query "<objetivo>" --top 3`
 5. Ejecutar run:
    - `python skills_manager.py task-run --goal "<objetivo>" --commands "..."`
-6. Revisar evidencia:
+6. Listar y revisar checklist:
+   - `python skills_manager.py task-list --limit 20`
+   - `python skills_manager.py task-checklist --run-id <run_id>`
+7. Revisar evidencia:
    - `copilot-agent/runs/<run_id>.json`
    - `copilot-agent/runs/<run_id>.events.jsonl`
 

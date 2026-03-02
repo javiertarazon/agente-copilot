@@ -85,9 +85,9 @@ AÃ±ade esto a tu `settings.json` de usuario (`Ctrl+Shift+P` â†’ "Open Use
   "github.copilot.chat.codeGeneration.instructions": [
     { "file": "D:/agente-copilot/.github/copilot-instructions.md" }
   ],
-  "chat.agentFilesLocations": [
-    "D:/agente-copilot/.github/agents"
-  ]
+  "chat.agentFilesLocations": {
+    "D:/agente-copilot/.github/agents": true
+  }
 }
 ```
 
@@ -173,19 +173,72 @@ python skills_manager.py rollout-mode autonomous
 # Resolver skills efÃ­meras para una tarea
 python skills_manager.py skill-resolve --query "docker kubernetes" --top 3
 
+# Inicializar/consultar ruteo de modelos por IDE + perfil
+python skills_manager.py model-profiles-init
+python skills_manager.py ide-detect
+python skills_manager.py ide-detect --json
+python skills_manager.py model-resolve --ide auto --profile default
+python skills_manager.py model-resolve --ide codex --profile default
+
+# Si pides un perfil que no existe en el IDE, auth_mode=unavailable
+# (o usa fallback API si existe key, por ejemplo OPENAI_API_KEY)
+python skills_manager.py model-resolve --ide codex --profile work
+
+# Flujo simple para no tecnicos (guarda credenciales + activa gateway + estado)
+python skills_manager.py easy-onboard --project "D:\\mi-proyecto" --interactive
+# tambien sirve sin prompts:
+python skills_manager.py easy-onboard --project "D:\\mi-proyecto" --owner-phone "+34123456789" --telegram-bot-token "123456:abc"
+
+# Bootstrap gateway OpenClaw para el proyecto activo
+python skills_manager.py gateway-bootstrap --ide auto --profile default --owner-phone "+34123456789"
+
+# Operacion gateway/canales (WhatsApp + Telegram)
+python skills_manager.py gateway-status
+python skills_manager.py channel-status
+python skills_manager.py channel-login --channel whatsapp
+python skills_manager.py channel-login --channel telegram
+python skills_manager.py pairing-list --channel telegram
+python skills_manager.py pairing-approve --channel telegram --code <CODE>
+
+# Plugins (fase 6)
+python skills_manager.py plugin-list
+python skills_manager.py plugin-enable --id device-pair --source local --path "OPEN CLAW\\extensions\\device-pair"
+python skills_manager.py plugin-validate
+python skills_manager.py plugin-disable --id device-pair
+
+# Fase 7: smoke E2E + resiliencia
+python skills_manager.py phase7-smoke
+python skills_manager.py gateway-resilience
+
+# Si OPEN CLAW local no esta compilado, instala CLI global:
+npm install -g openclaw@latest
+
+# Gestionar allowlist de programas ejecutables
+python skills_manager.py exec-allowlist list
+python skills_manager.py exec-allowlist add git python node
+python skills_manager.py exec-allowlist enable
+
+# Modo host (safe/full) para ejecucion autonoma real
+python skills_manager.py host-mode status
+python skills_manager.py host-mode safe
+python skills_manager.py host-mode full
+
 # Orquestar run completo
-python skills_manager.py task-run --goal "auditar CI" --commands "ls" "python skills_manager.py doctor"
+python skills_manager.py task-run --goal "auditar CI" --ide codex --profile default --commands "ls" "python skills_manager.py doctor"
 
 # Modo granular
-python skills_manager.py task-start --goal "revisar seguridad"
+python skills_manager.py task-start --goal "revisar seguridad" --ide claude-code --profile default
 python skills_manager.py task-step --run-id <id> --command "Get-ChildItem"
 python skills_manager.py task-close --run-id <id> --summary "verificaciÃ³n completada"
+python skills_manager.py task-list --limit 20
+python skills_manager.py task-checklist --run-id <id>
 ```
 
 Artefactos generados:
 - `copilot-agent/runs/<run_id>.json`
 - `copilot-agent/runs/<run_id>.events.jsonl`
 - Policy: `.github/free-jt7-policy.yaml`
+- Model routing: `.github/free-jt7-model-routing.json`
 
 ---
 
