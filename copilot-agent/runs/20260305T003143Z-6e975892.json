@@ -1,0 +1,88 @@
+{
+  "run_id": "20260305T003143Z-6e975892",
+  "started_at": "2026-03-05T00:31:44Z",
+  "ended_at": "2026-03-05T00:31:51Z",
+  "user_goal": "auditoria capacidades free jt7",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "free-jt7-global-runtime-audit",
+      "category": "general",
+      "score": 3.136,
+      "gh_path": ".github/skills/free-jt7-global-runtime-audit/SKILL.md"
+    },
+    {
+      "id": "free-tool-strategy",
+      "category": "business",
+      "score": 1.667,
+      "gh_path": ".github/skills/free-tool-strategy/SKILL.md"
+    },
+    {
+      "id": "fp-ts-pragmatic",
+      "category": "data-ai",
+      "score": 1.107,
+      "gh_path": ".github/skills/fp-ts-pragmatic/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "python skills_manager.py skill-resolve --query plan --top 3",
+      "normalized_command": "python skills_manager.py skill-resolve --query plan --top 3",
+      "result": "[skill-resolve] query='plan' -> 3 skills\n  - plan-writing (architecture) score=1.9\n  - writing-plans (general) score=1.876\n  - plantuml-ascii (general) score=1.856\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    },
+    {
+      "step_id": "step-2",
+      "action": "task-step",
+      "command": "python skills_manager.py skill-resolve --query subagent --top 5",
+      "normalized_command": "python skills_manager.py skill-resolve --query subagent --top 5",
+      "result": "[skill-resolve] query='subagent' -> 5 skills\n  - subagent-driven-development (data-ai) score=1.866\n  - imagen (general) score=0.457\n  - segment-cdp (data-ai) score=0.421\n  - crypto-bd-agent (general) score=0.417\n  - agentic-eval (general) score=0.4\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    },
+    {
+      "step_id": "step-3",
+      "action": "task-step",
+      "command": "python skills_manager.py task-list --limit 3",
+      "normalized_command": "python skills_manager.py task-list --limit 3",
+      "result": "[task-list] total=3\n - 20260305T003143Z-6e975892 status=running risk=low steps=2 qg=False goal=auditoria capacidades free jt7\n - 20260305T000606Z-62210eb7 status=succeeded risk=low steps=3 qg=True goal=Persistencia gateway + instalacion multi-IDE automatica + verificacion settings \n - 20260304T235044Z-c9ab2b39 status=succeeded risk=low steps=4 qg=True goal=Arrancar Free JT7 con servidor OpenClaw y validar Copilot Chat\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 3 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\jt7ingenieria\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "E:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

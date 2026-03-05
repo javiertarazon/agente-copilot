@@ -1,0 +1,5 @@
+$ErrorActionPreference = 'Continue'
+Start-Transcript -Path 'E:\javie\agente coplit tipo open claw con skill\copilot-agent\admin-runs\admin-exec-20260305T013413Z.log' -Force | Out-Null
+$ErrorActionPreference='Continue'; Write-Output '=== ACTIVATION ==='; cscript //nologo $env:windir\system32\slmgr.vbs /xpr; Write-Output '=== LICENSE STATUS ==='; Get-CimInstance SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -and $_.Name -like '*Windows*' } | Select-Object Name,LicenseStatus,Description,PartialProductKey | Format-Table -AutoSize; Write-Output '=== EDITIONS ==='; DISM /Online /Get-CurrentEdition; DISM /Online /Get-TargetEditions; Write-Output '=== OEM KEY ==='; $k=(Get-CimInstance -Query "select OA3xOriginalProductKey from SoftwareLicensingService").OA3xOriginalProductKey; if($k){$masked = if($k.Length -gt 5){ ('*' * ($k.Length - 5)) + $k.Substring($k.Length-5) } else { '*****' }; Write-Output ("OEM_KEY_MASKED:" + $masked)} else { Write-Output 'OEM_KEY:NO' }
+Write-Host "`n[admin-exec] exit code: $LASTEXITCODE"
+Stop-Transcript | Out-Null

@@ -1,10 +1,14 @@
 {
   "_description": "Proyecto activo donde se aplican los cambios. Edita 'path' o usa: python skills_manager.py set-project <ruta>",
-  "path": "D:\\javie\\agente coplit tipo open claw con skill",
+  "path": "E:\\javie\\agente coplit tipo open claw con skill",
   "name": "agente coplit tipo open claw con skill",
-  "set_at": "2026-02-26T23:27:26Z",
-  "notes": "workspace free-jt7 openclaw",
+  "set_at": "2026-03-04T23:18:33Z",
+  "notes": "",
   "history": [
+    {
+      "path": "D:\\javie\\agente coplit tipo open claw con skill",
+      "set_at": "2026-02-26T23:27:26Z"
+    },
     {
       "path": "D:\\javie",
       "set_at": "2026-02-26T23:27:19Z"

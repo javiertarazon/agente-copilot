@@ -1,0 +1,99 @@
+{
+  "run_id": "20260304T235044Z-c9ab2b39",
+  "started_at": "2026-03-04T23:50:45Z",
+  "ended_at": "2026-03-04T23:51:11Z",
+  "user_goal": "Arrancar Free JT7 con servidor OpenClaw y validar Copilot Chat",
+  "scope": "workspace",
+  "risk_level": "low",
+  "status": "succeeded",
+  "skills_selected": [
+    {
+      "id": "free-jt7-global-runtime-audit",
+      "category": "general",
+      "score": 5.246,
+      "gh_path": ".github/skills/free-jt7-global-runtime-audit/SKILL.md"
+    },
+    {
+      "id": "deployment-validation-config-validate",
+      "category": "testing",
+      "score": 3.259,
+      "gh_path": ".github/skills/deployment-validation-config-validate/SKILL.md"
+    },
+    {
+      "id": "go-concurrency-patterns",
+      "category": "general",
+      "score": 3.226,
+      "gh_path": ".github/skills/go-concurrency-patterns/SKILL.md"
+    }
+  ],
+  "quality_gate": {
+    "required": true,
+    "passed": true
+  },
+  "steps": [
+    {
+      "step_id": "step-1",
+      "action": "task-step",
+      "command": "python skills_manager.py doctor --strict",
+      "normalized_command": "python skills_manager.py doctor --strict",
+      "result": "[doctor] Diagnóstico del sistema\n  [INFO] SKILL.md detectados: 964\n  [INFO] índice principal: 964 entries\n  [INFO] índice legado presente (compatibilidad)\n  [INFO] policy mode: autonomous\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    },
+    {
+      "step_id": "step-2",
+      "action": "task-step",
+      "command": "python skills_manager.py gateway-status",
+      "normalized_command": "python skills_manager.py gateway-status",
+      "result": "Service: Scheduled Task (missing)\nFile logs: C:\\Users\\JT7ING~1\\AppData\\Local\\Temp\\openclaw\\openclaw-2026-03-04.log\nCommand: C:Program Filesnodejsnode.exe E:javieagente coplit tipo open claw con skillOPEN CLAWdistindex.js gateway --port 18789\nService env: OPENCLAW_STATE_DIR=E:\\javie\\agente coplit tipo open claw con skill\\.openclaw\\state OPENCLAW_CONFIG_PATH=E:\\javie\\agente coplit tipo open claw con skill\\.openclaw\\openclaw.json OPENCLAW_GATEWAY_PORT=18789\n\nConfig (cli): E:\\javie\\agente coplit tipo open claw con skill\\.openclaw\\openclaw.json\nConfig (service): E:\\javie\\agente coplit tipo open claw con skill\\.openclaw\\openclaw.json\n\nGateway: bind=loopback (127.0.0.1), port=18789 (service args)\nProbe target: ws://127.0.0.1:18789\nDashboard: http://127.0.0.1:18789/\nProbe note: Loopback-only gateway; only local clients can connect.\n\nRuntime: unknown (Error: El sistema no puede encontrar el archivo especificado.)\nRPC probe: ok\n\nListening: 127.0.0.1:18789\nTroubles: run openclaw status\nTroubleshooting: https://docs.openclaw.ai/troubleshooting\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    },
+    {
+      "step_id": "step-3",
+      "action": "task-step",
+      "command": "python skills_manager.py channel-status",
+      "normalized_command": "python skills_manager.py channel-status",
+      "result": "Checking channel status (probe)�\nGateway reachable.\n\nTip: https://docs.openclaw.ai/cli#status adds gateway health probes to status output (requires a reachable gateway).\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    },
+    {
+      "step_id": "step-4",
+      "action": "task-step",
+      "command": "python skills_manager.py model-resolve --ide auto --profile default",
+      "normalized_command": "python skills_manager.py model-resolve --ide auto --profile default",
+      "result": "[model-resolve] ide=vscode profile=default\n provider=github-copilot model=copilot-default\n auth_mode=ide-profile reason=ide profile detected\n ide_evidence:\n  - settings:C:\\Users\\jt7ingenieria\\AppData\\Roaming\\Code\\User\\settings.json\n",
+      "exit_code": 0,
+      "retry_index": 0,
+      "risk_level": "low",
+      "mode": "autonomous"
+    }
+  ],
+  "summary": "Run finalizado con 4 steps",
+  "rollout_mode": "autonomous",
+  "model_resolution": {
+    "ide": "vscode",
+    "profile": "default",
+    "provider": "github-copilot",
+    "model": "copilot-default",
+    "auth_mode": "ide-profile",
+    "reason": "ide profile detected",
+    "prefer_ide_profile": true,
+    "allow_api_fallback": true,
+    "api_env_var": "",
+    "ide_profile_available": true,
+    "requested_profile_available": true,
+    "ide_detected_profiles": [],
+    "ide_evidence": [
+      "settings:C:\\Users\\jt7ingenieria\\AppData\\Roaming\\Code\\User\\settings.json"
+    ],
+    "routing_file": "E:\\javie\\agente coplit tipo open claw con skill\\.github\\free-jt7-model-routing.json"
+  }
+}

@@ -4,9 +4,9 @@
       "file": ".github/copilot-instructions.md"
     }
   ],
-  "chat.agentFilesLocations": [
-    ".github/agents"
-  ],
+  "chat.agentFilesLocations": {
+    ".github/agents": true
+  },
   "github.copilot.chat.codeGeneration.useInstructionFiles": true,
   "github.copilot.chat.customInstructionsInSystemMessage": true,
   "chat.agent.enabled": true,

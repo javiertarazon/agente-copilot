@@ -7,8 +7,9 @@
   ],
   "settings": {
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
-    "chat.agentFilesLocations": [
-      "D:/javie/agente coplit tipo open claw con skill/.github/agents"
-    ]
+    "chat.agentFilesLocations": {
+      "D:/javie/agente coplit tipo open claw con skill/.github/agents": true,
+      "E:/javie/agente coplit tipo open claw con skill/.github/agents": true
+    }
   }
 }

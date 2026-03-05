@@ -1,8 +1,8 @@
 # Free JT7 Gateway Runbook
 
-- Proyecto: `D:\javie\agente coplit tipo open claw con skill`
-- Config: `D:\javie\agente coplit tipo open claw con skill\.openclaw\openclaw.json`
-- Estado: `D:\javie\agente coplit tipo open claw con skill\.openclaw\state`
+- Proyecto: `E:\javie\agente coplit tipo open claw con skill`
+- Config: `E:\javie\agente coplit tipo open claw con skill\.openclaw\openclaw.json`
+- Estado: `E:\javie\agente coplit tipo open claw con skill\.openclaw\state`
 - IDE/modelo por defecto: `vscode` / `github-copilot` / `copilot-default`
 - Retención objetivo: `30 dias`
 
