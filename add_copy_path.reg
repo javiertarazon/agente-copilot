@@ -1,0 +1,19 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\CopiarRuta]
+@="Copiar Ruta"
+
+[HKEY_CLASSES_ROOT\*\shell\CopiarRuta\command]
+@="cmd /c echo \"%1\" | clip"
+
+[HKEY_CLASSES_ROOT\Directory\shell\CopiarRuta]
+@="Copiar Ruta"
+
+[HKEY_CLASSES_ROOT\Directory\shell\CopiarRuta\command]
+@="cmd /c echo \"%1\" | clip"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopiarRuta]
+@="Copiar Ruta"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopiarRuta\command]
+@="cmd /c echo \"%V\" | clip"
