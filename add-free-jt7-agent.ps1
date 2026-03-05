@@ -10,7 +10,7 @@
 param(
     [string]$Path = ".",
     [ValidateSet("auto", "all", "vscode", "cursor", "kiro", "antigravity", "codex", "claude-code", "gemini-cli")]
-    [string]$Ide = "auto",
+    [string]$Ide = "all",
     [switch]$UpdateUserSettings,
     [switch]$Force
 )
@@ -26,6 +26,10 @@ $manager = Join-Path $scriptDir "skills_manager.py"
 if (-not (Test-Path $manager)) {
     Write-Error "No se puede encontrar skills_manager.py en $scriptDir"
     exit 1
+}
+
+if (-not $PSBoundParameters.ContainsKey("UpdateUserSettings")) {
+    $UpdateUserSettings = $true
 }
 
 Write-Host "[add-free-jt7-agent] instalando en: $targetDir"

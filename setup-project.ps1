@@ -26,7 +26,7 @@ param(
     [string]$ProjectPath = (Get-Location).Path,
     [string]$AgentPath = "",
     [ValidateSet("auto", "all", "vscode", "cursor", "kiro", "antigravity", "codex", "claude-code", "gemini-cli")]
-    [string]$Ide = "auto",
+    [string]$Ide = "all",
     [switch]$UpdateUserSettings,
     [switch]$Force
 )
@@ -77,6 +77,10 @@ function Resolve-AgentPath {
 }
 
 try {
+    if (-not $PSBoundParameters.ContainsKey("UpdateUserSettings")) {
+        $UpdateUserSettings = $true
+    }
+
     Write-Step "Detectando repositorio Agente Free JT7"
     $resolvedAgentPath = Resolve-AgentPath -RequestedPath $AgentPath
     Write-Ok "Repositorio: $resolvedAgentPath"

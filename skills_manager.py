@@ -3845,6 +3845,102 @@ def cmd_gateway_resilience(args: argparse.Namespace) -> int:
     return 0 if success else 1
 
 
+def cmd_admin_exec(args: argparse.Namespace) -> int:
+    """
+    Ejecuta un comando en PowerShell elevado (RunAs/UAC).
+    Nota: Windows siempre puede pedir confirmacion UAC; no es evitable por software.
+    """
+    command = str(getattr(args, "command", "") or "").strip()
+    if not command:
+        print("[admin-exec] ERROR: especifica --command")
+        return 1
+
+    wait = bool(getattr(args, "wait", False))
+    timeout_ms = int(getattr(args, "timeout_ms", 600000))
+    admin_dir = COPILOT_AGENT / "admin-runs"
+    admin_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    runner = admin_dir / f"admin-exec-{stamp}.ps1"
+    log_file = admin_dir / f"admin-exec-{stamp}.log"
+    escaped_log = str(log_file).replace("'", "''")
+    escaped_runner = str(runner).replace("'", "''")
+
+    script = (
+        "$ErrorActionPreference = 'Continue'\n"
+        f"Start-Transcript -Path '{escaped_log}' -Force | Out-Null\n"
+        f"{command}\n"
+        "Write-Host \"`n[admin-exec] exit code: $LASTEXITCODE\"\n"
+        "Stop-Transcript | Out-Null\n"
+    )
+    runner.write_text(script, encoding="utf-8")
+
+    ps_cmd = (
+        "Start-Process powershell "
+        "-Verb RunAs "
+        "-ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"
+        f"'{escaped_runner}')"
+    )
+    if wait:
+        ps_cmd += " -Wait -PassThru | Out-Null"
+    else:
+        ps_cmd += " | Out-Null"
+
+    code, out = _execute_powershell(ps_cmd, timeout=timeout_ms)
+    if code != 0:
+        print(f"[admin-exec] ERROR lanzando proceso elevado: {out.strip()}")
+        return code
+
+    _log_audit("admin-exec", f"runner={runner.name} wait={wait}")
+    print(f"[admin-exec] OK solicitado (UAC) | runner={runner}")
+    print(f"[admin-exec] log esperado -> {log_file}")
+    return 0
+
+
+def cmd_admin_doctor(args: argparse.Namespace) -> int:
+    """
+    Diagnostico administrativo 1-comando para Windows:
+    - Estado de activacion (slmgr /xpr)
+    - Productos/licencias Windows
+    - Edicion actual y ediciones destino (DISM)
+    - Clave OEM (opcional mostrar completa)
+    """
+    reveal_key = bool(getattr(args, "reveal_key", False))
+    elevated = not bool(getattr(args, "no_elevated", False))
+    wait = bool(getattr(args, "wait", False))
+    timeout_ms = int(getattr(args, "timeout_ms", 600000))
+
+    doctor_cmd = (
+        "$ErrorActionPreference='Continue'; "
+        "Write-Output '=== ACTIVATION ==='; "
+        "cscript //nologo $env:windir\\system32\\slmgr.vbs /xpr; "
+        "Write-Output '=== LICENSE STATUS ==='; "
+        "Get-CimInstance SoftwareLicensingProduct | "
+        "Where-Object { $_.PartialProductKey -and $_.Name -like '*Windows*' } | "
+        "Select-Object Name,LicenseStatus,Description,PartialProductKey | Format-Table -AutoSize; "
+        "Write-Output '=== EDITIONS ==='; "
+        "DISM /Online /Get-CurrentEdition; "
+        "DISM /Online /Get-TargetEditions; "
+        "Write-Output '=== OEM KEY ==='; "
+        "$k=(Get-CimInstance -Query \"select OA3xOriginalProductKey from SoftwareLicensingService\").OA3xOriginalProductKey; "
+        "if($k){"
+    )
+    if reveal_key:
+        doctor_cmd += "Write-Output (\"OEM_KEY:\" + $k)"
+    else:
+        doctor_cmd += (
+            "$masked = if($k.Length -gt 5){ ('*' * ($k.Length - 5)) + $k.Substring($k.Length-5) } else { '*****' }; "
+            "Write-Output (\"OEM_KEY_MASKED:\" + $masked)"
+        )
+    doctor_cmd += "} else { Write-Output 'OEM_KEY:NO' }"
+
+    if elevated:
+        return cmd_admin_exec(argparse.Namespace(command=doctor_cmd, wait=wait, timeout_ms=timeout_ms))
+
+    code, out = _execute_powershell(doctor_cmd, timeout=timeout_ms)
+    print(out)
+    return code
+
+
 def cmd_install(args: argparse.Namespace) -> int:
     """Instala/vincula skills de este agente en otro proyecto."""
     try:
@@ -4911,6 +5007,19 @@ def main() -> int:
     p_res.add_argument("--min-success-ratio", type=float, default=0.8, help="Umbral exito [0..1]")
     p_res.add_argument("--live", action="store_true", help="Ejecutar real (por defecto dry-run)")
 
+    # admin-exec
+    p_admin = sub.add_parser("admin-exec", help="Ejecutar comando en PowerShell elevado (RunAs/UAC)")
+    p_admin.add_argument("--command", required=True, help="Comando PowerShell a ejecutar como administrador")
+    p_admin.add_argument("--wait", action="store_true", help="Esperar finalizacion del proceso elevado")
+    p_admin.add_argument("--timeout-ms", type=int, default=600000, help="Timeout de lanzamiento")
+
+    # admin-doctor (1 comando)
+    p_admin_doc = sub.add_parser("admin-doctor", help="Diagnostico admin 1-comando (activacion/edicion/OEM)")
+    p_admin_doc.add_argument("--reveal-key", action="store_true", help="Mostrar clave OEM completa")
+    p_admin_doc.add_argument("--no-elevated", action="store_true", help="Ejecutar sin elevacion")
+    p_admin_doc.add_argument("--wait", action="store_true", help="Esperar resultado cuando se lance elevado")
+    p_admin_doc.add_argument("--timeout-ms", type=int, default=600000, help="Timeout de lanzamiento/ejecucion")
+
     # install
     p_inst = sub.add_parser("install", help="Instalar skills (symlinks) en otro proyecto")
     p_inst.add_argument("path", help="Ruta del proyecto destino")
@@ -4986,6 +5095,8 @@ def main() -> int:
         "plugin-validate": cmd_plugin_validate,
         "phase7-smoke": cmd_phase7_smoke,
         "gateway-resilience": cmd_gateway_resilience,
+        "admin-exec":   cmd_admin_exec,
+        "admin-doctor": cmd_admin_doctor,
         "install":       cmd_install,
         "add-agent":    cmd_add_agent,
     }
